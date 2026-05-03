@@ -1,0 +1,16 @@
+{
+    "name": "bintangalea/project-aplin",
+    "description": "Merish - Unified Hybrid Business System",
+    "type": "project",
+    "require": {
+        "php": ">=8.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true
+    }
+}
