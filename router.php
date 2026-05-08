@@ -1,16 +1,6 @@
 <?php
-
 /**
- * index.php — Front Controller
- *
- * All HTTP requests are routed through this file.
- * Make sure your web server (Apache/Nginx) is configured to rewrite
- * all requests to this file.
- *
- * Apache example (.htaccess):
- *   RewriteEngine On
- *   RewriteCond %{REQUEST_FILENAME} !-f
- *   RewriteRule ^(.*)$ index.php [QSA,L]
+ * router.php - Working router fallback
  */
 
 require_once __DIR__ . '/bootstrap.php';
@@ -26,15 +16,22 @@ $uri = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH), '/');
 // Remove project path from URI if present
 if (strpos($uri, 'SIB/PROJECT-APLIN/') === 0) {
     $uri = substr($uri, strlen('SIB/PROJECT-APLIN/'));
+    $uri = trim($uri, '/');
 }
 
-// Fallback: check if route is passed via query string (for servers without mod_rewrite)
-if (empty($uri) && isset($_GET['route'])) {
+// Remove router.php from URI if present
+if (strpos($uri, 'router.php') === 0) {
+    $uri = substr($uri, strlen('router.php'));
+    $uri = trim($uri, '/');
+}
+
+// Fallback: check if route is passed via query string
+if ((empty($uri) || $uri === 'router.php') && isset($_GET['route'])) {
     $uri = $_GET['route'];
 }
 
 $segments = array_filter(explode('/', $uri));
-$segments = array_values($segments); // Re-index array
+$segments = array_values($segments);
 
 // Simple route table
 $routes = [
@@ -73,22 +70,31 @@ $routes = [
     'receptionist/check-in'     => [\App\Controllers\ReceptionistController::class, 'checkIn'],
 
     // Beautician routes
-    'beautician'                => [\App\Controllers\BeauticianController::class,  'index'],
-    'beautician/today'          => [\App\Controllers\BeauticianController::class,  'todaySchedule'],
-    'beautician/upcoming'       => [\App\Controllers\BeauticianController::class,  'upcomingSchedule'],
-    'beautician/update-status'  => [\App\Controllers\BeauticianController::class,  'updateReservationStatus'],
+    'beautician'                => [\App\Controllers\BeauticianController::class,   'index'],
+    'beautician/today'          => [\App\Controllers\BeauticianController::class,   'todaySchedule'],
+    'beautician/upcoming'       => [\App\Controllers\BeauticianController::class,   'upcomingSchedule'],
+    'beautician/update-status'  => [\App\Controllers\BeauticianController::class,   'updateReservationStatus'],
 
     // Barista routes
-    'barista'                   => [\App\Controllers\BaristaController::class,     'index'],
-    'barista/update-order'      => [\App\Controllers\BaristaController::class,     'updateOrderStatus'],
-    'barista/history'           => [\App\Controllers\BaristaController::class,     'orderHistory'],
+    'barista'                   => [\App\Controllers\BaristaController::class,      'index'],
+    'barista/update-order'      => [\App\Controllers\BaristaController::class,      'updateOrderStatus'],
+    'barista/history'           => [\App\Controllers\BaristaController::class,      'orderHistory'],
 ];
 
-if (array_key_exists($uri, $routes)) {
-    [$controllerClass, $method] = $routes[$uri];
-    $controller = new $controllerClass();
+// Build route key
+$routeKey = implode('/', $segments);
+if ($routeKey === 'router.php' || $routeKey === 'router') {
+    $routeKey = '';
+}
+
+// Find and execute route
+if (isset($routes[$routeKey])) {
+    [$controller, $method] = $routes[$routeKey];
+    $controller = new $controller();
     $controller->$method();
 } else {
+    // Not found - show error or home page
     http_response_code(404);
-    echo '404 – Page not found.';
+    echo "404 - Route not found: " . htmlspecialchars($routeKey);
 }
+?>
