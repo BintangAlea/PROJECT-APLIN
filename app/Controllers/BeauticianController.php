@@ -2,7 +2,6 @@
 
 namespace App\Controllers;
 
-use App\Core\Auth;
 use App\Models\BeauticiansModel;
 use App\Models\ReservationsModel;
 
@@ -13,71 +12,79 @@ class BeauticianController
 
     public function __construct()
     {
-        Auth::requireRole('beautician');
+        // Check role
+        if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'beautician') {
+            header('Location: index.php?page=login');
+            exit;
+        }
+        
         $this->beauticiansModel = new BeauticiansModel();
         $this->reservationsModel = new ReservationsModel();
     }
 
-    public function index(): void
+    public function index()
     {
-        $userId = Auth::getId();
+        $userId = $_SESSION['user_id'];
         $beautician = $this->beauticiansModel->findByUserId($userId);
         $beauticiansId = $beautician['id'] ?? null;
 
         if (!$beauticiansId) {
-            die('Beautician profile not found');
+            $_SESSION['error'] = 'Beautician profile not found';
+            header('Location: index.php?page=login');
+            exit;
         }
 
         $todaySchedule = $this->reservationsModel->getTodayScheduleByBeautician($beauticiansId);
         $upcomingSchedule = $this->reservationsModel->getUpcomingByBeautician($beauticiansId);
 
-        require_once __DIR__ . '/../Views/Beautician/index.php';
+        require __DIR__ . '/../Views/Beautician/index.php';
     }
 
-    public function todaySchedule(): void
+    public function todaySchedule()
     {
-        $userId = Auth::getId();
+        $userId = $_SESSION['user_id'];
         $beautician = $this->beauticiansModel->findByUserId($userId);
         $beauticiansId = $beautician['id'] ?? null;
 
         if (!$beauticiansId) {
-            die('Beautician profile not found');
+            $_SESSION['error'] = 'Beautician profile not found';
+            header('Location: index.php?page=login');
+            exit;
         }
 
         $schedule = $this->reservationsModel->getTodayScheduleByBeautician($beauticiansId);
-        require_once __DIR__ . '/../Views/Beautician/today_schedule.php';
+        require __DIR__ . '/../Views/Beautician/today_schedule.php';
     }
 
-    public function upcomingSchedule(): void
+    public function upcomingSchedule()
     {
-        $userId = Auth::getId();
+        $userId = $_SESSION['user_id'];
         $beautician = $this->beauticiansModel->findByUserId($userId);
         $beauticiansId = $beautician['id'] ?? null;
 
         if (!$beauticiansId) {
-            die('Beautician profile not found');
+            $_SESSION['error'] = 'Beautician profile not found';
+            header('Location: index.php?page=login');
+            exit;
         }
 
         $days = $_GET['days'] ?? 30;
         $schedule = $this->reservationsModel->getUpcomingByBeautician($beauticiansId, $days);
-        require_once __DIR__ . '/../Views/Beautician/upcoming_schedule.php';
+        require __DIR__ . '/../Views/Beautician/upcoming_schedule.php';
     }
 
-    public function updateReservationStatus(): void
+    public function updateReservationStatus()
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /SIB/PROJECT-APLIN/router.php?route=beautician');
-            exit;
-        }
-
         $reservationId = (int)($_POST['reservation_id'] ?? 0);
         $status = $_POST['status'] ?? '';
 
         if ($reservationId > 0 && !empty($status)) {
             $this->reservationsModel->update($reservationId, ['status' => $status]);
-            header('Location: /SIB/PROJECT-APLIN/router.php?route=beautician&success=Status%20updated');
+            $_SESSION['success'] = 'Status updated';
+            header('Location: index.php?page=beautician');
         } else {
-            header('Location: /SIB/PROJECT-APLIN/router.php?route=beautician&error=Invalid%20data');
+            $_SESSION['error'] = 'Invalid data';
+            header('Location: index.php?page=beautician');
         }
         exit;
     }

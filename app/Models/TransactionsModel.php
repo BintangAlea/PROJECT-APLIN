@@ -11,17 +11,17 @@ class TransactionsModel
 
     public function __construct()
     {
-        $this->db = Database::getInstance()->getConnection();
+        $this->db = Database::getConnection();
     }
 
     public function findAll(): array
     {
         $stmt = $this->db->query(
-            'SELECT t.*, r.res_id, u.full_name as customer_name
+            'SELECT t.*, u.NAME as customer_name
              FROM transactions t
-             LEFT JOIN reservations r ON t.reservation_id = r.id
-             LEFT JOIN users u ON r.customer_id = u.id
-             ORDER BY t.created_at DESC'
+             LEFT JOIN reservations r ON t.res_id = r.res_id
+             LEFT JOIN users u ON r.user_id = u.user_id
+             ORDER BY t.payment_date DESC'
         );
         return $stmt->fetchAll();
     }
@@ -29,49 +29,36 @@ class TransactionsModel
     public function findById(int $id): array|false
     {
         $stmt = $this->db->prepare(
-            'SELECT t.*, r.res_id, u.full_name as customer_name
+            'SELECT t.*, u.NAME as customer_name
              FROM transactions t
-             LEFT JOIN reservations r ON t.reservation_id = r.id
-             LEFT JOIN users u ON r.customer_id = u.id
-             WHERE t.id = :id'
+             LEFT JOIN reservations r ON t.res_id = r.res_id
+             LEFT JOIN users u ON r.user_id = u.user_id
+             WHERE t.trans_id = :id'
         );
         $stmt->execute([':id' => $id]);
         return $stmt->fetch();
     }
 
-    public function findByReservationId(int $reservationId): array|false
+    public function findByReservationId(int $resId): array|false
     {
         $stmt = $this->db->prepare(
-            'SELECT * FROM transactions WHERE reservation_id = :reservation_id'
+            'SELECT * FROM transactions WHERE res_id = :res_id'
         );
-        $stmt->execute([':reservation_id' => $reservationId]);
+        $stmt->execute([':res_id' => $resId]);
         return $stmt->fetch();
-    }
-
-    public function findByStatus(string $status): array
-    {
-        $stmt = $this->db->prepare(
-            'SELECT t.*, r.res_id, u.full_name as customer_name
-             FROM transactions t
-             LEFT JOIN reservations r ON t.reservation_id = r.id
-             LEFT JOIN users u ON r.customer_id = u.id
-             WHERE t.payment_status = :status
-             ORDER BY t.created_at DESC'
-        );
-        $stmt->execute([':status' => $status]);
-        return $stmt->fetchAll();
     }
 
     public function create(array $data): bool
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO transactions (trans_id, reservation_id, subtotal, discount_amount, discount_reason, 
-                                      synergy_discount, multiplier_applied, total_amount, payment_method, payment_status)
-             VALUES (:trans_id, :reservation_id, :subtotal, :discount_amount, :discount_reason, 
-                     :synergy_discount, :multiplier_applied, :total_amount, :payment_method, :payment_status)'
+            'INSERT INTO transactions (res_id, total_amount, payment_date)
+             VALUES (:res_id, :total_amount, NOW())'
         );
 
-        return $stmt->execute($data);
+        return $stmt->execute([
+            ':res_id' => $data['res_id'],
+            ':total_amount' => $data['total_amount'],
+        ]);
     }
 
     public function update(int $id, array $data): bool
@@ -85,19 +72,25 @@ class TransactionsModel
         }
 
         $stmt = $this->db->prepare(
-            'UPDATE transactions SET ' . implode(', ', $fields) . ' WHERE id = :id'
+            'UPDATE transactions SET ' . implode(', ', $fields) . ' WHERE trans_id = :id'
         );
 
         return $stmt->execute($values);
     }
 
+    public function delete(int $id): bool
+    {
+        $stmt = $this->db->prepare('DELETE FROM transactions WHERE trans_id = :id');
+        return $stmt->execute([':id' => $id]);
+    }
+
     public function getTotalRevenue(string $startDate = null, string $endDate = null): float
     {
-        $query = 'SELECT SUM(total_amount) as total FROM transactions WHERE payment_status = "Paid"';
+        $query = 'SELECT SUM(total_amount) as total FROM transactions';
         $params = [];
 
         if ($startDate && $endDate) {
-            $query .= ' AND DATE(created_at) BETWEEN :start_date AND :end_date';
+            $query .= ' WHERE DATE(payment_date) BETWEEN :start_date AND :end_date';
             $params[':start_date'] = $startDate;
             $params[':end_date'] = $endDate;
         }
@@ -105,11 +98,6 @@ class TransactionsModel
         $stmt = $this->db->prepare($query);
         $stmt->execute($params);
         $result = $stmt->fetch();
-        return (float) ($result['total'] ?? 0);
-    }
-
-    public function generateTransId(): string
-    {
-        return 'TRX-' . date('YmdHis') . '-' . rand(1000, 9999);
+        return (float)($result['total'] ?? 0);
     }
 }

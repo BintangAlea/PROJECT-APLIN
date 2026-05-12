@@ -2,7 +2,6 @@
 
 namespace App\Controllers;
 
-use App\Core\Auth;
 use App\Models\ReservationsModel;
 use App\Models\ServicesModel;
 use App\Models\MenusModel;
@@ -19,7 +18,12 @@ class CustomerController
 
     public function __construct()
     {
-        Auth::requireRole('customer');
+        // Check role
+        if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'customer') {
+            header('Location: index.php?page=login');
+            exit;
+        }
+        
         $this->reservationsModel = new ReservationsModel();
         $this->servicesModel = new ServicesModel();
         $this->menusModel = new MenusModel();
@@ -27,28 +31,23 @@ class CustomerController
         $this->ordersModel = new OrdersModel();
     }
 
-    public function index(): void
+    public function index()
     {
-        $customerId = Auth::getId();
+        $customerId = $_SESSION['user_id'];
         $reservations = $this->reservationsModel->findByCustomerId($customerId);
-        require_once __DIR__ . '/../Views/Customer/index.php';
+        require __DIR__ . '/../Views/Customer/index.php';
     }
 
-    public function appointment(): void
+    public function appointment()
     {
         $services = $this->servicesModel->findAll();
         $beauticians = $this->beauticiansModel->findAvailable();
-        require_once __DIR__ . '/../Views/Customer/appointment.php';
+        require __DIR__ . '/../Views/Customer/appointment.php';
     }
 
-    public function bookAppointment(): void
+    public function bookAppointment()
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /SIB/PROJECT-APLIN/router.php?route=customer/appointment');
-            exit;
-        }
-
-        $customerId = Auth::getId();
+        $customerId = $_SESSION['user_id'];
         $serviceId = $_POST['service_id'] ?? '';
         $beauticiansId = $_POST['beautician_id'] ?? null;
         $reservationDate = $_POST['reservation_date'] ?? '';
@@ -56,81 +55,75 @@ class CustomerController
         $notes = $_POST['notes'] ?? '';
 
         $error = '';
-        if (empty($serviceId) || empty($reservationDate) || empty($reservationTime)) {
-            $error = 'Service, tanggal, dan waktu harus diisi';
-        }
-
-        if (!$error && empty($beauticiansId)) {
-            $beauticiansId = null;
-        }
-
-        if (!$error) {
-            $service = $this->servicesModel->findById($serviceId);
-            if (!$service) {
-                $error = 'Service tidak ditemukan';
-            }
-        }
-
-        if (!$error) {
-            $resId = $this->reservationsModel->generateResId();
-            $result = $this->reservationsModel->create([
-                'res_id' => $resId,
-                'customer_id' => $customerId,
-                'beautician_id' => $beauticiansId,
-                'service_id' => $serviceId,
-                'reservation_date' => $reservationDate,
-                'reservation_time' => $reservationTime,
-                'duration_minutes' => $service['duration_minutes'],
-                'status' => 'Stage1',
-                'notes' => $notes,
-            ]);
-
-            if ($result) {
-                header('Location: /SIB/PROJECT-APLIN/router.php?route=customer&success=Appointment%20berhasil%20dibuat');
-                exit;
-            } else {
-                $error = 'Gagal membuat appointment';
-            }
-        }
-
-        $services = $this->servicesModel->findAll();
-        $beauticians = $this->beauticiansModel->findAvailable();
-        require_once __DIR__ . '/../Views/Customer/appointment.php';
-    }
-
-    public function orderMenu(): void
-    {
-        $menus = $this->menusModel->getAvailable();
-        require_once __DIR__ . '/../Views/Customer/order_menu.php';
-    }
-
-    public function createOrder(): void
-    {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /SIB/PROJECT-APLIN/router.php?route=customer/order-menu');
+        if (!$serviceId || !$reservationDate || !$reservationTime) {
+            $_SESSION['error'] = 'Service, tanggal, dan waktu harus diisi';
+            header('Location: index.php?page=customer&action=appointment');
             exit;
         }
 
-        $customerId = Auth::getId();
+        if (empty($beauticiansId)) {
+            $beauticiansId = null;
+        }
+
+        $service = $this->servicesModel->findById($serviceId);
+        if (!$service) {
+            $_SESSION['error'] = 'Service tidak ditemukan';
+            header('Location: index.php?page=customer&action=appointment');
+            exit;
+        }
+
+        $resId = $this->reservationsModel->generateResId();
+        $result = $this->reservationsModel->create([
+            'res_id' => $resId,
+            'customer_id' => $customerId,
+            'beautician_id' => $beauticiansId,
+            'service_id' => $serviceId,
+            'reservation_date' => $reservationDate,
+            'reservation_time' => $reservationTime,
+            'duration_minutes' => $service['duration_minutes'] ?? 60,
+            'status' => 'Stage1',
+            'notes' => $notes,
+        ]);
+
+        if ($result) {
+            $_SESSION['success'] = 'Appointment berhasil dibuat';
+            header('Location: index.php?page=customer');
+            exit;
+        } else {
+            $_SESSION['error'] = 'Gagal membuat appointment';
+            header('Location: index.php?page=customer&action=appointment');
+            exit;
+        }
+    }
+
+    public function orderMenu()
+    {
+        $menus = $this->menusModel->findAll();
+        require __DIR__ . '/../Views/Customer/order_menu.php';
+    }
+
+    public function createOrder()
+    {
+        $customerId = $_SESSION['user_id'];
         $menuId = $_POST['menu_id'] ?? '';
         $quantity = $_POST['quantity'] ?? 1;
         $reservationId = $_POST['reservation_id'] ?? null;
         $tableNumber = $_POST['table_number'] ?? 'ONLINE';
 
-        if (empty($menuId)) {
-            header('Location: /SIB/PROJECT-APLIN/router.php?route=customer/order-menu&error=Menu%20harus%20dipilih');
+        if (!$menuId) {
+            $_SESSION['error'] = 'Menu harus dipilih';
+            header('Location: index.php?page=customer&action=orderMenu');
             exit;
         }
 
         $menu = $this->menusModel->findById($menuId);
         if (!$menu) {
-            header('Location: /SIB/PROJECT-APLIN/router.php?route=customer/order-menu&error=Menu%20tidak%20ditemukan');
+            $_SESSION['error'] = 'Menu tidak ditemukan';
+            header('Location: index.php?page=customer&action=orderMenu');
             exit;
         }
 
-        $orderId = $this->ordersModel->generateOrderId();
         $result = $this->ordersModel->create([
-            'order_id' => $orderId,
             'reservation_id' => $reservationId,
             'menu_id' => $menuId,
             'quantity' => $quantity,
@@ -140,10 +133,13 @@ class CustomerController
         ]);
 
         if ($result) {
-            header('Location: /SIB/PROJECT-APLIN/router.php?route=customer&success=Order%20berhasil%20dibuat');
+            $_SESSION['success'] = 'Order berhasil dibuat';
+            header('Location: index.php?page=customer');
+            exit;
         } else {
-            header('Location: /SIB/PROJECT-APLIN/router.php?route=customer/order-menu&error=Gagal%20membuat%20order');
+            $_SESSION['error'] = 'Gagal membuat order';
+            header('Location: index.php?page=customer&action=orderMenu');
+            exit;
         }
-        exit;
     }
 }

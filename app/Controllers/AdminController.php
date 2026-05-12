@@ -2,7 +2,6 @@
 
 namespace App\Controllers;
 
-use App\Core\Auth;
 use App\Models\UsersModel;
 use App\Models\ReservationsModel;
 use App\Models\OrdersModel;
@@ -17,62 +16,65 @@ class AdminController
 
     public function __construct()
     {
-        Auth::requireRole('admin');
+        // Check role
+        if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+            header('Location: index.php?page=login');
+            exit;
+        }
+        
         $this->usersModel = new UsersModel();
         $this->reservationsModel = new ReservationsModel();
         $this->ordersModel = new OrdersModel();
         $this->transactionsModel = new TransactionsModel();
     }
 
-    public function index(): void
+    public function index()
     {
         $totalCustomers = $this->usersModel->getTotalByRole('customer');
         $totalBeauticians = $this->usersModel->getTotalByRole('beautician');
         $totalReservations = count($this->reservationsModel->findAll());
         $totalRevenue = $this->transactionsModel->getTotalRevenue();
 
-        require_once __DIR__ . '/../Views/Admin/index.php';
+        require __DIR__ . '/../Views/Admin/index.php';
     }
 
-    public function manageUsers(): void
+    public function manageUsers()
     {
         $users = $this->usersModel->findAll();
-        require_once __DIR__ . '/../Views/Admin/manage_users.php';
+        require __DIR__ . '/../Views/Admin/manage_users.php';
     }
 
-    public function manageReservations(): void
+    public function manageReservations()
     {
         $reservations = $this->reservationsModel->findAll();
-        require_once __DIR__ . '/../Views/Admin/manage_reservations.php';
+        require __DIR__ . '/../Views/Admin/manage_reservations.php';
     }
 
-    public function manageServices(): void
+    public function manageServices()
     {
-        // Will implement service management
-        require_once __DIR__ . '/../Views/Admin/manage_services.php';
+        require __DIR__ . '/../Views/Admin/manage_services.php';
     }
 
-    public function manageMenus(): void
+    public function manageMenus()
     {
-        // Will implement menu management
-        require_once __DIR__ . '/../Views/Admin/manage_menus.php';
+        require __DIR__ . '/../Views/Admin/manage_menus.php';
     }
 
-    public function manageStaff(): void
+    public function manageStaff()
     {
         $staff = $this->usersModel->findByRole('beautician');
-        require_once __DIR__ . '/../Views/Admin/manage_staff.php';
+        require __DIR__ . '/../Views/Admin/manage_staff.php';
     }
 
-    public function reports(): void
+    public function reports()
     {
         $reservations = $this->reservationsModel->findAll();
         $transactions = $this->transactionsModel->findAll();
-        require_once __DIR__ . '/../Views/Admin/reports.php';
+        require __DIR__ . '/../Views/Admin/reports.php';
     }
 
-    public function settings(): void
+    public function settings()
     {
-        require_once __DIR__ . '/../Views/Admin/settings.php';
+        require __DIR__ . '/../Views/Admin/settings.php';
     }
 }

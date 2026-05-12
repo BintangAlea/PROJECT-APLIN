@@ -11,16 +11,17 @@ class BeauticiansModel
 
     public function __construct()
     {
-        $this->db = Database::getInstance()->getConnection();
+        $this->db = Database::getConnection();
     }
 
     public function findAll(): array
     {
         $stmt = $this->db->query(
-            'SELECT b.id, b.user_id, b.specialization, b.rating, b.status, u.full_name, u.email, u.phone
-             FROM beauticians b
-             JOIN users u ON b.user_id = u.id
-             ORDER BY u.full_name'
+            'SELECT sp.profile_id, sp.user_id, sp.specialization, sp.hire_date, u.NAME, u.email
+             FROM staff_profiles sp
+             JOIN users u ON sp.user_id = u.user_id
+             WHERE u.ROLE = "Beautician"
+             ORDER BY u.NAME'
         );
         return $stmt->fetchAll();
     }
@@ -28,10 +29,10 @@ class BeauticiansModel
     public function findById(int $id): array|false
     {
         $stmt = $this->db->prepare(
-            'SELECT b.id, b.user_id, b.specialization, b.rating, b.status, u.full_name, u.email, u.phone
-             FROM beauticians b
-             JOIN users u ON b.user_id = u.id
-             WHERE b.id = :id'
+            'SELECT sp.profile_id, sp.user_id, sp.specialization, sp.hire_date, u.NAME, u.email
+             FROM staff_profiles sp
+             JOIN users u ON sp.user_id = u.user_id
+             WHERE sp.profile_id = :id'
         );
         $stmt->execute([':id' => $id]);
         return $stmt->fetch();
@@ -40,7 +41,7 @@ class BeauticiansModel
     public function findByUserId(int $userId): array|false
     {
         $stmt = $this->db->prepare(
-            'SELECT * FROM beauticians WHERE user_id = :user_id'
+            'SELECT * FROM staff_profiles WHERE user_id = :user_id'
         );
         $stmt->execute([':user_id' => $userId]);
         return $stmt->fetch();
@@ -49,39 +50,27 @@ class BeauticiansModel
     public function findAvailable(): array
     {
         $stmt = $this->db->query(
-            'SELECT b.id, b.user_id, b.specialization, b.rating, b.status, u.full_name, u.email
-             FROM beauticians b
-             JOIN users u ON b.user_id = u.id
-             WHERE b.status = "available"
-             ORDER BY b.rating DESC'
+            'SELECT sp.profile_id, sp.user_id, sp.specialization, sp.hire_date, u.NAME, u.email
+             FROM staff_profiles sp
+             JOIN users u ON sp.user_id = u.user_id
+             WHERE u.ROLE = "Beautician"
+             ORDER BY u.NAME'
         );
         return $stmt->fetchAll();
     }
 
-    public function findByStatus(string $status): array
+    public function getSchedule(int $userId, string $date): array
     {
         $stmt = $this->db->prepare(
-            'SELECT b.id, b.user_id, b.specialization, b.rating, b.status, u.full_name, u.email
-             FROM beauticians b
-             JOIN users u ON b.user_id = u.id
-             WHERE b.status = :status
-             ORDER BY u.full_name'
-        );
-        $stmt->execute([':status' => $status]);
-        return $stmt->fetchAll();
-    }
-
-    public function getSchedule(int $beauticiansId, string $date): array
-    {
-        $stmt = $this->db->prepare(
-            'SELECT r.id, r.res_id, r.reservation_time, r.duration_minutes, r.status, u.full_name as customer_name, s.name as service_name
+            'SELECT r.res_id, r.schedule_time, r.STATUS, u.NAME as customer_name, s.service_name
              FROM reservations r
-             JOIN users u ON r.customer_id = u.id
-             JOIN services s ON r.service_id = s.id
-             WHERE r.beautician_id = :beautician_id AND r.reservation_date = :date
-             ORDER BY r.reservation_time'
+             JOIN reservation_details rd ON r.res_id = rd.res_id
+             JOIN users u ON r.user_id = u.user_id
+             JOIN services s ON rd.service_id = s.service_id
+             WHERE rd.beautician_id = :beautician_id AND DATE(r.schedule_time) = :date
+             ORDER BY r.schedule_time'
         );
-        $stmt->execute([':beautician_id' => $beauticiansId, ':date' => $date]);
+        $stmt->execute([':beautician_id' => $userId, ':date' => $date]);
         return $stmt->fetchAll();
     }
 
@@ -96,7 +85,7 @@ class BeauticiansModel
         }
 
         $stmt = $this->db->prepare(
-            'UPDATE beauticians SET ' . implode(', ', $fields) . ' WHERE id = :id'
+            'UPDATE staff_profiles SET ' . implode(', ', $fields) . ' WHERE profile_id = :id'
         );
 
         return $stmt->execute($values);

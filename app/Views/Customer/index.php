@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -16,9 +16,9 @@
         <div style="margin-bottom: 30px;">
             <h2>Menu Utama</h2>
             <ul style="list-style: none; padding: 0;">
-                <li><a href="<?php echo url('customer/appointment'); ?>" style="display: inline-block; padding: 10px 15px; background: #f0f0f0; margin: 5px; text-decoration: none;">Buat Appointment</a></li>
-                <li><a href="<?php echo url('customer/order-menu'); ?>" style="display: inline-block; padding: 10px 15px; background: #f0f0f0; margin: 5px; text-decoration: none;">Pesan Menu</a></li>
-                <li><a href="<?php echo url('auth/logout'); ?>" style="display: inline-block; padding: 10px 15px; background: #f0f0f0; margin: 5px; text-decoration: none;">Logout</a></li>
+                <li><a href="index.php?page=customer&action=appointment; ?>" style="display: inline-block; padding: 10px 15px; background: #f0f0f0; margin: 5px; text-decoration: none;">Buat Appointment</a></li>
+                <li><a href="index.php?page=customer&action=orderMenu; ?>" style="display: inline-block; padding: 10px 15px; background: #f0f0f0; margin: 5px; text-decoration: none;">Pesan Menu</a></li>
+                <li><a href="index.php?page=login&action=logout; ?>" style="display: inline-block; padding: 10px 15px; background: #f0f0f0; margin: 5px; text-decoration: none;">Logout</a></li>
             </ul>
         </div>
 
@@ -54,3 +54,5 @@
     </div>
 </body>
 </html>
+
+

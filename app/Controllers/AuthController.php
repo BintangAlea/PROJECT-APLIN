@@ -2,83 +2,62 @@
 
 namespace App\Controllers;
 
-use App\Core\Auth;
-use App\Core\Session;
-use App\Core\Database;
 use App\Models\UsersModel;
 
 class AuthController
 {
     private UsersModel $usersModel;
-    private \PDO $db;
 
     public function __construct()
     {
         $this->usersModel = new UsersModel();
-        $this->db = Database::getInstance()->getConnection();
     }
 
-    public function loginForm(): void
+    public function index()
     {
-        require_once __DIR__ . '/../Views/Auth/login.php';
+        require __DIR__ . '/../Views/Auth/login.php';
     }
 
-    public function registerForm(): void
+    public function login()
     {
-        require_once __DIR__ . '/../Views/Auth/register.php';
-    }
-
-    public function login(): void
-    {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /SIB/PROJECT-APLIN/router.php?route=login');
-            exit;
-        }
-
         $email = $_POST['email'] ?? '';
         $password = $_POST['password'] ?? '';
         $error = '';
 
-        if (empty($email) || empty($password)) {
-            $error = 'Email dan password harus diisi';
-        }
-
-        if (!$error) {
-            $user = $this->usersModel->login($email, $password);
-            if ($user) {
-                Session::set('user_id', $user['id']);
-                Session::set('email', $user['email']);
-                Session::set('role', $user['role']);
-                Session::set('full_name', $user['full_name']);
-
-                // Redirect berdasarkan role
-                $redirectUrl = match ($user['role']) {
-                    'admin' => '/SIB/PROJECT-APLIN/router.php?route=admin',
-                    'receptionist' => '/SIB/PROJECT-APLIN/router.php?route=receptionist',
-                    'barista' => '/SIB/PROJECT-APLIN/router.php?route=barista',
-                    'beautician' => '/SIB/PROJECT-APLIN/router.php?route=beautician',
-                    'customer' => '/SIB/PROJECT-APLIN/router.php?route=customer',
-                    default => '/SIB/PROJECT-APLIN/router.php',
-                };
-
-                header("Location: $redirectUrl");
-                exit;
-            } else {
-                $error = 'Email atau password salah';
-            }
-        }
-
-        // Render login form dengan error
-        require_once __DIR__ . '/../Views/Auth/login.php';
-    }
-
-    public function register(): void
-    {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /SIB/PROJECT-APLIN/router.php?route=register');
+        if (!$email || !$password) {
+            $_SESSION['error'] = 'Email dan password harus diisi';
+            header('Location: index.php?page=login');
             exit;
         }
 
+        $user = $this->usersModel->login($email, $password);
+        if ($user) {
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['user_login'] = $user['email'];
+            $_SESSION['role'] = $user['role'];
+            $_SESSION['full_name'] = $user['full_name'];
+
+            // Redirect berdasarkan role
+            $redirectPage = match ($user['role']) {
+                'admin' => 'admin',
+                'receptionist' => 'receptionist',
+                'barista' => 'barista',
+                'beautician' => 'beautician',
+                'customer' => 'customer',
+                default => 'home',
+            };
+
+            header('Location: index.php?page=' . $redirectPage);
+            exit;
+        } else {
+            $_SESSION['error'] = 'Email atau password salah';
+            header('Location: index.php?page=login');
+            exit;
+        }
+    }
+
+    public function register()
+    {
         $email = $_POST['email'] ?? '';
         $password = $_POST['password'] ?? '';
         $confirmPassword = $_POST['confirm_password'] ?? '';
@@ -87,49 +66,58 @@ class AuthController
         $role = $_POST['role'] ?? 'customer';
         $error = '';
 
-        if (empty($email) || empty($password) || empty($fullName)) {
-            $error = 'Email, password, dan nama lengkap harus diisi';
+        if (!$email || !$password || !$fullName) {
+            $_SESSION['error'] = 'Email, password, dan nama lengkap harus diisi';
+            header('Location: index.php?page=register');
+            exit;
         }
 
-        if (!$error && $password !== $confirmPassword) {
-            $error = 'Password tidak sesuai';
+        if ($password !== $confirmPassword) {
+            $_SESSION['error'] = 'Password tidak sesuai';
+            header('Location: index.php?page=register');
+            exit;
         }
 
-        if (!$error && strlen($password) < 6) {
-            $error = 'Password minimal 6 karakter';
+        if (strlen($password) < 6) {
+            $_SESSION['error'] = 'Password minimal 6 karakter';
+            header('Location: index.php?page=register');
+            exit;
         }
 
-        if (!$error) {
-            $result = $this->usersModel->register($email, $password, $fullName, $phone, $role);
-            if ($result) {
-                // If beautician role, create beautician profile
-                if ($role === 'beautician') {
-                    $user = $this->usersModel->findByEmail($email);
-                    if ($user) {
-                        $stmt = $this->db->prepare('INSERT INTO beauticians (user_id, specialization, status) VALUES (:user_id, :specialization, :status)');
-                        $stmt->execute([
-                            ':user_id' => $user['id'],
-                            ':specialization' => 'General',
-                            ':status' => 'available'
-                        ]);
-                    }
-                }
-                
-                header('Location: /SIB/PROJECT-APLIN/router.php?route=login&success=Registration%20successful.%20Please%20login.');
-                exit;
-            } else {
-                $error = 'Email sudah terdaftar atau terjadi kesalahan';
+        $result = $this->usersModel->register($email, $password, $fullName, $phone, $role);
+        if (!$result) {
+            $_SESSION['error'] = 'Email sudah terdaftar atau terjadi kesalahan';
+            header('Location: index.php?page=register');
+            exit;
+        }
+
+        // If beautician role, create beautician profile
+        if ($role === 'beautician') {
+            $user = $this->usersModel->findByEmail($email);
+            if ($user) {
+                $stmt = \App\Core\Database::getConnection()->prepare('INSERT INTO beauticians (user_id, specialization, status) VALUES (:user_id, :specialization, :status)');
+                $stmt->execute([
+                    ':user_id' => $user['id'],
+                    ':specialization' => 'General',
+                    ':status' => 'available'
+                ]);
             }
         }
 
-        // Render register form dengan error
-        require_once __DIR__ . '/../Views/Auth/register.php';
+        $_SESSION['success'] = 'Registrasi berhasil. Silakan login.';
+        header('Location: index.php?page=login');
+        exit;
     }
 
-    public function logout(): void
+    public function logout()
     {
-        Session::logout();
-        header('Location: /SIB/PROJECT-APLIN/router.php?route=login&success=Logout%20successful');
+        unset($_SESSION['user_id']);
+        unset($_SESSION['user_login']);
+        unset($_SESSION['role']);
+        unset($_SESSION['full_name']);
+        
+        $_SESSION['success'] = 'Logout berhasil';
+        header('Location: index.php?page=login');
         exit;
     }
 }

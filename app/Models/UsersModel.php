@@ -11,18 +11,18 @@ class UsersModel
 
     public function __construct()
     {
-        $this->db = Database::getInstance()->getConnection();
+        $this->db = Database::getConnection();
     }
 
     public function findAll(): array
     {
-        $stmt = $this->db->query('SELECT * FROM users ORDER BY created_at DESC');
+        $stmt = $this->db->query('SELECT * FROM users');
         return $stmt->fetchAll();
     }
 
     public function findById(int $id): array|false
     {
-        $stmt = $this->db->prepare('SELECT * FROM users WHERE id = :id');
+        $stmt = $this->db->prepare('SELECT * FROM users WHERE user_id = :id');
         $stmt->execute([':id' => $id]);
         return $stmt->fetch();
     }
@@ -36,7 +36,7 @@ class UsersModel
 
     public function findByRole(string $role): array
     {
-        $stmt = $this->db->prepare('SELECT * FROM users WHERE role = :role AND status = "active"');
+        $stmt = $this->db->prepare('SELECT * FROM users WHERE ROLE = :role');
         $stmt->execute([':role' => $role]);
         return $stmt->fetchAll();
     }
@@ -50,16 +50,18 @@ class UsersModel
 
         $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
         $stmt = $this->db->prepare(
-            'INSERT INTO users (email, password, full_name, phone, role) 
-             VALUES (:email, :password, :full_name, :phone, :role)'
+            'INSERT INTO users (NAME, email, PASSWORD, ROLE, loyalty_stage, total_spent, reward_points) 
+             VALUES (:name, :email, :password, :role, :loyalty_stage, :total_spent, :reward_points)'
         );
 
         return $stmt->execute([
+            ':name' => $fullName,
             ':email' => $email,
             ':password' => $hashedPassword,
-            ':full_name' => $fullName,
-            ':phone' => $phone,
             ':role' => $role,
+            ':loyalty_stage' => 1,
+            ':total_spent' => 0,
+            ':reward_points' => 0,
         ]);
     }
 
@@ -71,11 +73,7 @@ class UsersModel
             return false;
         }
 
-        if (!password_verify($password, $user['password'])) {
-            return false;
-        }
-
-        if ($user['status'] !== 'active') {
+        if (!password_verify($password, $user['PASSWORD'])) {
             return false;
         }
 
@@ -93,7 +91,7 @@ class UsersModel
         }
 
         $stmt = $this->db->prepare(
-            'UPDATE users SET ' . implode(', ', $fields) . ' WHERE id = :id'
+            'UPDATE users SET ' . implode(', ', $fields) . ' WHERE user_id = :id'
         );
 
         return $stmt->execute($values);
@@ -101,13 +99,13 @@ class UsersModel
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db->prepare('DELETE FROM users WHERE id = :id');
+        $stmt = $this->db->prepare('DELETE FROM users WHERE user_id = :id');
         return $stmt->execute([':id' => $id]);
     }
 
     public function getTotalByRole(string $role): int
     {
-        $stmt = $this->db->prepare('SELECT COUNT(*) as count FROM users WHERE role = :role');
+        $stmt = $this->db->prepare('SELECT COUNT(*) as count FROM users WHERE ROLE = :role');
         $stmt->execute([':role' => $role]);
         $result = $stmt->fetch();
         return $result['count'] ?? 0;

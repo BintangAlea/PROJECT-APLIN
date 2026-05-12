@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -8,7 +8,7 @@
 <body>
     <div style="max-width: 1200px; margin: 20px auto; padding: 20px;">
         <h1>Reservasi Tanggal: <?php echo htmlspecialchars($date); ?></h1>
-        <a href="<?php echo url('receptionist'); ?>" style="padding: 10px 15px; background: #f0f0f0; text-decoration: none;">Kembali ke Dashboard</a>
+        <a href="index.php?page=receptionist; ?>" style="padding: 10px 15px; background: #f0f0f0; text-decoration: none;">Kembali ke Dashboard</a>
 
         <div style="margin: 20px 0;">
             <form method="GET" style="display: inline-block;">
@@ -80,3 +80,5 @@
     </script>
 </body>
 </html>
+
+

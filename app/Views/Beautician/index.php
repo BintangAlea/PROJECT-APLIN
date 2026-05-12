@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -16,9 +16,9 @@
         <div style="margin-bottom: 20px;">
             <h2>Menu Beautician</h2>
             <ul style="list-style: none; padding: 0;">
-                <li><a href="<?php echo url('beautician/today'); ?>" style="display: inline-block; padding: 10px 15px; background: #f0f0f0; margin: 5px; text-decoration: none;">Jadwal Hari Ini</a></li>
-                <li><a href="<?php echo url('beautician/upcoming'); ?>" style="display: inline-block; padding: 10px 15px; background: #f0f0f0; margin: 5px; text-decoration: none;">Jadwal Mendatang</a></li>
-                <li><a href="<?php echo url('auth/logout'); ?>" style="display: inline-block; padding: 10px 15px; background: #f0f0f0; margin: 5px; text-decoration: none;">Logout</a></li>
+                <li><a href="index.php?page=beautician&action=todaySchedule; ?>" style="display: inline-block; padding: 10px 15px; background: #f0f0f0; margin: 5px; text-decoration: none;">Jadwal Hari Ini</a></li>
+                <li><a href="index.php?page=beautician&action=upcomingSchedule; ?>" style="display: inline-block; padding: 10px 15px; background: #f0f0f0; margin: 5px; text-decoration: none;">Jadwal Mendatang</a></li>
+                <li><a href="index.php?page=login&action=logout; ?>" style="display: inline-block; padding: 10px 15px; background: #f0f0f0; margin: 5px; text-decoration: none;">Logout</a></li>
             </ul>
         </div>
 
@@ -82,3 +82,5 @@
     </div>
 </body>
 </html>
+
+

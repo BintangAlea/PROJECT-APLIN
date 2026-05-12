@@ -11,19 +11,18 @@ class ReviewsModel
 
     public function __construct()
     {
-        $this->db = Database::getInstance()->getConnection();
+        $this->db = Database::getConnection();
     }
 
     public function findAll(): array
     {
         $stmt = $this->db->query(
-            'SELECT r.*, u.full_name as customer_name, b.id as beautician_id, ub.full_name as beautician_name, res.res_id
+            'SELECT r.*, u.NAME as customer_name, ub.NAME as beautician_name, res.res_id
              FROM reviews r
-             JOIN users u ON r.customer_id = u.id
-             LEFT JOIN beauticians b ON r.beautician_id = b.id
-             LEFT JOIN users ub ON b.user_id = ub.id
-             JOIN reservations res ON r.reservation_id = res.id
-             ORDER BY r.created_at DESC'
+             JOIN users u ON r.customer_id = u.user_id
+             LEFT JOIN users ub ON r.beautician_id = ub.user_id
+             JOIN reservations res ON r.res_id = res.res_id
+             ORDER BY r.review_id DESC'
         );
         return $stmt->fetchAll();
     }
@@ -31,12 +30,12 @@ class ReviewsModel
     public function findByBeautician(int $beauticiansId): array
     {
         $stmt = $this->db->prepare(
-            'SELECT r.*, u.full_name as customer_name, res.res_id
+            'SELECT r.*, u.NAME as customer_name, res.res_id
              FROM reviews r
-             JOIN users u ON r.customer_id = u.id
-             JOIN reservations res ON r.reservation_id = res.id
+             JOIN users u ON r.customer_id = u.user_id
+             JOIN reservations res ON r.res_id = res.res_id
              WHERE r.beautician_id = :beautician_id
-             ORDER BY r.created_at DESC'
+             ORDER BY r.review_id DESC'
         );
         $stmt->execute([':beautician_id' => $beauticiansId]);
         return $stmt->fetchAll();
@@ -45,13 +44,12 @@ class ReviewsModel
     public function findByCustomer(int $customerId): array
     {
         $stmt = $this->db->prepare(
-            'SELECT r.*, ub.full_name as beautician_name, res.res_id
+            'SELECT r.*, ub.NAME as beautician_name, res.res_id
              FROM reviews r
-             LEFT JOIN beauticians b ON r.beautician_id = b.id
-             LEFT JOIN users ub ON b.user_id = ub.id
-             JOIN reservations res ON r.reservation_id = res.id
+             LEFT JOIN users ub ON r.beautician_id = ub.user_id
+             JOIN reservations res ON r.res_id = res.res_id
              WHERE r.customer_id = :customer_id
-             ORDER BY r.created_at DESC'
+             ORDER BY r.review_id DESC'
         );
         $stmt->execute([':customer_id' => $customerId]);
         return $stmt->fetchAll();
@@ -60,11 +58,18 @@ class ReviewsModel
     public function create(array $data): bool
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO reviews (reservation_id, customer_id, beautician_id, rating, comment)
-             VALUES (:reservation_id, :customer_id, :beautician_id, :rating, :comment)'
+            'INSERT INTO reviews (res_id, customer_id, beautician_id, menu_id, rating, COMMENT)
+             VALUES (:res_id, :customer_id, :beautician_id, :menu_id, :rating, :comment)'
         );
 
-        return $stmt->execute($data);
+        return $stmt->execute([
+            ':res_id' => $data['res_id'],
+            ':customer_id' => $data['customer_id'],
+            ':beautician_id' => $data['beautician_id'] ?? null,
+            ':menu_id' => $data['menu_id'] ?? null,
+            ':rating' => $data['rating'],
+            ':comment' => $data['comment'] ?? null,
+        ]);
     }
 
     public function getAverageRating(int $beauticiansId): float

@@ -2,7 +2,6 @@
 
 namespace App\Controllers;
 
-use App\Core\Auth;
 use App\Models\ReservationsModel;
 use App\Models\OrdersModel;
 
@@ -13,58 +12,59 @@ class ReceptionistController
 
     public function __construct()
     {
-        Auth::requireRole('receptionist');
+        // Check role
+        if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'receptionist') {
+            header('Location: index.php?page=login');
+            exit;
+        }
+        
         $this->reservationsModel = new ReservationsModel();
         $this->ordersModel = new OrdersModel();
     }
 
-    public function index(): void
+    public function index()
     {
         $today = date('Y-m-d');
         $reservations = $this->reservationsModel->findByDate($today);
         $pendingOrders = $this->ordersModel->findByStatus('Pending');
-        require_once __DIR__ . '/../Views/Receptionist/index.php';
+        require __DIR__ . '/../Views/Receptionist/index.php';
     }
 
-    public function scheduleBooking(): void
+    public function scheduleBooking()
     {
         $reservations = $this->reservationsModel->findAll();
-        require_once __DIR__ . '/../Views/Receptionist/schedule_booking.php';
+        require __DIR__ . '/../Views/Receptionist/schedule_booking.php';
     }
 
-    public function viewReservations(): void
+    public function viewReservations()
     {
         $date = $_GET['date'] ?? date('Y-m-d');
         $reservations = $this->reservationsModel->findByDate($date);
-        require_once __DIR__ . '/../Views/Receptionist/view_reservations.php';
+        require __DIR__ . '/../Views/Receptionist/view_reservations.php';
     }
 
-    public function updateReservationStatus(): void
+    public function updateReservationStatus()
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /SIB/PROJECT-APLIN/router.php?route=receptionist');
-            exit;
-        }
-
         $reservationId = (int)($_POST['reservation_id'] ?? 0);
         $status = $_POST['status'] ?? '';
 
         if ($reservationId > 0 && !empty($status)) {
             $this->reservationsModel->update($reservationId, ['status' => $status]);
+            $_SESSION['success'] = 'Reservation status updated';
         }
 
-        header('Location: /SIB/PROJECT-APLIN/router.php?route=receptionist&success=Reservation%20status%20updated');
+        header('Location: index.php?page=receptionist');
         exit;
     }
 
-    public function viewOrders(): void
+    public function viewOrders()
     {
         $orders = $this->ordersModel->findAll();
-        require_once __DIR__ . '/../Views/Receptionist/view_orders.php';
+        require __DIR__ . '/../Views/Receptionist/view_orders.php';
     }
 
-    public function checkIn(): void
+    public function checkIn()
     {
-        require_once __DIR__ . '/../Views/Receptionist/check_in.php';
+        require __DIR__ . '/../Views/Receptionist/check_in.php';
     }
 }

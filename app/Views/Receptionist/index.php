@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -16,11 +16,11 @@
         <div style="margin-bottom: 20px;">
             <h2>Menu Receptionist</h2>
             <ul style="list-style: none; padding: 0;">
-                <li><a href="<?php echo url('receptionist/schedule'); ?>" style="display: inline-block; padding: 10px 15px; background: #f0f0f0; margin: 5px; text-decoration: none;">Jadwal Booking</a></li>
-                <li><a href="<?php echo url('receptionist/check-in'); ?>" style="display: inline-block; padding: 10px 15px; background: #f0f0f0; margin: 5px; text-decoration: none;">Check-In Pelanggan</a></li>
-                <li><a href="<?php echo url('receptionist/reservations'); ?>" style="display: inline-block; padding: 10px 15px; background: #f0f0f0; margin: 5px; text-decoration: none;">Lihat Reservasi</a></li>
-                <li><a href="<?php echo url('receptionist/orders'); ?>" style="display: inline-block; padding: 10px 15px; background: #f0f0f0; margin: 5px; text-decoration: none;">Lihat Pesanan</a></li>
-                <li><a href="<?php echo url('auth/logout'); ?>" style="display: inline-block; padding: 10px 15px; background: #f0f0f0; margin: 5px; text-decoration: none;">Logout</a></li>
+                <li><a href="index.php?page=receptionist&action=scheduleBooking; ?>" style="display: inline-block; padding: 10px 15px; background: #f0f0f0; margin: 5px; text-decoration: none;">Jadwal Booking</a></li>
+                <li><a href="index.php?page=receptionist&action=checkIn; ?>" style="display: inline-block; padding: 10px 15px; background: #f0f0f0; margin: 5px; text-decoration: none;">Check-In Pelanggan</a></li>
+                <li><a href="index.php?page=receptionist&action=viewReservations; ?>" style="display: inline-block; padding: 10px 15px; background: #f0f0f0; margin: 5px; text-decoration: none;">Lihat Reservasi</a></li>
+                <li><a href="index.php?page=receptionist&action=viewOrders; ?>" style="display: inline-block; padding: 10px 15px; background: #f0f0f0; margin: 5px; text-decoration: none;">Lihat Pesanan</a></li>
+                <li><a href="index.php?page=login&action=logout; ?>" style="display: inline-block; padding: 10px 15px; background: #f0f0f0; margin: 5px; text-decoration: none;">Logout</a></li>
             </ul>
         </div>
 
@@ -58,3 +58,5 @@
     </div>
 </body>
 </html>
+
+

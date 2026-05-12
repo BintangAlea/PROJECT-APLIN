@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -21,23 +21,23 @@
                 </div>
 
                 <!-- Error Message -->
-                <?php if (isset($error) && $error): ?>
+                <?php if (isset($_SESSION['error']) && $_SESSION['error']): ?>
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <?php echo htmlspecialchars($error); ?>
+                        <?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 <?php endif; ?>
 
                 <!-- Success Message -->
-                <?php if (isset($_GET['success'])): ?>
+                <?php if (isset($_SESSION['success']) && $_SESSION['success']): ?>
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <?php echo htmlspecialchars($_GET['success']); ?>
+                        <?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 <?php endif; ?>
 
                 <!-- Login Form -->
-                <form method="POST" action="<?php echo url('auth/login'); ?>">
+                <form method="POST" action="index.php?page=login&action=login">>
                     <div class="mb-3">
                         <label for="email" class="form-label">Email Address</label>
                         <input 
@@ -75,12 +75,12 @@
                 <!-- Footer Links -->
                 <div class="text-center">
                     <p class="text-muted small mb-2">Don't have an account?</p>
-                    <a href="<?php echo url('auth/register'); ?>" class="btn btn-link text-merish text-decoration-none fw-bold">
+                    <a href="index.php?page=register" class="btn btn-link text-merish text-decoration-none fw-bold">
                         Create an account
                     </a>
                     <br>
-                    <a href="<?php echo url(''); ?>" class="btn btn-link text-muted text-decoration-none small">
-                        ← Back to Home
+                    <a href="index.php" class="btn btn-link text-muted text-decoration-none small">
+                        â† Back to Home
                     </a>
                 </div>
             </div>
@@ -92,3 +92,5 @@
     <script src="/SIB/PROJECT-APLIN/assets/js/script.js"></script>
 </body>
 </html>
+
+

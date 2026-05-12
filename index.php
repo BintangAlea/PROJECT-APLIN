@@ -1,94 +1,69 @@
 <?php
-
-/**
- * index.php — Front Controller
- *
- * All HTTP requests are routed through this file.
- * Make sure your web server (Apache/Nginx) is configured to rewrite
- * all requests to this file.
- *
- * Apache example (.htaccess):
- *   RewriteEngine On
- *   RewriteCond %{REQUEST_FILENAME} !-f
- *   RewriteRule ^(.*)$ index.php [QSA,L]
- */
-
 require_once __DIR__ . '/bootstrap.php';
 
-use App\Core\Session;
-use App\Core\Auth;
+use App\Controllers\Home;
+use App\Controllers\AuthController;
+use App\Controllers\AdminController;
+use App\Controllers\CustomerController;
+use App\Controllers\ReceptionistController;
+use App\Controllers\BeauticianController;
+use App\Controllers\BaristaController;
+use App\Controllers\QrOrder;
+use App\Controllers\UnifiedBilling;
 
-Session::start();
+$page = $_GET['page'] ?? 'home';
+$action = $_GET['action'] ?? 'index';
 
-// Determine the URI path, stripping query string and leading slash
-$uri = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH), '/');
+// Determine which controller to use based on page
+$controller = match($page) {
+    'login'       => new AuthController(),
+    'register'    => new AuthController(),
+    'home'        => new Home(),
+    'admin'       => new AdminController(),
+    'customer'    => new CustomerController(),
+    'receptionist' => new ReceptionistController(),
+    'beautician'  => new BeauticianController(),
+    'barista'     => new BaristaController(),
+    'qrorder'     => new QrOrder(),
+    'billing'     => new UnifiedBilling(),
+    default       => new Home(),
+};
 
-// Remove project path from URI if present
-if (strpos($uri, 'SIB/PROJECT-APLIN/') === 0) {
-    $uri = substr($uri, strlen('SIB/PROJECT-APLIN/'));
+// Route POST actions to appropriate controller methods
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if ($page === 'login' && $action === 'login') {
+        $controller->login();
+        exit;
+    } else if ($page === 'login' && $action === 'logout') {
+        $controller->logout();
+        exit;
+    } else if ($page === 'register' && $action === 'register') {
+        $controller->register();
+        exit;
+    } else if ($action === 'store') {
+        $method = 'store';
+        if (method_exists($controller, $method)) {
+            $controller->$method();
+            exit;
+        }
+    } else if ($action === 'update') {
+        $method = 'update';
+        if (method_exists($controller, $method)) {
+            $controller->$method();
+            exit;
+        }
+    } else if ($action === 'delete') {
+        $method = 'delete';
+        if (method_exists($controller, $method)) {
+            $controller->$method();
+            exit;
+        }
+    }
 }
 
-// Fallback: check if route is passed via query string (for servers without mod_rewrite)
-if (empty($uri) && isset($_GET['route'])) {
-    $uri = $_GET['route'];
-}
-
-$segments = array_filter(explode('/', $uri));
-$segments = array_values($segments); // Re-index array
-
-// Simple route table
-$routes = [
-    // Public routes
-    ''                          => [\App\Controllers\Home::class,             'index'],
-    'home'                      => [\App\Controllers\Home::class,             'index'],
-    'login'                     => [\App\Controllers\AuthController::class,   'loginForm'],
-    'register'                  => [\App\Controllers\AuthController::class,   'registerForm'],
-    'auth/login'                => [\App\Controllers\AuthController::class,   'login'],
-    'auth/register'             => [\App\Controllers\AuthController::class,   'register'],
-    'auth/logout'               => [\App\Controllers\AuthController::class,   'logout'],
-
-    // Customer routes
-    'customer'                  => [\App\Controllers\CustomerController::class,    'index'],
-    'customer/appointment'      => [\App\Controllers\CustomerController::class,    'appointment'],
-    'customer/book-appointment' => [\App\Controllers\CustomerController::class,    'bookAppointment'],
-    'customer/order-menu'       => [\App\Controllers\CustomerController::class,    'orderMenu'],
-    'customer/create-order'     => [\App\Controllers\CustomerController::class,    'createOrder'],
-
-    // Admin routes
-    'admin'                     => [\App\Controllers\AdminController::class,       'index'],
-    'admin/manage-users'        => [\App\Controllers\AdminController::class,       'manageUsers'],
-    'admin/manage-reservations' => [\App\Controllers\AdminController::class,       'manageReservations'],
-    'admin/manage-services'     => [\App\Controllers\AdminController::class,       'manageServices'],
-    'admin/manage-menus'        => [\App\Controllers\AdminController::class,       'manageMenus'],
-    'admin/manage-staff'        => [\App\Controllers\AdminController::class,       'manageStaff'],
-    'admin/reports'             => [\App\Controllers\AdminController::class,       'reports'],
-    'admin/settings'            => [\App\Controllers\AdminController::class,       'settings'],
-
-    // Receptionist routes
-    'receptionist'              => [\App\Controllers\ReceptionistController::class, 'index'],
-    'receptionist/schedule'     => [\App\Controllers\ReceptionistController::class, 'scheduleBooking'],
-    'receptionist/reservations' => [\App\Controllers\ReceptionistController::class, 'viewReservations'],
-    'receptionist/update-reservation' => [\App\Controllers\ReceptionistController::class, 'updateReservationStatus'],
-    'receptionist/orders'       => [\App\Controllers\ReceptionistController::class, 'viewOrders'],
-    'receptionist/check-in'     => [\App\Controllers\ReceptionistController::class, 'checkIn'],
-
-    // Beautician routes
-    'beautician'                => [\App\Controllers\BeauticianController::class,  'index'],
-    'beautician/today'          => [\App\Controllers\BeauticianController::class,  'todaySchedule'],
-    'beautician/upcoming'       => [\App\Controllers\BeauticianController::class,  'upcomingSchedule'],
-    'beautician/update-status'  => [\App\Controllers\BeauticianController::class,  'updateReservationStatus'],
-
-    // Barista routes
-    'barista'                   => [\App\Controllers\BaristaController::class,     'index'],
-    'barista/update-order'      => [\App\Controllers\BaristaController::class,     'updateOrderStatus'],
-    'barista/history'           => [\App\Controllers\BaristaController::class,     'orderHistory'],
-];
-
-if (array_key_exists($uri, $routes)) {
-    [$controllerClass, $method] = $routes[$uri];
-    $controller = new $controllerClass();
-    $controller->$method();
+// Call the appropriate action method
+if ($action !== 'index' && method_exists($controller, $action)) {
+    $controller->$action();
 } else {
-    http_response_code(404);
-    echo '404 – Page not found.';
+    $controller->index();
 }

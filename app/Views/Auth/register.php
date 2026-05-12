@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * app/Views/Auth/register.php
  * Registration page with Bootstrap styling
@@ -28,23 +28,23 @@
                 </div>
 
                 <!-- Error Message -->
-                <?php if (isset($error) && $error): ?>
+                <?php if (isset($_SESSION['error']) && $_SESSION['error']): ?>
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <?php echo htmlspecialchars($error); ?>
+                        <?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 <?php endif; ?>
 
                 <!-- Success Message -->
-                <?php if (isset($_GET['success'])): ?>
+                <?php if (isset($_SESSION['success']) && $_SESSION['success']): ?>
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <?php echo htmlspecialchars($_GET['success']); ?>
+                        <?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 <?php endif; ?>
 
                 <!-- Register Form -->
-                <form method="POST" action="<?php echo url('auth/register'); ?>">
+                <form method="POST" action="index.php?page=register&action=register">>
                     <div class="mb-3">
                         <label for="full_name" class="form-label">Full Name</label>
                         <input 
@@ -128,12 +128,12 @@
                 <!-- Footer Links -->
                 <div class="text-center">
                     <p class="text-muted small mb-2">Already have an account?</p>
-                    <a href="<?php echo url('auth/login'); ?>" class="btn btn-link text-merish text-decoration-none fw-bold">
+                    <a href="index.php?page=login" class="btn btn-link text-merish text-decoration-none fw-bold">
                         Sign in instead
                     </a>
                     <br>
-                    <a href="<?php echo url(''); ?>" class="btn btn-link text-muted text-decoration-none small">
-                        ← Back to Home
+                    <a href="index.php" class="btn btn-link text-muted text-decoration-none small">
+                        â† Back to Home
                     </a>
                 </div>
             </div>
@@ -145,3 +145,5 @@
     <script src="/SIB/PROJECT-APLIN/assets/js/script.js"></script>
 </body>
 </html>
+
+

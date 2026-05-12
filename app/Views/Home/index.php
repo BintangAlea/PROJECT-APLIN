@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -15,7 +15,7 @@
     <!-- HEADER / NAVIGATION -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top border-bottom">
         <div class="container-fluid px-4">
-            <a href="<?php echo url(''); ?>" class="navbar-brand fw-bold" style="color: #c97fa6; font-size: 24px;">Merish</a>
+            <a href="index.php; ?>" class="navbar-brand fw-bold" style="color: #c97fa6; font-size: 24px;">Merish</a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -23,14 +23,14 @@
             
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav mx-auto">
-                    <li class="nav-item"><a class="nav-link" href="<?php echo url(''); ?>#services">Services</a></li>
-                    <li class="nav-item"><a class="nav-link" href="<?php echo url(''); ?>#cafe">The Cafe</a></li>
-                    <li class="nav-item"><a class="nav-link" href="<?php echo url(''); ?>#stylists">Stylists</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.php; ?>#services">Services</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.php; ?>#cafe">The Cafe</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.php; ?>#stylists">Stylists</a></li>
                 </ul>
                 
                 <div class="d-flex gap-2">
-                    <a href="<?php echo url('auth/login'); ?>" class="btn btn-outline-secondary">Login / Register</a>
-                    <a href="<?php echo url('customer/appointment'); ?>" class="btn btn-merish">Book Appointment</a>
+                    <a href="index.php?page=login&action=login; ?>" class="btn btn-outline-secondary">Login / Register</a>
+                    <a href="index.php?page=customer&action=appointment; ?>" class="btn btn-merish">Book Appointment</a>
                 </div>
             </div>
         </div>
@@ -53,9 +53,9 @@
                         </p>
 
                         <div class="d-flex gap-3">
-                            <a href="<?php echo url('customer/appointment'); ?>" class="btn btn-merish btn-lg">
+                            <a href="index.php?page=customer&action=appointment; ?>" class="btn btn-merish btn-lg">
                                 Book an Appointment
-                                <span class="ms-2">→</span>
+                                <span class="ms-2">â†’</span>
                             </a>
                         </div>
                     </div>
@@ -97,7 +97,7 @@
                                 <polyline points="9 12 12 15 15 9"></polyline>
                             </svg>
                         </div>
-                        <h4 class="fw-bold mb-2 text-dark">L'ORÉAL PRO CERTIFIED</h4>
+                        <h4 class="fw-bold mb-2 text-dark">L'ORÃ‰AL PRO CERTIFIED</h4>
                         <p class="text-muted small">Official partner & training</p>
                     </div>
                 </div>
@@ -144,7 +144,7 @@
                 
                 <!-- Promo Banner -->
                 <div class="promo-banner mb-5">
-                    <span class="me-2">✨</span>
+                    <span class="me-2">âœ¨</span>
                     Get 20% Synergy Discount when combining Salon & Cafe orders!
                 </div>
             </div>
@@ -239,11 +239,11 @@
                         <div class="card-body">
                             <!-- Stars -->
                             <div class="stars mb-3">
-                                <span class="star">★</span>
-                                <span class="star">★</span>
-                                <span class="star">★</span>
-                                <span class="star">★</span>
-                                <span class="star">★</span>
+                                <span class="star">â˜…</span>
+                                <span class="star">â˜…</span>
+                                <span class="star">â˜…</span>
+                                <span class="star">â˜…</span>
+                                <span class="star">â˜…</span>
                             </div>
                             
                             <!-- Review Text (Empty) -->
@@ -263,11 +263,11 @@
                         <div class="card-body">
                             <!-- Stars -->
                             <div class="stars mb-3">
-                                <span class="star">★</span>
-                                <span class="star">★</span>
-                                <span class="star">★</span>
-                                <span class="star">★</span>
-                                <span class="star">★</span>
+                                <span class="star">â˜…</span>
+                                <span class="star">â˜…</span>
+                                <span class="star">â˜…</span>
+                                <span class="star">â˜…</span>
+                                <span class="star">â˜…</span>
                             </div>
                             
                             <!-- Review Text (Empty) -->
@@ -287,11 +287,11 @@
                         <div class="card-body">
                             <!-- Stars -->
                             <div class="stars mb-3">
-                                <span class="star">★</span>
-                                <span class="star">★</span>
-                                <span class="star">★</span>
-                                <span class="star">★</span>
-                                <span class="star">★</span>
+                                <span class="star">â˜…</span>
+                                <span class="star">â˜…</span>
+                                <span class="star">â˜…</span>
+                                <span class="star">â˜…</span>
+                                <span class="star">â˜…</span>
                             </div>
                             
                             <!-- Review Text (Empty) -->
@@ -349,11 +349,11 @@
                         
                         <!-- Stars -->
                         <div class="stars justify-content-center">
-                            <span class="star">★</span>
-                            <span class="star">★</span>
-                            <span class="star">★</span>
-                            <span class="star">★</span>
-                            <span class="star">★</span>
+                            <span class="star">â˜…</span>
+                            <span class="star">â˜…</span>
+                            <span class="star">â˜…</span>
+                            <span class="star">â˜…</span>
+                            <span class="star">â˜…</span>
                         </div>
                     </div>
                 </div>
@@ -379,11 +379,11 @@
                         
                         <!-- Stars -->
                         <div class="stars justify-content-center">
-                            <span class="star">★</span>
-                            <span class="star">★</span>
-                            <span class="star">★</span>
-                            <span class="star">★</span>
-                            <span class="star">★</span>
+                            <span class="star">â˜…</span>
+                            <span class="star">â˜…</span>
+                            <span class="star">â˜…</span>
+                            <span class="star">â˜…</span>
+                            <span class="star">â˜…</span>
                         </div>
                     </div>
                 </div>
@@ -409,11 +409,11 @@
                         
                         <!-- Stars -->
                         <div class="stars justify-content-center">
-                            <span class="star">★</span>
-                            <span class="star">★</span>
-                            <span class="star">★</span>
-                            <span class="star">★</span>
-                            <span class="star">★</span>
+                            <span class="star">â˜…</span>
+                            <span class="star">â˜…</span>
+                            <span class="star">â˜…</span>
+                            <span class="star">â˜…</span>
+                            <span class="star">â˜…</span>
                         </div>
                     </div>
                 </div>
@@ -456,7 +456,7 @@
             <hr class="border-secondary">
 
             <div class="d-flex justify-content-between py-3 text-muted small">
-                <div>© 2026 Merish Salon & Cafe. All rights reserved.</div>
+                <div>Â© 2026 Merish Salon & Cafe. All rights reserved.</div>
                 <div>
                     <a href="#" class="text-muted me-3">Staff Login</a>
                     <a href="#" class="text-muted">Privacy Policy</a>
@@ -470,3 +470,5 @@
     <script src="/SIB/PROJECT-APLIN/assets/js/script.js"></script>
 </body>
 </html>
+
+

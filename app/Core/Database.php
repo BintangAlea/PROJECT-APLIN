@@ -7,46 +7,30 @@ use PDOException;
 
 class Database
 {
-    private static ?Database $instance = null;
-    private PDO $pdo;
+    private static ?PDO $connection = null;
 
-    private function __construct()
+    public static function getConnection(): PDO
     {
-        $host    = $_ENV['DB_HOST']    ?? 'localhost';
-        $dbName  = $_ENV['DB_NAME']    ?? 'db_merish';
-        $user    = $_ENV['DB_USER']    ?? 'root';
-        $pass    = $_ENV['DB_PASS']    ?? '';
-        $charset = $_ENV['DB_CHARSET'] ?? 'utf8mb4';
+        if (self::$connection !== null) {
+            return self::$connection;
+        }
 
-        $dsn = "mysql:host={$host};dbname={$dbName};charset={$charset}";
+        $host = 'localhost';
+        $dbName = 'db_merish';
+        $user = 'root';
+        $pass = '';
+        $dsn = "mysql:host={$host};port=3307;dbname={$dbName};charset=utf8mb4";
 
         try {
-            $this->pdo = new PDO($dsn, $user, $pass, [
-                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            self::$connection = new PDO($dsn, $user, $pass, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES   => false,
+                PDO::ATTR_EMULATE_PREPARES => false,
             ]);
         } catch (PDOException $e) {
-            error_log('Database connection failed: ' . $e->getMessage());
-            die('A database error occurred. Please try again later.');
-        }
-    }
-
-    public static function getInstance(): Database
-    {
-        if (self::$instance === null) {
-            self::$instance = new self();
+            die('Koneksi database gagal: ' . $e->getMessage());
         }
 
-        return self::$instance;
+        return self::$connection;
     }
-
-    public function getConnection(): PDO
-    {
-        return $this->pdo;
-    }
-
-    // Prevent cloning and unserialization of the singleton
-    private function __clone() {}
-    public function __wakeup() {}
 }

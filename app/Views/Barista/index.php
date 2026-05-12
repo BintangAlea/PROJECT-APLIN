@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -16,8 +16,8 @@
         <div style="margin-bottom: 20px;">
             <h2>Menu Barista</h2>
             <ul style="list-style: none; padding: 0;">
-                <li><a href="<?php echo url('barista/history'); ?>" style="display: inline-block; padding: 10px 15px; background: #f0f0f0; margin: 5px; text-decoration: none;">Riwayat Pesanan</a></li>
-                <li><a href="<?php echo url('auth/logout'); ?>" style="display: inline-block; padding: 10px 15px; background: #f0f0f0; margin: 5px; text-decoration: none;">Logout</a></li>
+                <li><a href="index.php?page=barista&action=orderHistory; ?>" style="display: inline-block; padding: 10px 15px; background: #f0f0f0; margin: 5px; text-decoration: none;">Riwayat Pesanan</a></li>
+                <li><a href="index.php?page=login&action=logout; ?>" style="display: inline-block; padding: 10px 15px; background: #f0f0f0; margin: 5px; text-decoration: none;">Logout</a></li>
             </ul>
         </div>
 
@@ -64,7 +64,7 @@
         function updateOrderStatus(orderId, newStatus) {
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = '<?php echo url('barista/update-order'); ?>';
+            form.action = 'index.php?page=barista&action=updateOrderStatus; ?>';
             
             const idField = document.createElement('input');
             idField.type = 'hidden';
@@ -84,3 +84,5 @@
     </script>
 </body>
 </html>
+
+

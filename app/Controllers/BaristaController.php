@@ -2,7 +2,6 @@
 
 namespace App\Controllers;
 
-use App\Core\Auth;
 use App\Models\OrdersModel;
 
 class BaristaController
@@ -11,38 +10,40 @@ class BaristaController
 
     public function __construct()
     {
-        Auth::requireRole('barista');
+        // Check role
+        if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'barista') {
+            header('Location: index.php?page=login');
+            exit;
+        }
+        
         $this->ordersModel = new OrdersModel();
     }
 
-    public function index(): void
+    public function index()
     {
         $orders = $this->ordersModel->findPendingOrInProgress();
-        require_once __DIR__ . '/../Views/Barista/index.php';
+        require __DIR__ . '/../Views/Barista/index.php';
     }
 
-    public function updateOrderStatus(): void
+    public function updateOrderStatus()
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /SIB/PROJECT-APLIN/router.php?route=barista');
-            exit;
-        }
-
         $orderId = (int)($_POST['order_id'] ?? 0);
         $status = $_POST['status'] ?? '';
 
         if ($orderId > 0 && !empty($status)) {
             $this->ordersModel->update($orderId, ['status' => $status]);
-            header('Location: /SIB/PROJECT-APLIN/router.php?route=barista&success=Order%20status%20updated');
+            $_SESSION['success'] = 'Order status updated';
+            header('Location: index.php?page=barista');
         } else {
-            header('Location: /SIB/PROJECT-APLIN/router.php?route=barista&error=Invalid%20data');
+            $_SESSION['error'] = 'Invalid data';
+            header('Location: index.php?page=barista');
         }
         exit;
     }
 
-    public function orderHistory(): void
+    public function orderHistory()
     {
         $orders = $this->ordersModel->findAll();
-        require_once __DIR__ . '/../Views/Barista/order_history.php';
+        require __DIR__ . '/../Views/Barista/order_history.php';
     }
 }

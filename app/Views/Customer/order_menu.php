@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -13,7 +13,7 @@
             <p style="color: red;"><?php echo htmlspecialchars($_GET['error']); ?></p>
         <?php endif; ?>
 
-        <form method="POST" action="<?php echo url('customer/create-order'); ?>">
+        <form method="POST" action="index.php?page=customer&action=createOrder">
             <div style="margin-bottom: 15px;">
                 <label for="menu_id">Menu:</label>
                 <select id="menu_id" name="menu_id" required style="width: 100%; padding: 5px;">
@@ -42,8 +42,10 @@
             </div>
 
             <button type="submit" style="padding: 10px 20px; cursor: pointer;">Pesan</button>
-            <a href="<?php echo url('customer'); ?>" style="margin-left: 10px; padding: 10px 20px; background: #f0f0f0; text-decoration: none;">Kembali</a>
+            <a href="index.php?page=customer" style="margin-left: 10px; padding: 10px 20px; background: #f0f0f0; text-decoration: none;">Kembali</a>
         </form>
     </div>
 </body>
 </html>
+
+

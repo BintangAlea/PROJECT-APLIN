@@ -1,1 +1,3 @@
-<?php // QR Order view ?>
+﻿<?php // QR Order view ?>
+
+

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -8,7 +8,7 @@
 <body>
     <div style="max-width: 1200px; margin: 20px auto; padding: 20px;">
         <h1>Riwayat Pesanan</h1>
-        <a href="<?php echo url('barista'); ?>" style="padding: 10px 15px; background: #f0f0f0; text-decoration: none;">Kembali ke Dashboard</a>
+        <a href="index.php?page=barista; ?>" style="padding: 10px 15px; background: #f0f0f0; text-decoration: none;">Kembali ke Dashboard</a>
 
         <table border="1" style="width: 100%; margin-top: 20px; border-collapse: collapse;">
             <thead>
@@ -39,3 +39,5 @@
     </div>
 </body>
 </html>
+
+

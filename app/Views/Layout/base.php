@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -14,25 +14,35 @@
 <body>
     <!-- HEADER / NAVIGATION -->
     <header>
-        <a href="<?php echo url(''); ?>" class="logo">Merish</a>
+        <a href="index.php" class="logo">Merish</a>
         
         <nav>
-            <a href="<?php echo url(''); ?>#services">Services</a>
-            <a href="<?php echo url(''); ?>#cafe">The Cafe</a>
-            <a href="<?php echo url(''); ?>#stylists">Stylists</a>
+            <a href="index.php#services">Services</a>
+            <a href="index.php#cafe">The Cafe</a>
+            <a href="index.php#stylists">Stylists</a>
         </nav>
 
         <div class="nav-right">
             <div class="login-register">
-                <?php if (is_authenticated()): ?>
+                <?php if (isset($_SESSION['user_id'])): ?>
                     <span style="font-size: 14px; color: var(--text-light);">
-                        Hi, <?php echo current_user()['full_name'] ?? 'User'; ?>
+                        Hi, <?php echo $_SESSION['full_name'] ?? 'User'; ?>
                     </span>
-                    <a href="<?php echo url('auth/logout'); ?>" class="btn btn-login">Logout</a>
-                    <a href="<?php echo url(get_dashboard_route()); ?>" class="btn btn-primary">Dashboard</a>
+                    <a href="index.php?page=login&action=logout" class="btn btn-login">Logout</a>
+                    <?php
+                        $dashboardPage = match($_SESSION['role'] ?? '') {
+                            'admin' => 'admin',
+                            'receptionist' => 'receptionist',
+                            'barista' => 'barista',
+                            'beautician' => 'beautician',
+                            'customer' => 'customer',
+                            default => 'home',
+                        };
+                    ?>
+                    <a href="index.php?page=<?php echo $dashboardPage; ?>" class="btn btn-primary">Dashboard</a>
                 <?php else: ?>
-                    <a href="<?php echo url('auth/login'); ?>" class="btn btn-login">Login / Register</a>
-                    <a href="<?php echo url('customer/appointment'); ?>" class="btn btn-primary">Book Appointment</a>
+                    <a href="index.php?page=login&action=login" class="btn btn-login">Login / Register</a>
+                    <a href="index.php?page=customer&action=appointment" class="btn btn-primary">Book Appointment</a>
                 <?php endif; ?>
             </div>
         </div>
@@ -54,10 +64,10 @@
                 <div class="footer-section">
                     <h4>Quick Links</h4>
                     <ul>
-                        <li><a href="<?php echo url(''); ?>">Home</a></li>
-                        <li><a href="<?php echo url(''); ?>#services">Services</a></li>
-                        <li><a href="<?php echo url(''); ?>#cafe">The Cafe</a></li>
-                        <li><a href="<?php echo url(''); ?>#stylists">Stylists</a></li>
+                        <li><a href="index.php; ?>">Home</a></li>
+                        <li><a href="index.php; ?>#services">Services</a></li>
+                        <li><a href="index.php; ?>#cafe">The Cafe</a></li>
+                        <li><a href="index.php; ?>#stylists">Stylists</a></li>
                     </ul>
                 </div>
                 <div class="footer-section">
@@ -88,3 +98,5 @@
     <?php endif; ?>
 </body>
 </html>
+
+

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -8,7 +8,7 @@
 <body>
     <div style="max-width: 600px; margin: 50px auto; padding: 20px; border: 1px solid #ccc;">
         <h1>Check-In Pelanggan</h1>
-        <a href="<?php echo url('receptionist'); ?>" style="display: inline-block; padding: 10px 15px; background: #f0f0f0; margin-bottom: 20px; text-decoration: none;">Kembali</a>
+        <a href="index.php?page=receptionist; ?>" style="display: inline-block; padding: 10px 15px; background: #f0f0f0; margin-bottom: 20px; text-decoration: none;">Kembali</a>
 
         <form method="POST">
             <div style="margin-bottom: 15px;">
@@ -22,3 +22,5 @@
     </div>
 </body>
 </html>
+
+
