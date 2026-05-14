@@ -1,0 +1,875 @@
+/* ============================================
+   MERISH - Bootstrap 5.3.0 Customization
+   ============================================ */
+
+/* ROOT VARIABLES */
+:root {
+    --primary-color: #c97fa6;
+    --primary-dark: #b06b8f;
+    --secondary-color: #f5f3f0;
+    --text-dark: #333333;
+    --text-light: #666666;
+    --border-light: #e0e0e0;
+    --white: #ffffff;
+}
+
+@font-face {
+    font-family: 'Brittany Signature';
+    src: url('/SIB/PROJECT-APLIN/assets/fonts/BrittanySignature.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* ============================================
+   GLOBAL BODY & TYPOGRAPHY
+   ============================================ */
+
+body {
+    font-family: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    color: var(--text-dark);
+}
+
+/* Headings use Playfair Display */
+h1,h2,h3,h4,h5,h6, .navbar-brand {
+    font-family: 'Playfair Display', serif;
+}
+
+/* Subtitles / display script */
+.subtitle, .section-subtitle, .lead {
+    font-family: 'Brittany Signature', 'Brush Script MT', cursive;
+}
+
+/* Body / content */
+p, .text-muted, .testimonial-text, .card-text {
+    font-family: 'Montserrat', sans-serif;
+}
+
+/* ============================================
+   CUSTOM BUTTON STYLING
+   ============================================ */
+
+.btn-merish {
+    background-color: #c97fa6;
+    border-color: #c97fa6;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-merish:hover,
+.btn-merish:focus {
+    background-color: #b06b8f;
+    border-color: #b06b8f;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(201, 127, 166, 0.3);
+}
+
+.btn-merish:active,
+.btn-merish.active {
+    background-color: #9e5a78;
+    border-color: #9e5a78;
+    transform: translateY(0);
+}
+
+/* ============================================
+   TEXT COLOR UTILITIES
+   ============================================ */
+
+.text-merish {
+    color: #c97fa6 !important;
+}
+
+a.text-merish:hover,
+a.text-merish:focus {
+    color: #b06b8f !important;
+}
+
+/* ============================================
+   HERO SECTION
+   ============================================ */
+
+.hero-section {
+    min-height: 100vh;
+    background: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.15)),
+                url('../images/hero-bg.jpg') center/cover no-repeat;
+    background-color: #e8d7d7;
+}
+
+.hero-image-section {
+    background: url('../images/hero-bg.jpg') center/cover no-repeat;
+}
+
+.hero-content h1 {
+    font-weight: 700;
+    color: #333333;
+}
+
+.hero-content h1 .text-merish {
+    font-style: italic;
+    font-weight: 300;
+}
+
+.hero-content p {
+    color: #666666;
+    font-size: 1.125rem;
+    line-height: 1.8;
+}/* ============================================
+   TESTIMONIALS / CLIENT REVIEWS SECTION
+   ============================================ */
+
+.testimonials-section {
+    background-color: #3a3a3a;
+    background: linear-gradient(135deg, #3a3a3a 0%, #2d2d2d 100%);
+}
+
+.testimonial-card {
+    background-color: #4a4a4a !important;
+    padding: 32px !important;
+    border-radius: 16px !important;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.3s ease;
+}
+
+.testimonial-card:hover {
+    background-color: #515151 !important;
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3) !important;
+}
+
+.testimonial-card .card-body {
+    padding: 0 !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+}
+
+.stars {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.star {
+    font-size: 1.5rem;
+    color: #ffc107;
+    display: inline-block;
+    letter-spacing: 2px;
+}
+
+.testimonial-text {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #d0d0d0;
+    margin-bottom: 20px;
+    flex-grow: 1;
+}
+
+.testimonial-author {
+    font-size: 0.95rem;
+    color: #c97fa6;
+    font-weight: 600;
+    margin-bottom: 0 !important;
+}
+
+/* Scroll Indicator */
+.scroll-indicator {
+    position: relative;
+    width: 100%;
+    height: 4px;
+    background-color: #555555;
+    border-radius: 2px;
+    margin-top: 15px;
+    overflow: hidden;
+}
+
+.scroll-track {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: #555555;
+    border-radius: 2px;
+}
+
+.scroll-thumb {
+    height: 100%;
+    width: 25%;
+    background-color: #c97fa6;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+    cursor: grab;
+}
+
+.scroll-thumb:active {
+    cursor: grabbing;
+}
+
+/* ============================================
+   TOP PERFORMERS SECTION
+   ============================================ */
+
+.top-performers {
+    background-color: var(--secondary-color);
+}
+
+.performer-card {
+    padding: 30px 20px;
+    transition: all 0.3s ease;
+}
+
+.performer-card:hover {
+    transform: translateY(-8px);
+}
+
+.performer-image {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.image-placeholder {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.placeholder-svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 4px 12px rgba(201, 127, 166, 0.15));
+}
+
+.performer-card h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.performer-card .text-merish {
+    font-size: 1rem;
+    color: #c97fa6;
+}
+
+.performer-card .stars {
+    justify-content: center;
+    margin-top: 15px;
+    gap: 4px;
+}
+
+.performer-card .star {
+    font-size: 1.25rem;
+}
+
+.signature-treatments {
+    background-color: var(--secondary-color);
+}
+
+.promo-banner {
+    display: inline-block;
+    background-color: #c97fa6;
+    color: white;
+    padding: 15px 40px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+    box-shadow: 0 8px 20px rgba(201, 127, 166, 0.3);
+    transition: all 0.3s ease;
+}
+
+.promo-banner:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(201, 127, 166, 0.4);
+}
+
+/* TREATMENT CARDS */
+
+.treatment-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.treatment-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 40px rgba(201, 127, 166, 0.2);
+}
+
+.treatment-image {
+    position: relative;
+    overflow: hidden;
+}
+
+.treatment-image::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0);
+    transition: background 0.3s ease;
+}
+
+.treatment-card:hover .treatment-image::before {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.treatment-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: white;
+}
+
+.treatment-details h3 {
+    font-size: 1.125rem;
+    color: var(--text-dark);
+    line-height: 1.4;
+}
+
+.treatment-details p {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+
+.price-label {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.price-value {
+    font-size: 1.5rem;
+    color: #c97fa6;
+    font-weight: 700;
+}
+
+.treatment-btn {
+    color: var(--text-dark) !important;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border-bottom: 2px solid transparent;
+    padding-bottom: 2px !important;
+}
+
+.treatment-btn:hover {
+    color: #c97fa6 !important;
+    border-bottom-color: #c97fa6;
+}
+
+.credentials-section {
+    border-top: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.credential-badge {
+    padding: 30px 20px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    background: var(--secondary-color);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.credential-badge:hover {
+    background: #ebe9e5;
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(201, 127, 166, 0.15);
+}
+
+.credential-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 15px;
+    background: rgba(201, 127, 166, 0.1);
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.credential-icon svg {
+    width: 32px;
+    height: 32px;
+    stroke: #c97fa6;
+}
+
+.credential-badge:hover .credential-icon {
+    background: rgba(201, 127, 166, 0.2);
+    transform: scale(1.1);
+}
+
+.credential-badge h4 {
+    font-size: 0.95rem;
+    color: var(--text-dark);
+    letter-spacing: 0.5px;
+}
+
+.credential-badge p {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-bottom: 0;
+}
+
+.navbar {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.navbar-brand {
+    color: #c97fa6 !important;
+    font-size: 24px !important;
+    font-weight: 700;
+}
+
+.nav-link {
+    font-weight: 500;
+    color: var(--text-dark) !important;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover,
+.nav-link:focus {
+    color: #c97fa6 !important;
+}
+
+.navbar-toggler:focus {
+    box-shadow: 0 0 0 0.25rem rgba(201, 127, 166, 0.25);
+}
+
+/* ============================================
+   HERO SECTION
+   ============================================ */
+
+.hero-section {
+    background: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.15)),
+                url('../images/hero-bg.jpg') center/cover no-repeat;
+    background-color: #e8d7d7;
+    background-attachment: fixed;
+}
+
+.hero-image-section {
+    background: url('../images/hero-bg.jpg') center/cover no-repeat;
+    background-attachment: fixed;
+}
+
+.hero-content h1 {
+    font-weight: 700;
+    color: var(--text-dark);
+    line-height: 1.2;
+}
+
+.hero-content h1 .text-merish {
+    font-style: italic;
+    font-weight: 300;
+}
+
+.hero-content p {
+    color: var(--text-light);
+    font-size: 1.125rem;
+    line-height: 1.8;
+}
+
+/* ============================================
+   FORM ELEMENTS
+   ============================================ */
+
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+    border-color: #c97fa6;
+    box-shadow: 0 0 0 0.25rem rgba(201, 127, 166, 0.25);
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 0.875rem;
+}
+
+.form-check-input:checked {
+    background-color: #c97fa6;
+    border-color: #c97fa6;
+}
+
+/* ============================================
+   CARDS
+   ============================================ */
+
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+}
+
+.card:hover {
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+/* ============================================
+   LINKS
+   ============================================ */
+
+a {
+    color: #c97fa6;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    color: #b06b8f;
+}
+
+/* ============================================
+   ALERT COMPONENTS
+   ============================================ */
+
+.alert-danger {
+    background-color: #fee;
+    border-color: #fcc;
+    color: #c33;
+}
+
+.alert-success {
+    background-color: #efe;
+    border-color: #cfc;
+    color: #3c3;
+}
+
+.alert-info {
+    background-color: #eef;
+    border-color: #ccf;
+    color: #33c;
+}
+
+.alert-warning {
+    background-color: #ffe;
+    border-color: #ffc;
+    color: #cc3;
+}
+
+/* ============================================
+   UTILITIES
+   ============================================ */
+
+.min-vh-100 {
+    min-height: 100vh;
+}
+
+.text-muted {
+    color: var(--text-light) !important;
+}
+
+.bg-light {
+    background-color: var(--secondary-color) !important;
+}
+
+.border-bottom {
+    border-bottom-color: var(--border-light) !important;
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+
+.footer-merish {
+    background-color: var(--text-dark);
+    color: white;
+    padding: 60px 0 20px;
+    margin-top: 100px;
+}
+
+.footer-merish a {
+    color: #999999;
+    transition: color 0.3s ease;
+}
+
+.footer-merish a:hover {
+    color: #c97fa6;
+}
+
+.footer-merish h5 {
+    color: #c97fa6;
+    margin-bottom: 15px;
+}
+
+/* ============================================
+   CUSTOM SCROLLBAR
+   ============================================ */
+
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c97fa6;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #b06b8f;
+}
+
+/* ============================================
+   ANIMATIONS & TRANSITIONS
+   ============================================ */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.8s ease-out;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 768px) {
+    .hero-section {
+        background-attachment: scroll;
+    }
+    
+    .hero-image-section {
+        background-attachment: scroll;
+    }
+    
+    .hero-content h1 {
+        font-size: 2rem;
+    }
+    
+    .hero-content p {
+        font-size: 1rem;
+    }
+    
+    .navbar-brand {
+        font-size: 20px !important;
+    }
+
+    .credential-badge {
+        padding: 20px 15px;
+    }
+
+    .credential-badge h4 {
+        font-size: 0.85rem;
+    }
+
+    .credential-badge p {
+        font-size: 0.75rem;
+    }
+
+    .credential-icon {
+        width: 56px;
+        height: 56px;
+        margin-bottom: 10px;
+    }
+
+    .promo-banner {
+        padding: 12px 30px;
+        font-size: 0.9rem;
+    }
+
+    .treatment-image {
+        height: 220px !important;
+    }
+
+    .treatment-details h3 {
+        font-size: 1rem;
+    }
+
+    .price-value {
+        font-size: 1.25rem;
+    }
+
+    .testimonial-card {
+        min-height: 280px;
+        padding: 24px !important;
+    }
+
+    .testimonial-text {
+        font-size: 0.95rem;
+    }
+
+    .star {
+        font-size: 1.25rem;
+    }
+
+    .performer-image {
+        width: 180px;
+        height: 180px;
+    }
+
+    .performer-card h3 {
+        font-size: 1.25rem;
+    }
+
+    .performer-card .text-merish {
+        font-size: 0.95rem;
+    }
+
+    .performer-card .star {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-content h1 {
+        font-size: 1.5rem;
+    }
+    
+    .hero-content p {
+        font-size: 0.875rem;
+    }
+    
+    .card {
+        border-radius: 10px;
+    }
+
+    .promo-banner {
+        padding: 10px 20px;
+        font-size: 0.85rem;
+    }
+
+    .treatment-image {
+        height: 200px !important;
+    }
+
+    .treatment-details {
+        padding: 15px !important;
+    }
+
+    .treatment-details h3 {
+        font-size: 0.95rem;
+    }
+
+    .treatment-details p {
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .price-value {
+        font-size: 1.125rem;
+    }
+
+    .treatment-btn {
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+    }
+
+    .testimonial-card {
+        min-height: 260px;
+        padding: 20px !important;
+    }
+
+    .testimonial-text {
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .star {
+        font-size: 1.1rem;
+        letter-spacing: 1px;
+    }
+
+    .testimonial-author {
+        font-size: 0.9rem;
+    }
+
+    .performer-image {
+        width: 150px;
+        height: 150px;
+    }
+
+    .performer-card {
+        padding: 20px 10px;
+    }
+
+    .performer-card h3 {
+        font-size: 1.1rem;
+    }
+
+    .performer-card .text-merish {
+        font-size: 0.9rem;
+    }
+
+    .performer-card .star {
+        font-size: 1rem;
+    }
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+    .navbar,
+    .footer-merish,
+    .btn {
+        display: none;
+    }
+}
+
+
+
+
+
+
+
+
+
+/* ============================================
+   SCROLLBAR
+   ============================================ */
+
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark);
+}
+
+

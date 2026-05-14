@@ -11,7 +11,7 @@ class MenusModel
 
     public function __construct()
     {
-        $this->db = Database::getInstance()->getConnection();
+        $this->db = Database::getConnection();
     }
 
     public function findAll(): array
@@ -20,9 +20,9 @@ class MenusModel
         return $stmt->fetchAll();
     }
 
-    public function findById(int $id): array|false
+    public function findById(string $id): array|false
     {
-        $stmt = $this->db->prepare('SELECT * FROM menus WHERE id = :id');
+        $stmt = $this->db->prepare('SELECT * FROM menus WHERE menu_id = :id');
         $stmt->execute([':id' => $id]);
         return $stmt->fetch();
     }

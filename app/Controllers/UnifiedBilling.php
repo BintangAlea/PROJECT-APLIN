@@ -4,8 +4,8 @@ namespace App\Controllers;
 
 class UnifiedBilling
 {
-    public function index(): void
+    public function index()
     {
-        require_once __DIR__ . '/../Views/UnifiedBilling/index.php';
+        require __DIR__ . '/../Views/UnifiedBilling/index.php';
     }
 }

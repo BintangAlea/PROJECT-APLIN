@@ -1,24 +1,25 @@
 <?php
+session_start();
 
-/**
- * bootstrap.php
- * Registers a PSR-4-style autoloader for the App namespace.
- */
+$autoloadFile = __DIR__ . '/vendor/autoload.php';
 
-spl_autoload_register(function (string $class): void {
-    // Convert namespace separator to directory separator
-    // e.g. App\Controllers\Home  ->  app/Controllers/Home.php
-    $prefix = 'App\\';
-    $baseDir = __DIR__ . '/app/';
+if (file_exists($autoloadFile)) {
+    require_once $autoloadFile;
+} else {
+    // Fallback sederhana jika composer dump-autoload belum dijalankan.
+    spl_autoload_register(function (string $class): void {
+        $prefix = 'App\\';
+        $baseDir = __DIR__ . '/app/';
 
-    if (strncmp($prefix, $class, strlen($prefix)) !== 0) {
-        return;
-    }
+        if (strncmp($prefix, $class, strlen($prefix)) !== 0) {
+            return;
+        }
 
-    $relativeClass = substr($class, strlen($prefix));
-    $file = $baseDir . str_replace('\\', '/', $relativeClass) . '.php';
+        $relativeClass = substr($class, strlen($prefix));
+        $file = $baseDir . str_replace('\\', '/', $relativeClass) . '.php';
 
-    if (file_exists($file)) {
-        require $file;
-    }
-});
+        if (file_exists($file)) {
+            require_once $file;
+        }
+    });
+}

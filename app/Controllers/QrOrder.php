@@ -4,8 +4,8 @@ namespace App\Controllers;
 
 class QrOrder
 {
-    public function index(): void
+    public function index()
     {
-        require_once __DIR__ . '/../Views/QrOrder/index.php';
+        require __DIR__ . '/../Views/QrOrder/index.php';
     }
 }

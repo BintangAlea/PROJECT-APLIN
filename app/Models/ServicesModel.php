@@ -11,7 +11,7 @@ class ServicesModel
 
     public function __construct()
     {
-        $this->db = Database::getInstance()->getConnection();
+        $this->db = Database::getConnection();
     }
 
     public function findAll(): array
@@ -20,9 +20,9 @@ class ServicesModel
         return $stmt->fetchAll();
     }
 
-    public function findById(int $id): array|false
+    public function findById(string $id): array|false
     {
-        $stmt = $this->db->prepare('SELECT * FROM services WHERE id = :id');
+        $stmt = $this->db->prepare('SELECT * FROM services WHERE service_id = :id');
         $stmt->execute([':id' => $id]);
         return $stmt->fetch();
     }

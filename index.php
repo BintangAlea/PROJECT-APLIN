@@ -1,37 +1,69 @@
 <?php
-
-/**
- * index.php — Front Controller
- *
- * All HTTP requests are routed through this file.
- * Make sure your web server (Apache/Nginx) is configured to rewrite
- * all requests to this file.
- *
- * Apache example (.htaccess):
- *   RewriteEngine On
- *   RewriteCond %{REQUEST_FILENAME} !-f
- *   RewriteRule ^(.*)$ index.php [QSA,L]
- */
-
 require_once __DIR__ . '/bootstrap.php';
 
-// Determine the URI path, stripping query string and leading slash
-$uri = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH), '/');
+use App\Controllers\Home;
+use App\Controllers\AuthController;
+use App\Controllers\AdminController;
+use App\Controllers\CustomerController;
+use App\Controllers\ReceptionistController;
+use App\Controllers\BeauticianController;
+use App\Controllers\BaristaController;
+use App\Controllers\QrOrder;
+use App\Controllers\UnifiedBilling;
 
-// Simple route table:  uri pattern => [ControllerClass, method]
-$routes = [
-    ''               => [\App\Controllers\Home::class,          'index'],
-    'home'           => [\App\Controllers\Home::class,          'index'],
-    'login'          => [\App\Controllers\Login::class,         'index'],
-    'qr-order'       => [\App\Controllers\QrOrder::class,       'index'],
-    'unified-billing' => [\App\Controllers\UnifiedBilling::class, 'index'],
-];
+$page = $_GET['page'] ?? 'home';
+$action = $_GET['action'] ?? 'index';
 
-if (array_key_exists($uri, $routes)) {
-    [$controllerClass, $method] = $routes[$uri];
-    $controller = new $controllerClass();
-    $controller->$method();
+// Determine which controller to use based on page
+$controller = match($page) {
+    'login'       => new AuthController(),
+    'register'    => new AuthController(),
+    'home'        => new Home(),
+    'admin'       => new AdminController(),
+    'customer'    => new CustomerController(),
+    'receptionist' => new ReceptionistController(),
+    'beautician'  => new BeauticianController(),
+    'barista'     => new BaristaController(),
+    'qrorder'     => new QrOrder(),
+    'billing'     => new UnifiedBilling(),
+    default       => new Home(),
+};
+
+// Route POST actions to appropriate controller methods
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if ($page === 'login' && $action === 'login') {
+        $controller->login();
+        exit;
+    } else if ($page === 'login' && $action === 'logout') {
+        $controller->logout();
+        exit;
+    } else if ($page === 'register' && $action === 'register') {
+        $controller->register();
+        exit;
+    } else if ($action === 'store') {
+        $method = 'store';
+        if (method_exists($controller, $method)) {
+            $controller->$method();
+            exit;
+        }
+    } else if ($action === 'update') {
+        $method = 'update';
+        if (method_exists($controller, $method)) {
+            $controller->$method();
+            exit;
+        }
+    } else if ($action === 'delete') {
+        $method = 'delete';
+        if (method_exists($controller, $method)) {
+            $controller->$method();
+            exit;
+        }
+    }
+}
+
+// Call the appropriate action method
+if ($action !== 'index' && method_exists($controller, $action)) {
+    $controller->$action();
 } else {
-    http_response_code(404);
-    echo '404 – Page not found.';
+    $controller->index();
 }
