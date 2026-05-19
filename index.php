@@ -10,6 +10,8 @@ use App\Controllers\BeauticianController;
 use App\Controllers\BaristaController;
 use App\Controllers\QrOrder;
 use App\Controllers\UnifiedBilling;
+use App\Controllers\ServicesController;
+use App\Controllers\CafeController;
 
 $page = $_GET['page'] ?? 'home';
 $action = $_GET['action'] ?? 'index';
@@ -19,6 +21,8 @@ $controller = match($page) {
     'login'       => new AuthController(),
     'register'    => new AuthController(),
     'home'        => new Home(),
+    'services'    => new ServicesController(),
+    'cafe'        => new CafeController(),
     'admin'       => new AdminController(),
     'customer'    => new CustomerController(),
     'receptionist' => new ReceptionistController(),
@@ -31,21 +35,15 @@ $controller = match($page) {
 
 // Route POST actions to appropriate controller methods
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if ($page === 'login' && $action === 'login') {
+    // Allow controllers to expose methods via action names if implemented
+    if (method_exists($controller, $action)) {
+        $controller->{$action}();
+        exit;
+    }
+    // fallback for auth helpers
+    if ($page === 'login' && $action === 'login' && method_exists($controller, 'login')) {
         $controller->login();
         exit;
-    } else if ($page === 'login' && $action === 'logout') {
-        $controller->logout();
-        exit;
-    } else if ($page === 'register' && $action === 'register') {
-        $controller->register();
-        exit;
-    } else if ($action === 'bookAppointment' || $action === 'createOrder' || $action === 'store' || $action === 'update' || $action === 'delete') {
-        // Convert action to method name if it exists
-        if (method_exists($controller, $action)) {
-            $controller->$action();
-            exit;
-        }
     }
 }
 

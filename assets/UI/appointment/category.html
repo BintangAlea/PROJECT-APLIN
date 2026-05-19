@@ -1,0 +1,339 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Merish Beauty Studio - Step 1: Services</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&amp;family=Playfair+Display:wght@500;600&amp;family=Brittany+Signature&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "secondary": "#6f566e",
+                      "on-tertiary-fixed": "#1b1c1a",
+                      "surface-dim": "#e1d8d8",
+                      "on-tertiary-container": "#444441",
+                      "surface-variant": "#e9e0e0",
+                      "on-surface-variant": "#4f4446",
+                      "surface-container-low": "#fbf2f1",
+                      "on-error-container": "#93000a",
+                      "primary-fixed": "#ffd9e2",
+                      "on-primary-container": "#5d3a44",
+                      "inverse-surface": "#342f2f",
+                      "primary": "#7a545e",
+                      "on-error": "#ffffff",
+                      "surface-tint": "#7a545e",
+                      "primary-fixed-dim": "#ebbac6",
+                      "surface-container-lowest": "#ffffff",
+                      "on-primary": "#ffffff",
+                      "secondary-container": "#fad9f6",
+                      "surface-container-high": "#efe6e6",
+                      "surface-bright": "#fff8f7",
+                      "on-surface": "#1e1b1b",
+                      "on-secondary-fixed-variant": "#563f56",
+                      "primary-container": "#d4a5b1",
+                      "tertiary-container": "#b2b1ae",
+                      "surface": "#fff8f7",
+                      "error": "#ba1a1a",
+                      "tertiary": "#5e5e5c",
+                      "tertiary-fixed-dim": "#c8c6c3",
+                      "secondary-fixed-dim": "#dcbdd9",
+                      "tertiary-fixed": "#e4e2de",
+                      "error-container": "#ffdad6",
+                      "on-background": "#1e1b1b",
+                      "background": "#fff8f7",
+                      "on-tertiary": "#ffffff",
+                      "inverse-primary": "#ebbac6",
+                      "inverse-on-surface": "#f8efee",
+                      "secondary-fixed": "#fad9f6",
+                      "on-secondary-container": "#765c75",
+                      "on-secondary-fixed": "#281429",
+                      "outline": "#817476",
+                      "outline-variant": "#d3c2c5",
+                      "surface-container": "#f5eceb",
+                      "on-primary-fixed": "#2f121c",
+                      "surface-container-highest": "#e9e0e0",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary-fixed-variant": "#474744",
+                      "on-primary-fixed-variant": "#603d47"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "section-padding": "80px",
+                      "base": "8px",
+                      "container-max": "1200px",
+                      "margin-mobile": "20px",
+                      "gutter": "24px"
+              },
+              "fontFamily": {
+                      "body-lg": [
+                              "Montserrat"
+                      ],
+                      "label-caps": [
+                              "Montserrat"
+                      ],
+                      "display-lg": [
+                              "Playfair Display"
+                      ],
+                      "display-lg-mobile": [
+                              "Playfair Display"
+                      ],
+                      "body-sm": [
+                              "Montserrat"
+                      ],
+                      "accent-script": [
+                              "Brittany Signature"
+                      ],
+                      "headline-md": [
+                              "Playfair Display"
+                      ]
+              },
+              "fontSize": {
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "1",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg-mobile": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "accent-script": [
+                              "28px",
+                              {
+                                      "lineHeight": "1",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "fontWeight": "500"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style data-stitch-cursor="">*{cursor:crosshair!important}[contenteditable="true"]:focus,.cursor-text:focus{cursor:text!important}</style><style data-stitch-scroll-lock="">html,body{overflow:hidden!important}</style></head>
+<body class="bg-background text-on-background font-body-lg antialiased">
+<!-- TopAppBar (Suppressed Contextually - Booking Flow is Transactional, but requested in layout via json, showing minimal version) -->
+<header class="bg-background border-b border-outline-variant flex justify-between items-center w-full px-margin-mobile md:px-gutter max-w-container-max mx-auto h-20">
+<div class="font-display-lg text-headline-md text-primary uppercase tracking-widest">
+            Merish
+        </div>
+<div class="hidden md:flex gap-6 items-center">
+<!-- Navigation suppressed for transactional flow -->
+</div>
+<div>
+<button class="font-label-caps text-label-caps text-primary border border-primary px-4 py-2 rounded">
+                Exit Booking
+            </button>
+</div>
+</header>
+<div class="flex flex-col md:flex-row w-full max-w-container-max mx-auto h-auto min-h-[calc(100vh-80px)]">
+<!-- SideNavBar -->
+<aside class="bg-surface-container-low border-r border-outline-variant w-64 hidden md:flex flex-col py-6 sticky top-20 h-[calc(100vh-80px)] overflow-y-auto">
+<div class="px-6 mb-8">
+
+
+</div>
+<nav class="flex flex-col gap-2 w-full">
+<a class="bg-secondary-container text-on-secondary-container rounded-full mx-2 px-4 py-3 flex items-center gap-3 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: &quot;FILL&quot; 1;">category</span>
+<span class="font-body-sm text-body-sm font-semibold">Category</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-variant rounded-full mx-2 px-4 py-3 flex items-center gap-3 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">auto_awesome</span>
+<span class="font-body-sm text-body-sm">Bundle</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-variant rounded-full mx-2 px-4 py-3 flex items-center gap-3 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-body-sm text-body-sm">Schedule</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-variant rounded-full mx-2 px-4 py-3 flex items-center gap-3 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">face</span>
+<span class="font-body-sm text-body-sm">Stylist</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-variant rounded-full mx-2 px-4 py-3 flex items-center gap-3 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-body-sm text-body-sm">Checkout</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-variant rounded-full mx-2 px-4 py-3 flex items-center gap-3 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">check_circle</span>
+<span class="font-body-sm text-body-sm">Confirm</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 px-margin-mobile md:px-section-padding py-10 overflow-y-auto">
+<div class="max-w-4xl mx-auto">
+<!-- Header -->
+<div class="mb-12 text-center md:text-left">
+<h1 class="font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-4">Select Category</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Choose the primary focus for your session today.</p>
+</div>
+<!-- Category Cards (Bento-ish Grid) -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
+<!-- Card 1: Hair (Active State Example) -->
+<div class="relative group cursor-pointer rounded-xl border border-primary bg-surface-container-lowest p-1 shadow-[0_8px_30px_rgb(111,86,110,0.08)] transition-all duration-300">
+<div class="absolute top-4 right-4 z-10 bg-primary text-on-primary rounded-full p-1 flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</div>
+<div class="h-48 w-full rounded-lg overflow-hidden relative mb-4 bg-surface-variant">
+<img alt="Professional hair styling session in a brightly lit modern salon setting, focusing on long flowing hair. The mood is luxurious and calm, adhering to a minimalist editorial style with soft neutral tones." class="object-cover w-full h-full grayscale-[50%] group-hover:grayscale-0 transition-all duration-500 opacity-90 mix-blend-multiply" data-alt="Professional hair styling session in a brightly lit modern salon setting, focusing on long flowing hair. The mood is luxurious and calm, adhering to a minimalist editorial style with soft neutral tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjB8GCH52waUzdlbSAJ4aIjRbYTFtCBPEEB4qlVVWGaEX1NB6xznWS5Y8Io3n-vLMZ3o0FfB5jNjzzwxBtj6B7_Qe5AFvUaopF7by1csFo_fLG2yQwS_YAr9tJfn-pjPaR0e0NEsNxOAHJ9zkzwJHBe24z9ovcJeuVw9fZ_JKXzmfPwE3EjW-2qLoKRrurIYGPouroeJS04h8bZ4OXQoEs8S3FqiBSIqDd4PQc7F3gsyIZK7UU1VRU8r894BceFpGHI-06XEDCUD_c">
+</div>
+<div class="px-4 pb-4 text-center">
+<h3 class="font-headline-md text-headline-md text-primary mb-1">Hair</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Cuts, Color &amp; Styling</p>
+</div>
+</div>
+<!-- Card 2: Nails -->
+<div class="relative group cursor-pointer rounded-xl border border-outline-variant bg-surface-container-lowest p-1 hover:shadow-[0_8px_30px_rgb(111,86,110,0.08)] hover:border-primary-container transition-all duration-300">
+<div class="h-48 w-full rounded-lg overflow-hidden relative mb-4 bg-surface-variant">
+<img alt="Close up of a professional manicure process showing manicured hands resting on a clean surface. The image is styled with a desaturated look, highlighting the elegance of the service in a high-end studio environment." class="object-cover w-full h-full grayscale-[80%] group-hover:grayscale-[20%] transition-all duration-500 opacity-90 mix-blend-multiply" data-alt="Close up of a professional manicure process showing manicured hands resting on a clean surface. The image is styled with a desaturated look, highlighting the elegance of the service in a high-end studio environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHVq2FwsBtZlo7wSMmYmJqCVLPUoA0j6VebDMl-bfy-2oMmeZh61mjHenRPt2lNbFxNDkSbkf0mJAj9Fnu9Thh0F4wNLOIGe_9TzFV3YnNfFaYzGFOCCFCUC7GDDEfX2_pPiXp_6IM7qTS0aBNALU62jOkvfqH4Vn2DE2neTPBkA2z-M2opf0MXbzeZgKRS4HeZ4_e7jb4Cyb6RaXVjken4k2t6LnK-F50T6VWmzgOmVSW6vZTgS7BMF7XoUVv6r-MKruAGT5OCFB8">
+</div>
+<div class="px-4 pb-4 text-center">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-1">Nails</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Manicures &amp; Pedicures</p>
+</div>
+</div>
+<!-- Card 3: Lashes -->
+<div class="relative group cursor-pointer rounded-xl border border-outline-variant bg-surface-container-lowest p-1 hover:shadow-[0_8px_30px_rgb(111,86,110,0.08)] hover:border-primary-container transition-all duration-300">
+<div class="h-48 w-full rounded-lg overflow-hidden relative mb-4 bg-surface-variant">
+<img alt="Detailed macro shot of eyelash extensions application, showing a serene subject with eyes closed. The lighting is soft and flattering, emphasizing a clinical yet relaxing luxury beauty treatment." class="object-cover w-full h-full grayscale-[80%] group-hover:grayscale-[20%] transition-all duration-500 opacity-90 mix-blend-multiply" data-alt="Detailed macro shot of eyelash extensions application, showing a serene subject with eyes closed. The lighting is soft and flattering, emphasizing a clinical yet relaxing luxury beauty treatment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDCqb8w1_ReVpdR1jMQlDjcqTsEwgyhLJxoIcMMCvgcaKvST7qkNggSrfTd0urqfuMCVT0eXjjVOExJMMSRS1JBiA3pRvaMuqYcidfK-xj0KKJZoGU9MSdjQi4WydCFRMs6qiyzPgUENNzPWqN--MRFeV2LjCTjn3iZ5JILGqi3WT9-mmnfchYu2q3E9mHL_GVcA3NxNqqGB_tzOd5T1qu3NdvpOpRcXypxTryKLE0H1oBdaWMzpKqniAADr97T5qJ0ZbWdrkzJ8we9">
+</div>
+<div class="px-4 pb-4 text-center">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-1">Lashes</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Extensions &amp; Lifts</p>
+</div>
+</div>
+<!-- Card 4: Wax & Brows -->
+<div class="relative group cursor-pointer rounded-xl border border-outline-variant bg-surface-container-lowest p-1 hover:shadow-[0_8px_30px_rgb(111,86,110,0.08)] hover:border-primary-container transition-all duration-300">
+<div class="h-48 w-full rounded-lg overflow-hidden relative mb-4 bg-surface-variant">
+<img alt="Aesthetic shot focusing on beautifully shaped eyebrows in a spa setting. The image uses a muted tonal palette, conveying a sense of meticulous grooming and high-end facial care." class="object-cover w-full h-full grayscale-[80%] group-hover:grayscale-[20%] transition-all duration-500 opacity-90 mix-blend-multiply" data-alt="Aesthetic shot focusing on beautifully shaped eyebrows in a spa setting. The image uses a muted tonal palette, conveying a sense of meticulous grooming and high-end facial care." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDiyJI3709VHYI4YEwWPWcHbFMBrtzFSKEjWzksLfbeQ2hu3quAHsWXSkQlmHrQG8B4Ge9BcSzWZqc6nCmgpbr3rlTvmY4Khf1IY4biJLq1wnp_B2qoSJR2y6gzzk4LcKthaRLBHiA7JYZozpzFfg9a06hYn6cuJ5zCeEM-KPNnnGkpnYWhWPpCGqi4DEXTaKST_JGn1J3kMIk_JpkScABfq3DRjBy8_mRPiowmb5mmgU6VbsuMor1fdEUj9I3pgFbz4QhiHc47ySad">
+</div>
+<div class="px-4 pb-4 text-center">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-1">Wax &amp; Brows</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Shaping &amp; Hair Removal</p>
+</div>
+</div>
+</div>
+<!-- Service List associated with selected Category (Hair) -->
+<div class="mb-12">
+<h2 class="font-headline-md text-headline-md text-primary border-b border-outline-variant pb-4 mb-6 flex items-center justify-between">
+<span class="">Hair Services</span>
+<span class="font-label-caps text-label-caps text-secondary bg-secondary-container px-3 py-1 rounded-sm">Step 1.2</span>
+</h2>
+<div class="space-y-4">
+<!-- Service Item 1 -->
+<div class="flex items-center justify-between p-4 rounded-lg hover:bg-surface-container-low border border-transparent hover:border-outline-variant transition-colors cursor-pointer group">
+<div class="flex items-start gap-4">
+<div class="mt-1">
+<div class="w-5 h-5 rounded border border-outline flex items-center justify-center group-hover:border-primary">
+<!-- unchecked state -->
+</div>
+</div>
+<div>
+<h4 class="font-body-lg text-body-lg font-medium text-on-surface group-hover:text-primary transition-colors">Signature Blowout</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Wash, scalp massage, and our signature voluminous styling.</p>
+</div>
+</div>
+<div class="text-right">
+<div class="font-body-lg text-body-lg font-medium text-on-surface">$65</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">45 mins</div>
+</div>
+</div>
+<!-- Service Item 2 (Selected, Promo) -->
+<div class="flex items-center justify-between p-4 rounded-lg bg-surface-container border border-primary-container transition-colors cursor-pointer group relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+<div class="flex items-start gap-4">
+<div class="mt-1">
+<div class="w-5 h-5 rounded border border-primary bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] text-on-primary">check</span>
+</div>
+</div>
+<div>
+<div class="flex items-center gap-2 mb-1">
+<h4 class="font-body-lg text-body-lg font-medium text-primary">Full Balayage &amp; Cut</h4>
+<span class="font-label-caps text-[10px] tracking-wider text-secondary bg-secondary-container px-2 py-0.5 rounded-sm">Promo Available</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Complete color transformation including toner and precision cut.</p>
+</div>
+</div>
+<div class="text-right">
+<div class="font-body-lg text-body-lg font-medium text-on-surface">$240</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">180 mins</div>
+</div>
+</div>
+<!-- Service Item 3 -->
+<div class="flex items-center justify-between p-4 rounded-lg hover:bg-surface-container-low border border-transparent hover:border-outline-variant transition-colors cursor-pointer group">
+<div class="flex items-start gap-4">
+<div class="mt-1">
+<div class="w-5 h-5 rounded border border-outline flex items-center justify-center group-hover:border-primary">
+</div>
+</div>
+<div>
+<h4 class="font-body-lg text-body-lg font-medium text-on-surface group-hover:text-primary transition-colors">Women's Precision Cut</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Detailed consultation, wash, cut, and finishing style.</p>
+</div>
+</div>
+<div class="text-right">
+<div class="font-body-lg text-body-lg font-medium text-on-surface">$85</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">60 mins</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Next Action -->
+<div class="mt-12 flex justify-end border-t border-outline-variant pt-8">
+<button class="bg-secondary text-on-secondary font-label-caps text-label-caps uppercase px-10 py-4 rounded-sm hover:bg-secondary-fixed-dim hover:text-on-secondary-fixed transition-colors shadow-sm flex items-center gap-2">
+                        Next Step
+                        <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</main>
+</div>
+
+
+</body></html>

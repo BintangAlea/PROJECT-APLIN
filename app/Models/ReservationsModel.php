@@ -30,7 +30,17 @@ class ReservationsModel
     public function findByCustomerId(int $userId): array
     {
         $stmt = $this->db->prepare('
-            SELECT r.*, rd.service_id, s.service_name, u.NAME as beautician_name, rd.beautician_id
+            SELECT r.res_id,
+                   r.user_id,
+                   r.seat_id,
+                   r.STATUS AS status,
+                   r.schedule_time,
+                   DATE(r.schedule_time) AS reservation_date,
+                   TIME(r.schedule_time) AS reservation_time,
+                   rd.service_id,
+                   s.service_name,
+                   u.NAME as beautician_name,
+                   rd.beautician_id
             FROM reservations r
             LEFT JOIN reservation_details rd ON r.res_id = rd.res_id
             LEFT JOIN services s ON rd.service_id = s.service_id
@@ -64,14 +74,39 @@ class ReservationsModel
             $reservationDate = $data['reservation_date'] ?? null;
             $reservationTime = $data['reservation_time'] ?? null;
             $serviceId = $data['service_id'] ?? null;
+            $beauticianId = $data['beautician_id'] ?? null;
 
             if (!$customerId || !$reservationDate || !$reservationTime) {
                 error_log('ReservationsModel.create() - Validation failed: missing required fields');
                 return false;
             }
 
+            if (!empty($beauticianId)) {
+                $beauticianStmt = $this->db->prepare('SELECT user_id FROM staff_profiles WHERE profile_id = :profile_id OR user_id = :user_id LIMIT 1');
+                $beauticianStmt->execute([
+                    ':profile_id' => $beauticianId,
+                    ':user_id' => $beauticianId,
+                ]);
+                $beauticianRow = $beauticianStmt->fetch();
+                if ($beauticianRow && !empty($beauticianRow['user_id'])) {
+                    $beauticianId = (int) $beauticianRow['user_id'];
+                }
+            }
+
+            $seatId = $data['seat_id'] ?? null;
+            if (empty($seatId)) {
+                $seatStmt = $this->db->query('SELECT seat_id FROM seats ORDER BY seat_id ASC LIMIT 1');
+                $seatRow = $seatStmt ? $seatStmt->fetch() : false;
+                $seatId = $seatRow['seat_id'] ?? null;
+            }
+
+            if (empty($seatId)) {
+                error_log('ReservationsModel.create() - No valid seat_id available');
+                return false;
+            }
+
             // Insert into reservations
-            $scheduleTime = $reservationDate . ' ' . $reservationTime;
+            $scheduleTime = date('Y-m-d H:i:s', strtotime($reservationDate . ' ' . $reservationTime));
             
             $stmt = $this->db->prepare('
                 INSERT INTO reservations (user_id, seat_id, STATUS, schedule_time, is_dp_paid, dp_amount, payment_proof_url)
@@ -80,7 +115,7 @@ class ReservationsModel
             
             $params = [
                 ':user_id' => $customerId,
-                ':seat_id' => $data['seat_id'] ?? 'A1',
+                ':seat_id' => $seatId,
                 ':status' => $data['status'] ?? 'Pending',
                 ':schedule_time' => $scheduleTime,
                 ':is_dp_paid' => $data['is_dp_paid'] ?? 0,
@@ -114,7 +149,7 @@ class ReservationsModel
                 $detailSuccess = $stmtDetail->execute([
                     ':res_id' => $resId,
                     ':service_id' => $serviceId,
-                    ':beautician_id' => $data['beautician_id'] ?? null,
+                    ':beautician_id' => $beauticianId,
                 ]);
                 
                 if (!$detailSuccess) {
