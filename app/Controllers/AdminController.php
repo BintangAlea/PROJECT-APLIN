@@ -17,7 +17,7 @@ class AdminController
     public function __construct()
     {
         // Check role
-        if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+        if (!isset($_SESSION['role']) || strtolower($_SESSION['role']) !== 'admin') {
             header('Location: index.php?page=login');
             exit;
         }

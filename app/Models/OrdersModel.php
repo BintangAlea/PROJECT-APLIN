@@ -85,10 +85,10 @@ class OrdersModel
         );
 
         return $stmt->execute([
-            ':res_id' => $data['res_id'],
+            ':res_id' => $data['res_id'] ?? $data['reservation_id'] ?? null,
             ':menu_id' => $data['menu_id'],
-            ':qty' => $data['qty'],
-            ':status' => $data['status'] ?? 'In Progress',
+            ':qty' => $data['qty'] ?? $data['quantity'] ?? 1,
+            ':status' => $data['status'] ?? 'New',
         ]);
     }
 

@@ -15,14 +15,26 @@ class AuthController
 
     public function index()
     {
-        require __DIR__ . '/../Views/Auth/login.php';
+        $page = $_GET['page'] ?? 'login';
+        
+        if ($page === 'register') {
+            require __DIR__ . '/../Views/Auth/register.php';
+        } else {
+            require __DIR__ . '/../Views/Auth/login.php';
+        }
+    }
+
+    public function logout()
+    {
+        session_destroy();
+        header('Location: index.php?page=login');
+        exit;
     }
 
     public function login()
     {
         $email = $_POST['email'] ?? '';
         $password = $_POST['password'] ?? '';
-        $error = '';
 
         if (!$email || !$password) {
             $_SESSION['error'] = 'Email dan password harus diisi';
@@ -31,22 +43,31 @@ class AuthController
         }
 
         $user = $this->usersModel->login($email, $password);
+        
+        // Debug logging
+        error_log('Login attempt - Email: ' . $email);
+        error_log('Login result: ' . ($user ? 'Success' : 'Failed'));
+        error_log('User data: ' . print_r($user, true));
+        
         if ($user) {
-            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['user_id'] = $user['user_id'];
             $_SESSION['user_login'] = $user['email'];
-            $_SESSION['role'] = $user['role'];
-            $_SESSION['full_name'] = $user['full_name'];
+            $_SESSION['role'] = $user['ROLE'];
+            $_SESSION['full_name'] = $user['NAME'];
+
+            error_log('Session set - User ID: ' . $user['user_id'] . ', Role: ' . $user['ROLE']);
 
             // Redirect berdasarkan role
-            $redirectPage = match ($user['role']) {
-                'admin' => 'admin',
-                'receptionist' => 'receptionist',
-                'barista' => 'barista',
-                'beautician' => 'beautician',
-                'customer' => 'customer',
+            $redirectPage = match ($user['ROLE']) {
+                'Admin' => 'admin',
+                'Receptionist' => 'receptionist',
+                'Barista' => 'barista',
+                'Beautician' => 'beautician',
+                'Customer' => 'customer',
                 default => 'home',
             };
 
+            error_log('Redirecting to: ' . $redirectPage);
             header('Location: index.php?page=' . $redirectPage);
             exit;
         } else {
@@ -62,9 +83,7 @@ class AuthController
         $password = $_POST['password'] ?? '';
         $confirmPassword = $_POST['confirm_password'] ?? '';
         $fullName = $_POST['full_name'] ?? '';
-        $phone = $_POST['phone'] ?? '';
         $role = $_POST['role'] ?? 'customer';
-        $error = '';
 
         if (!$email || !$password || !$fullName) {
             $_SESSION['error'] = 'Email, password, dan nama lengkap harus diisi';
@@ -84,39 +103,28 @@ class AuthController
             exit;
         }
 
-        $result = $this->usersModel->register($email, $password, $fullName, $phone, $role);
+        $result = $this->usersModel->register($email, $password, $fullName, '', $role);
         if (!$result) {
             $_SESSION['error'] = 'Email sudah terdaftar atau terjadi kesalahan';
             header('Location: index.php?page=register');
             exit;
         }
 
-        // If beautician role, create beautician profile
+        // Jika role beautician, create staff profile
         if ($role === 'beautician') {
             $user = $this->usersModel->findByEmail($email);
             if ($user) {
-                $stmt = \App\Core\Database::getConnection()->prepare('INSERT INTO beauticians (user_id, specialization, status) VALUES (:user_id, :specialization, :status)');
+                $db = \App\Core\Database::getConnection();
+                $stmt = $db->prepare('INSERT INTO staff_profiles (user_id, specialization, work_status) VALUES (:user_id, :specialization, :status)');
                 $stmt->execute([
-                    ':user_id' => $user['id'],
-                    ':specialization' => 'General',
-                    ':status' => 'available'
+                    ':user_id' => $user['user_id'],
+                    ':specialization' => 'Hair Stylist',
+                    ':status' => 'Offline'
                 ]);
             }
         }
 
-        $_SESSION['success'] = 'Registrasi berhasil. Silakan login.';
-        header('Location: index.php?page=login');
-        exit;
-    }
-
-    public function logout()
-    {
-        unset($_SESSION['user_id']);
-        unset($_SESSION['user_login']);
-        unset($_SESSION['role']);
-        unset($_SESSION['full_name']);
-        
-        $_SESSION['success'] = 'Logout berhasil';
+        $_SESSION['success'] = 'Registrasi berhasil! Silahkan login dengan akun anda';
         header('Location: index.php?page=login');
         exit;
     }

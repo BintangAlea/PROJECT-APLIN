@@ -56,22 +56,82 @@ class ReservationsModel
         return 'RES' . $timestamp . $random;
     }
 
-    public function create(array $data): bool
+    public function create(array $data): bool|int
     {
-        $stmt = $this->db->prepare('
-            INSERT INTO reservations (user_id, seat_id, STATUS, schedule_time, is_dp_paid, dp_amount, payment_proof_url)
-            VALUES (:user_id, :seat_id, :status, :schedule_time, :is_dp_paid, :dp_amount, :payment_proof_url)
-        ');
-        
-        return $stmt->execute([
-            ':user_id' => $data['user_id'] ?? $data['customer_id'],
-            ':seat_id' => $data['seat_id'] ?? 'A1',
-            ':status' => $data['status'] ?? 'Stage 1',
-            ':schedule_time' => $data['schedule_time'] ?? $data['reservation_date'] . ' ' . ($data['reservation_time'] ?? '10:00:00'),
-            ':is_dp_paid' => $data['is_dp_paid'] ?? false,
-            ':dp_amount' => $data['dp_amount'] ?? 0,
-            ':payment_proof_url' => $data['payment_proof_url'] ?? null,
-        ]);
+        try {
+            // Validate required fields
+            $customerId = $data['customer_id'] ?? $data['user_id'] ?? null;
+            $reservationDate = $data['reservation_date'] ?? null;
+            $reservationTime = $data['reservation_time'] ?? null;
+            $serviceId = $data['service_id'] ?? null;
+
+            if (!$customerId || !$reservationDate || !$reservationTime) {
+                error_log('ReservationsModel.create() - Validation failed: missing required fields');
+                return false;
+            }
+
+            // Insert into reservations
+            $scheduleTime = $reservationDate . ' ' . $reservationTime;
+            
+            $stmt = $this->db->prepare('
+                INSERT INTO reservations (user_id, seat_id, STATUS, schedule_time, is_dp_paid, dp_amount, payment_proof_url)
+                VALUES (:user_id, :seat_id, :status, :schedule_time, :is_dp_paid, :dp_amount, :payment_proof_url)
+            ');
+            
+            $params = [
+                ':user_id' => $customerId,
+                ':seat_id' => $data['seat_id'] ?? 'A1',
+                ':status' => $data['status'] ?? 'Pending',
+                ':schedule_time' => $scheduleTime,
+                ':is_dp_paid' => $data['is_dp_paid'] ?? 0,
+                ':dp_amount' => $data['dp_amount'] ?? 0,
+                ':payment_proof_url' => $data['payment_proof_url'] ?? null,
+            ];
+            
+            $success = $stmt->execute($params);
+
+            if (!$success) {
+                $error = $stmt->errorInfo();
+                error_log('ReservationsModel.create() - Insert reservations failed: ' . print_r($error, true));
+                return false;
+            }
+
+            // Get the last inserted res_id using SQL instead of PDO method
+            $resIdStmt = $this->db->query('SELECT LAST_INSERT_ID() as id');
+            $resIdRow = $resIdStmt->fetch();
+            $resId = $resIdRow['id'] ?? 0;
+            
+            error_log('ReservationsModel.create() - LAST_INSERT_ID: ' . $resId);
+
+            // Insert into reservation_details (service_id and beautician_id)
+            if (!empty($serviceId)) {
+                error_log('ReservationsModel.create() - Inserting detail: resId=' . $resId . ', serviceId=' . $serviceId);
+                $stmtDetail = $this->db->prepare('
+                    INSERT INTO reservation_details (res_id, service_id, beautician_id)
+                    VALUES (:res_id, :service_id, :beautician_id)
+                ');
+                
+                $detailSuccess = $stmtDetail->execute([
+                    ':res_id' => $resId,
+                    ':service_id' => $serviceId,
+                    ':beautician_id' => $data['beautician_id'] ?? null,
+                ]);
+                
+                if (!$detailSuccess) {
+                    $error = $stmtDetail->errorInfo();
+                    error_log('ReservationsModel.create() - Insert detail FAILED: ' . print_r($error, true));
+                    // Don't return false - detail insert failure should not fail the whole appointment
+                } else {
+                    error_log('ReservationsModel.create() - Detail insert SUCCESS');
+                }
+            }
+
+            error_log('ReservationsModel.create() - SUCCESS: resId=' . $resId);
+            return $resId;
+        } catch (\Exception $e) {
+            error_log('ReservationsModel.create() exception: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
+            return false;
+        }
     }
 
     public function update(int $id, array $data): bool

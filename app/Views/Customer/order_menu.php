@@ -19,8 +19,8 @@
                 <select id="menu_id" name="menu_id" required style="width: 100%; padding: 5px;">
                     <option value="">-- Pilih Menu --</option>
                     <?php foreach ($menus as $menu): ?>
-                        <option value="<?php echo htmlspecialchars($menu['id']); ?>">
-                            <?php echo htmlspecialchars($menu['name']); ?> - Rp <?php echo number_format($menu['price']); ?>
+                        <option value="<?php echo htmlspecialchars($menu['menu_id']); ?>">
+                            <?php echo htmlspecialchars($menu['menu_name']); ?> - Rp <?php echo number_format($menu['price']); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>

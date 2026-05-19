@@ -19,7 +19,7 @@ class CustomerController
     public function __construct()
     {
         // Check role
-        if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'customer') {
+        if (!isset($_SESSION['role']) || strtolower($_SESSION['role']) !== 'customer') {
             header('Location: index.php?page=login');
             exit;
         }
@@ -47,6 +47,8 @@ class CustomerController
 
     public function bookAppointment()
     {
+        error_log('bookAppointment() called - POST data: ' . print_r($_POST, true));
+        
         $customerId = $_SESSION['user_id'];
         $serviceId = $_POST['service_id'] ?? '';
         $beauticiansId = $_POST['beautician_id'] ?? null;
@@ -54,36 +56,36 @@ class CustomerController
         $reservationTime = $_POST['reservation_time'] ?? '';
         $notes = $_POST['notes'] ?? '';
 
-        $error = '';
+        error_log('bookAppointment() - customerId: ' . $customerId . ', serviceId: ' . $serviceId . ', date: ' . $reservationDate);
+
         if (!$serviceId || !$reservationDate || !$reservationTime) {
             $_SESSION['error'] = 'Service, tanggal, dan waktu harus diisi';
+            error_log('bookAppointment() - validation failed');
             header('Location: index.php?page=customer&action=appointment');
             exit;
-        }
-
-        if (empty($beauticiansId)) {
-            $beauticiansId = null;
         }
 
         $service = $this->servicesModel->findById($serviceId);
+        
+        
         if (!$service) {
             $_SESSION['error'] = 'Service tidak ditemukan';
+            error_log('bookAppointment() - service not found: ' . $serviceId);
             header('Location: index.php?page=customer&action=appointment');
             exit;
         }
 
-        $resId = $this->reservationsModel->generateResId();
+        // Create reservation and get res_id
         $result = $this->reservationsModel->create([
-            'res_id' => $resId,
             'customer_id' => $customerId,
-            'beautician_id' => $beauticiansId,
             'service_id' => $serviceId,
+            'beautician_id' => $beauticiansId,
             'reservation_date' => $reservationDate,
             'reservation_time' => $reservationTime,
-            'duration_minutes' => $service['duration_minutes'] ?? 60,
-            'status' => 'Stage1',
-            'notes' => $notes,
+            'status' => 'Pending',
         ]);
+
+        error_log('bookAppointment() - create result: ' . $result);
 
         if ($result) {
             $_SESSION['success'] = 'Appointment berhasil dibuat';
@@ -104,7 +106,6 @@ class CustomerController
 
     public function createOrder()
     {
-        $customerId = $_SESSION['user_id'];
         $menuId = $_POST['menu_id'] ?? '';
         $quantity = $_POST['quantity'] ?? 1;
         $reservationId = $_POST['reservation_id'] ?? null;
@@ -124,12 +125,10 @@ class CustomerController
         }
 
         $result = $this->ordersModel->create([
-            'reservation_id' => $reservationId,
+            'res_id' => $reservationId,
             'menu_id' => $menuId,
-            'quantity' => $quantity,
-            'price_per_item' => $menu['price'],
-            'table_number' => $tableNumber,
-            'status' => 'Pending',
+            'qty' => $quantity,
+            'status' => 'New',
         ]);
 
         if ($result) {

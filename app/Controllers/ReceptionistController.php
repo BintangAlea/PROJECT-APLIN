@@ -13,7 +13,7 @@ class ReceptionistController
     public function __construct()
     {
         // Check role
-        if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'receptionist') {
+        if (!isset($_SESSION['role']) || strtolower($_SESSION['role']) !== 'receptionist') {
             header('Location: index.php?page=login');
             exit;
         }

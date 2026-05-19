@@ -15,7 +15,7 @@
     <!-- HEADER / NAVIGATION -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top border-bottom">
         <div class="container-fluid px-4">
-            <a href="index.php; ?>" class="navbar-brand fw-bold" style="color: #c97fa6; font-size: 24px;">Merish</a>
+            <a href="index.php" class="navbar-brand fw-bold" style="color: #c97fa6; font-size: 24px;">Merish</a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -23,14 +23,14 @@
             
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav mx-auto">
-                    <li class="nav-item"><a class="nav-link" href="index.php; ?>#services">Services</a></li>
-                    <li class="nav-item"><a class="nav-link" href="index.php; ?>#cafe">The Cafe</a></li>
-                    <li class="nav-item"><a class="nav-link" href="index.php; ?>#stylists">Stylists</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.php#services">Services</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.php#cafe">The Cafe</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.php#stylists">Stylists</a></li>
                 </ul>
                 
                 <div class="d-flex gap-2">
-                    <a href="index.php?page=login&action=login; ?>" class="btn btn-outline-secondary">Login / Register</a>
-                    <a href="index.php?page=customer&action=appointment; ?>" class="btn btn-merish">Book Appointment</a>
+                    <a href="index.php?page=login" class="btn btn-outline-secondary">Login / Register</a>
+                    <a href="index.php?page=customer&action=appointment" class="btn btn-merish">Book Appointment</a>
                 </div>
             </div>
         </div>
@@ -53,9 +53,9 @@
                         </p>
 
                         <div class="d-flex gap-3">
-                            <a href="index.php?page=customer&action=appointment; ?>" class="btn btn-merish btn-lg">
+                            <a href="index.php?page=customer&action=appointment" class="btn btn-merish btn-lg">
                                 Book an Appointment
-                                <span class="ms-2">â†’</span>
+                                <span class="ms-2">→</span>
                             </a>
                         </div>
                     </div>

@@ -21,7 +21,7 @@ class Database
         $user = 'root';
         $pass = '';
 
-        $ports = [3307, 3306];
+        $ports = [3306, 3307];
         $lastException = null;
 
         foreach ($ports as $port) {

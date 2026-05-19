@@ -13,7 +13,7 @@ class BeauticianController
     public function __construct()
     {
         // Check role
-        if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'beautician') {
+        if (!isset($_SESSION['role']) || strtolower($_SESSION['role']) !== 'beautician') {
             header('Location: index.php?page=login');
             exit;
         }

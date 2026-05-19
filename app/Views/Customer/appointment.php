@@ -13,14 +13,19 @@
             <p style="color: red;"><?php echo htmlspecialchars($error); ?></p>
         <?php endif; ?>
 
-        <form method="POST" action="index.php?page=customer&action=bookAppointment; ?>">
+        <?php if (isset($_SESSION['error']) && $_SESSION['error']): ?>
+            <p style="color: red;"><?php echo htmlspecialchars($_SESSION['error']); ?></p>
+            <?php unset($_SESSION['error']); ?>
+        <?php endif; ?>
+
+        <form method="POST" action="index.php?page=customer&action=bookAppointment">
             <div style="margin-bottom: 15px;">
                 <label for="service_id">Service/Treatment:</label>
                 <select id="service_id" name="service_id" required style="width: 100%; padding: 5px;">
                     <option value="">-- Pilih Service --</option>
                     <?php foreach ($services as $service): ?>
-                        <option value="<?php echo htmlspecialchars($service['id']); ?>">
-                            <?php echo htmlspecialchars($service['name']); ?> (Rp <?php echo number_format($service['base_price']); ?>)
+                        <option value="<?php echo htmlspecialchars($service['service_id']); ?>">
+                            <?php echo htmlspecialchars($service['service_name']); ?> (Rp <?php echo number_format($service['base_tariff']); ?>)
                         </option>
                     <?php endforeach; ?>
                 </select>
@@ -41,8 +46,8 @@
                 <select id="beautician_id" name="beautician_id" style="width: 100%; padding: 5px;">
                     <option value="">-- Sistem akan memilih --</option>
                     <?php foreach ($beauticians as $beautician): ?>
-                        <option value="<?php echo htmlspecialchars($beautician['id']); ?>">
-                            <?php echo htmlspecialchars($beautician['full_name']); ?> (Rating: <?php echo htmlspecialchars($beautician['rating']); ?>)
+                        <option value="<?php echo htmlspecialchars($beautician['profile_id']); ?>">
+                            <?php echo htmlspecialchars($beautician['NAME']); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
@@ -54,7 +59,7 @@
             </div>
 
             <button type="submit" style="padding: 10px 20px; cursor: pointer;">Buat Appointment</button>
-            <a href="index.php?page=customer; ?>" style="margin-left: 10px; padding: 10px 20px; background: #f0f0f0; text-decoration: none;">Kembali</a>
+            <a href="index.php?page=customer" style="margin-left: 10px; padding: 10px 20px; background: #f0f0f0; text-decoration: none;">Kembali</a>
         </form>
     </div>
 </body>

@@ -11,7 +11,7 @@ class BaristaController
     public function __construct()
     {
         // Check role
-        if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'barista') {
+        if (!isset($_SESSION['role']) || strtolower($_SESSION['role']) !== 'barista') {
             header('Location: index.php?page=login');
             exit;
         }

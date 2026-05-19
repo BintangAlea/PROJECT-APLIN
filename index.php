@@ -40,22 +40,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else if ($page === 'register' && $action === 'register') {
         $controller->register();
         exit;
-    } else if ($action === 'store') {
-        $method = 'store';
-        if (method_exists($controller, $method)) {
-            $controller->$method();
-            exit;
-        }
-    } else if ($action === 'update') {
-        $method = 'update';
-        if (method_exists($controller, $method)) {
-            $controller->$method();
-            exit;
-        }
-    } else if ($action === 'delete') {
-        $method = 'delete';
-        if (method_exists($controller, $method)) {
-            $controller->$method();
+    } else if ($action === 'bookAppointment' || $action === 'createOrder' || $action === 'store' || $action === 'update' || $action === 'delete') {
+        // Convert action to method name if it exists
+        if (method_exists($controller, $action)) {
+            $controller->$action();
             exit;
         }
     }
