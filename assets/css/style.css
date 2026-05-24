@@ -1,16 +1,21 @@
 /* ============================================
-   MERISH - Bootstrap 5.3.0 Customization
+   MERISH - Bootstrap 5.3.0 Complete Customization
    ============================================ */
 
 /* ROOT VARIABLES */
 :root {
     --primary-color: #c97fa6;
     --primary-dark: #b06b8f;
+    --primary-light: #ddb4cc;
+    --accent-gold: #d4a574;
     --secondary-color: #f5f3f0;
+    --bg-beige: #faf8f6;
+    --bg-light-cream: #f8f3f0;
     --text-dark: #333333;
     --text-light: #666666;
-    --border-light: #e0e0e0;
+    --border-light: #e8ddd8;
     --white: #ffffff;
+    --dark-overlay: rgba(0, 0, 0, 0.25);
 }
 
 @font-face {
@@ -25,19 +30,54 @@
    GLOBAL BODY & TYPOGRAPHY
    ============================================ */
 
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    scroll-behavior: smooth;
+}
+
 body {
     font-family: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     color: var(--text-dark);
+    background-color: var(--bg-beige);
+    line-height: 1.6;
 }
 
 /* Headings use Playfair Display */
-h1,h2,h3,h4,h5,h6, .navbar-brand {
+h1, h2, h3, h4, h5, h6, .navbar-brand {
     font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+}
+
+h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 700;
+}
+
+h2 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+}
+
+h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+h4, h5 {
+    font-weight: 600;
 }
 
 /* Subtitles / display script */
-.subtitle, .section-subtitle, .lead {
+.subtitle, .section-subtitle {
     font-family: 'Brittany Signature', 'Brush Script MT', cursive;
+    font-size: 1.25rem;
 }
 
 /* Body / content */
@@ -45,32 +85,95 @@ p, .text-muted, .testimonial-text, .card-text {
     font-family: 'Montserrat', sans-serif;
 }
 
+.lead {
+    font-size: 1.125rem;
+    font-weight: 400;
+}
+
 /* ============================================
-   CUSTOM BUTTON STYLING
+   CUSTOM BUTTON STYLING (Bootstrap-based)
    ============================================ */
 
+.btn {
+    border-radius: 8px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    padding: 0.65rem 1.5rem;
+    font-size: 0.95rem;
+}
+
+.btn:hover, .btn:focus, .btn:active {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(201, 127, 166, 0.3);
+}
+
+/* Primary Button - Merish Color */
 .btn-merish {
-    background-color: #c97fa6;
-    border-color: #c97fa6;
+    background: linear-gradient(135deg, #c97fa6 0%, #b06b8f 100%);
+    border-color: transparent;
     color: white;
     font-weight: 600;
-    transition: all 0.3s ease;
 }
 
-.btn-merish:hover,
-.btn-merish:focus {
-    background-color: #b06b8f;
-    border-color: #b06b8f;
+.btn-merish:hover {
+    background: linear-gradient(135deg, #b06b8f 0%, #9e5a78 100%);
+    border-color: transparent;
     color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 15px rgba(201, 127, 166, 0.3);
 }
 
-.btn-merish:active,
-.btn-merish.active {
-    background-color: #9e5a78;
-    border-color: #9e5a78;
+.btn-merish:focus, .btn-merish.focus {
+    background: linear-gradient(135deg, #b06b8f 0%, #9e5a78 100%);
+    box-shadow: 0 0 0 0.25rem rgba(201, 127, 166, 0.5);
+}
+
+.btn-merish:active, .btn-merish.active {
+    background: #9e5a78;
+    border-color: transparent;
     transform: translateY(0);
+}
+
+.btn-merish:disabled, .btn-merish.disabled {
+    background: #ddb4cc;
+    border-color: transparent;
+}
+
+/* Outline Button */
+.btn-outline-merish {
+    color: #c97fa6;
+    border: 2px solid #c97fa6;
+    background: transparent;
+}
+
+.btn-outline-merish:hover {
+    background: #c97fa6;
+    border-color: #c97fa6;
+    color: white;
+}
+
+.btn-outline-merish:focus {
+    box-shadow: 0 0 0 0.25rem rgba(201, 127, 166, 0.5);
+}
+
+/* Secondary Button */
+.btn-secondary {
+    background-color: #f5f3f0;
+    border-color: #e8ddd8;
+    color: var(--text-dark);
+    font-weight: 600;
+}
+
+.btn-secondary:hover {
+    background-color: #eae5df;
+    border-color: #d8ccc3;
+    color: var(--text-dark);
+}
+
+/* Large Button */
+.btn-lg {
+    padding: 0.875rem 2.5rem;
+    font-size: 1.1rem;
 }
 
 /* ============================================
@@ -86,59 +189,152 @@ a.text-merish:focus {
     color: #b06b8f !important;
 }
 
+.text-accent-gold {
+    color: #d4a574 !important;
+}
+
 /* ============================================
-   HERO SECTION
+   BACKGROUND COLOR UTILITIES
+   ============================================ */
+
+.bg-merish-light {
+    background-color: #faf8f6 !important;
+}
+
+.bg-merish-beige {
+    background-color: #f5f3f0 !important;
+}
+
+.bg-merish-dark {
+    background-color: #333333 !important;
+}
+
+/* ============================================
+   HERO SECTION (Bootstrap-based)
    ============================================ */
 
 .hero-section {
+    position: relative;
     min-height: 100vh;
-    background: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.15)),
-                url('../images/hero-bg.jpg') center/cover no-repeat;
-    background-color: #e8d7d7;
+    display: flex;
+    align-items: center;
+    background: linear-gradient(135deg, #faf8f6 0%, #f5f3f0 100%);
+    overflow: hidden;
 }
 
-.hero-image-section {
-    background: url('../images/hero-bg.jpg') center/cover no-repeat;
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50%;
+    height: 100%;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><defs><linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:rgba(212,165,116,0.1);stop-opacity:1" /><stop offset="100%" style="stop-color:rgba(201,127,166,0.05);stop-opacity:1" /></linearGradient></defs><rect width="1200" height="800" fill="url(%23grad1)"/></svg>') center/cover no-repeat;
+    z-index: 0;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 1;
 }
 
 .hero-content h1 {
+    color: var(--text-dark);
+    line-height: 1.15;
+    margin-bottom: 1.5rem;
     font-weight: 700;
-    color: #333333;
 }
 
-.hero-content h1 .text-merish {
+.hero-content h1 span {
     font-style: italic;
     font-weight: 300;
+    color: #c97fa6;
 }
 
 .hero-content p {
-    color: #666666;
+    color: var(--text-light);
     font-size: 1.125rem;
     line-height: 1.8;
+    margin-bottom: 2rem;
+    max-width: 550px;
+}
+
+.hero-image-section {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #e8d7d7 0%, #d9c5c0 100%);
+    border-radius: 20px;
+    overflow: hidden;
+    height: 500px;
+    box-shadow: 0 20px 60px rgba(201, 127, 166, 0.2);
+}
+
+.hero-image-section::before {
+    content: '✨';
+    position: absolute;
+    font-size: 200px;
+    opacity: 0.15;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+}
+
+.hero-image-section img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
 }/* ============================================
    TESTIMONIALS / CLIENT REVIEWS SECTION
    ============================================ */
 
 .testimonials-section {
-    background-color: #3a3a3a;
-    background: linear-gradient(135deg, #3a3a3a 0%, #2d2d2d 100%);
+    background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
+    padding: 5rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.testimonials-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 50%, rgba(201, 127, 166, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(212, 165, 116, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.testimonials-section h2 {
+    color: white;
+    position: relative;
+    z-index: 1;
 }
 
 .testimonial-card {
-    background-color: #4a4a4a !important;
-    padding: 32px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    padding: 2rem !important;
     border-radius: 16px !important;
     min-height: 300px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .testimonial-card:hover {
-    background-color: #515151 !important;
-    transform: translateY(-4px);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3) !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(201, 127, 166, 0.5) !important;
+    transform: translateY(-8px);
+    box-shadow: 0 12px 40px rgba(201, 127, 166, 0.2) !important;
 }
 
 .testimonial-card .card-body {
@@ -152,7 +348,7 @@ a.text-merish:focus {
 .stars {
     display: flex;
     gap: 8px;
-    margin-bottom: 20px;
+    margin-bottom: 1.5rem;
 }
 
 .star {
@@ -160,14 +356,16 @@ a.text-merish:focus {
     color: #ffc107;
     display: inline-block;
     letter-spacing: 2px;
+    text-shadow: 0 0 8px rgba(255, 193, 7, 0.3);
 }
 
 .testimonial-text {
     font-size: 1rem;
-    line-height: 1.6;
-    color: #d0d0d0;
-    margin-bottom: 20px;
+    line-height: 1.7;
+    color: #e0e0e0;
+    margin-bottom: 1.5rem;
     flex-grow: 1;
+    font-style: italic;
 }
 
 .testimonial-author {
@@ -182,9 +380,9 @@ a.text-merish:focus {
     position: relative;
     width: 100%;
     height: 4px;
-    background-color: #555555;
+    background-color: rgba(255, 255, 255, 0.1);
     border-radius: 2px;
-    margin-top: 15px;
+    margin-top: 2rem;
     overflow: hidden;
 }
 
@@ -192,14 +390,14 @@ a.text-merish:focus {
     position: absolute;
     width: 100%;
     height: 100%;
-    background-color: #555555;
+    background-color: rgba(255, 255, 255, 0.1);
     border-radius: 2px;
 }
 
 .scroll-thumb {
     height: 100%;
     width: 25%;
-    background-color: #c97fa6;
+    background: linear-gradient(90deg, #c97fa6, #d4a574);
     border-radius: 2px;
     transition: all 0.3s ease;
     cursor: grab;
@@ -214,24 +412,33 @@ a.text-merish:focus {
    ============================================ */
 
 .top-performers {
-    background-color: var(--secondary-color);
+    background: linear-gradient(135deg, var(--secondary-color) 0%, white 100%);
+    padding: 5rem 0;
+}
+
+.top-performers h2 {
+    color: var(--text-dark);
+}
+
+.top-performers .lead {
+    color: var(--text-light);
 }
 
 .performer-card {
-    padding: 30px 20px;
-    transition: all 0.3s ease;
+    padding: 2rem 1rem;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: center;
 }
 
 .performer-card:hover {
-    transform: translateY(-8px);
+    transform: translateY(-12px);
 }
 
 .performer-image {
     position: relative;
     width: 220px;
     height: 220px;
-    margin-left: auto;
-    margin-right: auto;
+    margin: 0 auto 1.5rem;
 }
 
 .image-placeholder {
@@ -246,23 +453,26 @@ a.text-merish:focus {
 .placeholder-svg {
     width: 100%;
     height: 100%;
-    filter: drop-shadow(0 4px 12px rgba(201, 127, 166, 0.15));
+    filter: drop-shadow(0 8px 20px rgba(201, 127, 166, 0.2));
 }
 
 .performer-card h3 {
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--text-dark);
+    margin: 1rem 0 0.5rem;
 }
 
 .performer-card .text-merish {
     font-size: 1rem;
     color: #c97fa6;
+    font-weight: 600;
+    margin-bottom: 1rem;
 }
 
 .performer-card .stars {
     justify-content: center;
-    margin-top: 15px;
+    margin-top: 1rem;
     gap: 4px;
 }
 
@@ -270,49 +480,65 @@ a.text-merish:focus {
     font-size: 1.25rem;
 }
 
+/* ============================================
+   SIGNATURE TREATMENTS / SERVICES SECTION
+   ============================================ */
+
 .signature-treatments {
-    background-color: var(--secondary-color);
+    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--bg-light-cream) 100%);
+    padding: 5rem 0;
+}
+
+.signature-treatments h2 {
+    color: var(--text-dark);
+    margin-bottom: 3rem;
 }
 
 .promo-banner {
     display: inline-block;
-    background-color: #c97fa6;
+    background: linear-gradient(135deg, #c97fa6 0%, #b06b8f 100%);
     color: white;
-    padding: 15px 40px;
+    padding: 1rem 2.5rem;
     border-radius: 50px;
     font-weight: 600;
     font-size: 1rem;
     letter-spacing: 0.5px;
-    box-shadow: 0 8px 20px rgba(201, 127, 166, 0.3);
-    transition: all 0.3s ease;
+    box-shadow: 0 8px 25px rgba(201, 127, 166, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-bottom: 3rem;
 }
 
 .promo-banner:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 30px rgba(201, 127, 166, 0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(201, 127, 166, 0.4);
 }
 
 /* TREATMENT CARDS */
-
 .treatment-card {
     background: white;
     border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     height: 100%;
     display: flex;
     flex-direction: column;
+    border: 1px solid rgba(201, 127, 166, 0.05);
 }
 
 .treatment-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 15px 40px rgba(201, 127, 166, 0.2);
+    transform: translateY(-12px);
+    box-shadow: 0 20px 50px rgba(201, 127, 166, 0.25);
 }
 
 .treatment-image {
     position: relative;
     overflow: hidden;
+    height: 280px;
+    background: linear-gradient(135deg, #e8c4d4 0%, #d4a9c3 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .treatment-image::before {
@@ -324,10 +550,27 @@ a.text-merish:focus {
     bottom: 0;
     background: rgba(0, 0, 0, 0);
     transition: background 0.3s ease;
+    z-index: 1;
 }
 
 .treatment-card:hover .treatment-image::before {
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(0, 0, 0, 0.08);
+}
+
+.treatment-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+}
+
+.treatment-image-text {
+    position: relative;
+    z-index: 2;
+    color: white;
+    font-weight: 600;
+    font-size: 1.2rem;
+    text-align: center;
 }
 
 .treatment-details {
@@ -335,18 +578,21 @@ a.text-merish:focus {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    padding: 1.75rem;
     background: white;
 }
 
 .treatment-details h3 {
-    font-size: 1.125rem;
+    font-size: 1.2rem;
     color: var(--text-dark);
     line-height: 1.4;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
 }
 
 .treatment-details p {
     font-size: 1rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
 }
 
 .price-label {
@@ -356,7 +602,7 @@ a.text-merish:focus {
 }
 
 .price-value {
-    font-size: 1.5rem;
+    font-size: 1.6rem;
     color: #c97fa6;
     font-weight: 700;
 }
@@ -368,7 +614,9 @@ a.text-merish:focus {
     text-decoration: none;
     transition: all 0.3s ease;
     border-bottom: 2px solid transparent;
-    padding-bottom: 2px !important;
+    padding-bottom: 0.25rem !important;
+    font-weight: 600;
+    display: inline-block;
 }
 
 .treatment-btn:hover {
@@ -376,55 +624,70 @@ a.text-merish:focus {
     border-bottom-color: #c97fa6;
 }
 
+/* ============================================
+   CREDENTIALS / BADGES SECTION
+   ============================================ */
+
 .credentials-section {
+    background-color: white;
     border-top: 1px solid var(--border-light);
     border-bottom: 1px solid var(--border-light);
+    padding: 4rem 0;
 }
 
 .credential-badge {
-    padding: 30px 20px;
-    border-radius: 12px;
-    transition: all 0.3s ease;
-    background: var(--secondary-color);
+    padding: 2rem 1.5rem;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--bg-beige) 0%, var(--secondary-color) 100%);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: center;
     height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    border: 1px solid rgba(201, 127, 166, 0.1);
 }
 
 .credential-badge:hover {
-    background: #ebe9e5;
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(201, 127, 166, 0.15);
+    background: linear-gradient(135deg, rgba(201, 127, 166, 0.08), rgba(201, 127, 166, 0.05));
+    transform: translateY(-8px);
+    box-shadow: 0 12px 35px rgba(201, 127, 166, 0.2);
+    border-color: rgba(201, 127, 166, 0.3);
 }
 
 .credential-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 64px;
-    height: 64px;
-    margin: 0 auto 15px;
-    background: rgba(201, 127, 166, 0.1);
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 1.5rem;
+    background: linear-gradient(135deg, rgba(201, 127, 166, 0.15), rgba(201, 127, 166, 0.08));
     border-radius: 50%;
+    border: 2px solid rgba(201, 127, 166, 0.2);
     transition: all 0.3s ease;
 }
 
 .credential-icon svg {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     stroke: #c97fa6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 .credential-badge:hover .credential-icon {
-    background: rgba(201, 127, 166, 0.2);
+    background: linear-gradient(135deg, rgba(201, 127, 166, 0.2), rgba(201, 127, 166, 0.15));
+    border-color: #c97fa6;
     transform: scale(1.1);
 }
 
 .credential-badge h4 {
     font-size: 0.95rem;
     color: var(--text-dark);
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
+    font-weight: 700;
+    margin: 1rem 0 0.5rem;
 }
 
 .credential-badge p {
@@ -433,29 +696,60 @@ a.text-merish:focus {
     margin-bottom: 0;
 }
 
+/* ============================================
+   NAVBAR / NAVIGATION (Bootstrap-based)
+   ============================================ */
+
 .navbar {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    background-color: white !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 }
 
 .navbar-brand {
     color: #c97fa6 !important;
-    font-size: 24px !important;
+    font-size: 28px !important;
     font-weight: 700;
+    letter-spacing: -1px;
+    transition: all 0.3s ease;
+}
+
+.navbar-brand:hover {
+    color: #b06b8f !important;
+    transform: scale(1.05);
 }
 
 .nav-link {
     font-weight: 500;
     color: var(--text-dark) !important;
-    transition: color 0.3s ease;
+    transition: all 0.3s ease;
+    padding: 0.5rem 1rem !important;
+    margin: 0 0.25rem;
+    border-radius: 6px;
 }
 
 .nav-link:hover,
 .nav-link:focus {
     color: #c97fa6 !important;
+    background-color: rgba(201, 127, 166, 0.1);
+    transform: translateY(-2px);
+}
+
+.navbar-toggler {
+    border: 2px solid #c97fa6;
+    padding: 0.25rem 0.6rem;
 }
 
 .navbar-toggler:focus {
     box-shadow: 0 0 0 0.25rem rgba(201, 127, 166, 0.25);
+    border-color: #c97fa6;
+}
+
+.navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23c97fa6' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
 /* ============================================
@@ -492,20 +786,39 @@ a.text-merish:focus {
 }
 
 /* ============================================
-   FORM ELEMENTS
+   FORM ELEMENTS (Bootstrap-based)
    ============================================ */
 
-.form-control:focus,
-.form-select:focus,
-.form-check-input:focus {
+.form-control, .form-select, .form-check-input {
+    border: 2px solid var(--border-light);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.form-control:focus, .form-select:focus, .form-check-input:focus {
     border-color: #c97fa6;
     box-shadow: 0 0 0 0.25rem rgba(201, 127, 166, 0.25);
+    background-color: white;
+}
+
+.form-control::placeholder {
+    color: #999999;
+    font-weight: 500;
 }
 
 .form-label {
     font-weight: 600;
     color: var(--text-dark);
-    font-size: 0.875rem;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.3px;
+}
+
+.form-check-input {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 4px;
 }
 
 .form-check-input:checked {
@@ -513,69 +826,218 @@ a.text-merish:focus {
     border-color: #c97fa6;
 }
 
+.form-check-input:checked::after {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='white' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e");
+}
+
 /* ============================================
-   CARDS
+   CARDS (Bootstrap-based)
    ============================================ */
 
 .card {
-    border: none;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
-}
-
-.card:hover {
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(201, 127, 166, 0.1) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08) !important;
     transition: all 0.3s ease;
 }
 
+.card:hover {
+    box-shadow: 0 12px 35px rgba(201, 127, 166, 0.15) !important;
+    border-color: rgba(201, 127, 166, 0.2) !important;
+}
+
 /* ============================================
-   LINKS
+   LINKS (Bootstrap-based)
    ============================================ */
 
 a {
     color: #c97fa6;
     text-decoration: none;
-    transition: color 0.3s ease;
+    transition: all 0.3s ease;
 }
 
 a:hover {
     color: #b06b8f;
+    text-decoration: underline;
+}
+
+a:focus {
+    outline: 2px solid #c97fa6;
+    outline-offset: 2px;
 }
 
 /* ============================================
-   ALERT COMPONENTS
+   FOOTER (Bootstrap-based)
    ============================================ */
 
-.alert-danger {
-    background-color: #fee;
-    border-color: #fcc;
-    color: #c33;
+.footer-merish {
+    background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+    color: white;
+    padding: 4rem 0 1rem;
+    margin-top: 5rem;
+    border-top: 1px solid rgba(201, 127, 166, 0.1);
 }
 
-.alert-success {
-    background-color: #efe;
-    border-color: #cfc;
-    color: #3c3;
+.footer-merish h3, .footer-merish h5 {
+    color: white;
+    font-weight: 700;
+    letter-spacing: -0.5px;
 }
 
-.alert-info {
-    background-color: #eef;
-    border-color: #ccf;
-    color: #33c;
+.footer-merish h5 {
+    color: #c97fa6;
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
 }
 
-.alert-warning {
-    background-color: #ffe;
-    border-color: #ffc;
-    color: #cc3;
+.footer-merish p {
+    color: #999999;
+    font-size: 0.95rem;
+    line-height: 1.8;
+}
+
+.footer-merish a {
+    color: #999999;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.footer-merish a:hover {
+    color: #c97fa6;
+    text-decoration: none;
+}
+
+.social-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: rgba(201, 127, 166, 0.15);
+    color: #c97fa6;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(201, 127, 166, 0.2);
+}
+
+.social-btn:hover {
+    background: #c97fa6;
+    color: white;
+    transform: translateY(-3px);
+    border-color: #c97fa6;
+}
+
+.footer-merish .text-muted {
+    color: #666666 !important;
+}
+
+.footer-merish hr {
+    border-color: rgba(255, 255, 255, 0.1);
+    margin: 2rem 0 1.5rem;
 }
 
 /* ============================================
-   UTILITIES
+   CUSTOM SCROLLBAR
+   ============================================ */
+
+::-webkit-scrollbar {
+    width: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f5f3f0;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #c97fa6, #d4a574);
+    border-radius: 6px;
+    border: 3px solid #f5f3f0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #b06b8f, #c97fa6);
+}
+
+/* ============================================
+   ANIMATIONS & TRANSITIONS
+   ============================================ */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.fade-in-down {
+    animation: fadeInDown 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.slide-in-left {
+    animation: slideInLeft 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.slide-in-right {
+    animation: slideInRight 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* ============================================
+   UTILITY CLASSES
    ============================================ */
 
 .min-vh-100 {
     min-height: 100vh;
+}
+
+.min-vh-50 {
+    min-height: 50vh;
 }
 
 .text-muted {
@@ -586,117 +1048,161 @@ a:hover {
     background-color: var(--secondary-color) !important;
 }
 
+.bg-white {
+    background-color: white !important;
+}
+
+.border-light {
+    border-color: var(--border-light) !important;
+}
+
 .border-bottom {
     border-bottom-color: var(--border-light) !important;
 }
 
-/* ============================================
-   FOOTER
-   ============================================ */
-
-.footer-merish {
-    background-color: var(--text-dark);
-    color: white;
-    padding: 60px 0 20px;
-    margin-top: 100px;
+.shadow-sm {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
 }
 
-.footer-merish a {
-    color: #999999;
-    transition: color 0.3s ease;
+.shadow-md {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
 }
 
-.footer-merish a:hover {
-    color: #c97fa6;
+.shadow-lg {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12) !important;
 }
 
-.footer-merish h5 {
-    color: #c97fa6;
-    margin-bottom: 15px;
+.rounded-lg {
+    border-radius: 16px !important;
 }
 
-/* ============================================
-   CUSTOM SCROLLBAR
-   ============================================ */
-
-::-webkit-scrollbar {
-    width: 10px;
-}
-
-::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #c97fa6;
-    border-radius: 5px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #b06b8f;
-}
-
-/* ============================================
-   ANIMATIONS & TRANSITIONS
-   ============================================ */
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.fade-in-up {
-    animation: fadeInUp 0.8s ease-out;
+.rounded-xl {
+    border-radius: 20px !important;
 }
 
 /* ============================================
    RESPONSIVE DESIGN
    ============================================ */
 
-@media (max-width: 768px) {
-    .hero-section {
-        background-attachment: scroll;
+/* Extra Small (< 576px) */
+@media (max-width: 575.98px) {
+    h1 {
+        font-size: 1.75rem;
     }
     
-    .hero-image-section {
-        background-attachment: scroll;
-    }
-    
-    .hero-content h1 {
-        font-size: 2rem;
-    }
-    
-    .hero-content p {
-        font-size: 1rem;
+    h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
     }
     
     .navbar-brand {
         font-size: 20px !important;
     }
-
-    .credential-badge {
-        padding: 20px 15px;
+    
+    .hero-section {
+        padding: 2rem 0;
     }
-
+    
+    .hero-content h1 {
+        font-size: 1.75rem;
+        line-height: 1.2;
+        margin-bottom: 1rem;
+    }
+    
+    .hero-content p {
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .hero-image-section {
+        display: none;
+    }
+    
+    .btn-lg {
+        padding: 0.65rem 1.5rem;
+        font-size: 0.95rem;
+    }
+    
+    .credential-badge {
+        padding: 1.5rem 1rem;
+        margin-bottom: 1rem;
+    }
+    
     .credential-badge h4 {
         font-size: 0.85rem;
     }
-
+    
     .credential-badge p {
         font-size: 0.75rem;
     }
-
+    
     .credential-icon {
         width: 56px;
         height: 56px;
-        margin-bottom: 10px;
+        margin-bottom: 0.75rem;
     }
+    
+    .treatment-details {
+        padding: 1.25rem;
+    }
+    
+    .promo-banner {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .footer-merish {
+        padding: 2rem 0 1rem;
+    }
+}
+
+/* Small (>= 576px) */
+@media (min-width: 576px) {
+    .hero-content {
+        max-width: 100%;
+    }
+}
+
+/* Medium (>= 768px) */
+@media (min-width: 768px) {
+    .hero-section {
+        background-attachment: scroll;
+    }
+    
+    .hero-image-section {
+        display: flex;
+        height: 500px;
+    }
+    
+    .credential-badge {
+        padding: 2rem 1.5rem;
+    }
+}
+
+/* Large (>= 992px) */
+@media (min-width: 992px) {
+    .navbar-expand-lg .navbar-nav .nav-link {
+        padding-right: 1rem;
+        padding-left: 1rem;
+    }
+    
+    .performer-image {
+        width: 220px;
+        height: 220px;
+    }
+}
+
+/* Extra Large (>= 1200px) */
+@media (min-width: 1200px) {
+    .container-fluid {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    .hero-content h1 {
+        font-size: 3.5rem;
+    }
+}
 
     .promo-banner {
         padding: 12px 30px;

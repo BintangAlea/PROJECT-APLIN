@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\ApiResponse;
 use App\Core\Database;
+use PDO;
 
 /**
  * API Booking Filter Controller
@@ -14,7 +15,7 @@ use App\Core\Database;
  */
 class ApiBookingController
 {
-    private Database $db;
+    private PDO $db;
 
     public function __construct()
     {
@@ -267,5 +268,79 @@ class ApiBookingController
         ];
 
         echo ApiResponse::success($specializations, 'Specializations retrieved', 200);
+    }
+
+    /**
+     * GET /api/bundles/active
+     * Get all active service bundles dengan pricing
+     */
+    public function getActiveBundles()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            echo ApiResponse::error('Method not allowed', 405);
+            return;
+        }
+
+        try {
+            $bundleModel = new \App\Models\ServiceBundleModel();
+            $bundles = $bundleModel->getAllActiveBundles();
+            
+            // Enrich dengan pricing
+            $enriched = [];
+            foreach ($bundles as $bundle) {
+                $enriched[] = $bundleModel->getBundleWithPrice($bundle['bundle_id']);
+            }
+
+            echo ApiResponse::success($enriched, 'Active bundles retrieved', 200);
+        } catch (\Exception $e) {
+            echo ApiResponse::error('Failed to retrieve bundles: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * GET /api/bundles/:bundle_id/details
+     * Get bundle detail dengan services dan pricing
+     */
+    public function getBundleDetails($bundleId)
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            echo ApiResponse::error('Method not allowed', 405);
+            return;
+        }
+
+        try {
+            $bundleModel = new \App\Models\ServiceBundleModel();
+            $bundle = $bundleModel->getBundleWithPrice($bundleId);
+            
+            if (!$bundle) {
+                echo ApiResponse::notFound('Bundle not found');
+                return;
+            }
+
+            echo ApiResponse::success($bundle, 'Bundle details retrieved', 200);
+        } catch (\Exception $e) {
+            echo ApiResponse::error('Failed to retrieve bundle: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * GET /api/addons/active
+     * Get all active booking add-ons grouped by type
+     */
+    public function getActiveAddons()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            echo ApiResponse::error('Method not allowed', 405);
+            return;
+        }
+
+        try {
+            $addonModel = new \App\Models\BookingAddonModel();
+            $addons = $addonModel->getAddonsGroupedByType();
+
+            echo ApiResponse::success($addons, 'Active add-ons retrieved', 200);
+        } catch (\Exception $e) {
+            echo ApiResponse::error('Failed to retrieve add-ons: ' . $e->getMessage(), 500);
+        }
     }
 }
