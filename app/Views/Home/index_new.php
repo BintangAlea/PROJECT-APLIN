@@ -33,10 +33,10 @@
                         <a class="nav-link text-uppercase fw-500" style="font-size: 13px; letter-spacing: 1px; color: #666;">HOME</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-uppercase fw-500" style="font-size: 13px; letter-spacing: 1px; color: #666;" href="index.php?page=cafe">THE CAFE</a>
+                        <a class="nav-link text-uppercase fw-500" style="font-size: 13px; letter-spacing: 1px; color: #666;" href="#cafe">THE CAFE</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-uppercase fw-500" style="font-size: 13px; letter-spacing: 1px; color: #666;" href="index.php?page=services">SERVICES</a>
+                        <a class="nav-link text-uppercase fw-500" style="font-size: 13px; letter-spacing: 1px; color: #666;" href="#services">SERVICES</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link text-uppercase fw-500" style="font-size: 13px; letter-spacing: 1px; color: #666;" href="index.php?page=booking&step=1">BOOK NOW</a>

@@ -24,10 +24,18 @@ use App\Controllers\ApiAdminDashboardController;
 
 header('Content-Type: application/json');
 
-// Parse URL
+// Parse URL - detect basePath dynamically (cross-platform compatible)
 $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$basePath = '/SIB/PROJECT-APLIN/api.php';
-$path = str_replace($basePath, '', $requestUri);
+$scriptName = parse_url($_SERVER['SCRIPT_NAME'], PHP_URL_PATH);
+
+// basePath = directory of script + api.php (handle Windows backslashes)
+$dirName = dirname($scriptName);
+$isRootDir = (strpos($dirName, '\\') === 0 && strlen(trim($dirName, '\\')) === 0) || $dirName === '/';
+$basePath = !$isRootDir ? dirname($scriptName) . '/api.php' : '/api.php';
+
+// Normalize paths (convert backslashes to forward slashes)
+$basePath = str_replace('\\', '/', $basePath);
+$path = str_replace('\\', '/', str_replace($basePath, '', $requestUri));
 $pathSegments = array_filter(explode('/', $path));
 
 // Extract route
@@ -56,6 +64,8 @@ $routes = [
     'GET:beauticians/online' => [ApiBookingController::class, 'getOnlineBeauticians'],
     'GET:time-slots' => [ApiBookingController::class, 'getTimeSlots'],
     'GET:specializations' => [ApiBookingController::class, 'getSpecializations'],
+    'GET:bundles/active' => [ApiBookingController::class, 'getActiveBundles'],
+    'GET:addons/active' => [ApiBookingController::class, 'getActiveAddons'],
 
     // INVENTORY ROUTES
     'GET:inventory' => [ApiInventarisController::class, 'getAll'],
@@ -102,6 +112,14 @@ if (preg_match('/^beauticians\/(\d+)\/status$/', $route, $matches)) {
     if ($method === 'PUT') {
         $controller = new ApiBookingController();
         $controller->updateBeauticianStatus($matches[1]);
+        exit;
+    }
+}
+
+if (preg_match('/^bundles\/(\d+)\/details$/', $route, $matches)) {
+    if ($method === 'GET') {
+        $controller = new ApiBookingController();
+        $controller->getBundleDetails($matches[1]);
         exit;
     }
 }
