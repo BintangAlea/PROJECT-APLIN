@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Core\Database;
 use PDO;
+use PDOException;
 
 /**
  * Service Bundle Model
@@ -23,10 +24,14 @@ class ServiceBundleModel
      */
     public function getAllActiveBundles(): array
     {
-        $stmt = $this->db->query(
-            'SELECT * FROM service_bundles WHERE is_active = TRUE ORDER BY bundle_name'
-        );
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        try {
+            $stmt = $this->db->query(
+                'SELECT * FROM service_bundles WHERE is_active = TRUE ORDER BY bundle_name'
+            );
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return [];
+        }
     }
 
     /**
@@ -34,11 +39,15 @@ class ServiceBundleModel
      */
     public function getBundleById(int $bundleId): array|false
     {
-        $stmt = $this->db->prepare(
-            'SELECT * FROM service_bundles WHERE bundle_id = :id'
-        );
-        $stmt->execute([':id' => $bundleId]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            $stmt = $this->db->prepare(
+                'SELECT * FROM service_bundles WHERE bundle_id = :id'
+            );
+            $stmt->execute([':id' => $bundleId]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return false;
+        }
     }
 
     /**
@@ -46,15 +55,19 @@ class ServiceBundleModel
      */
     public function getBundleServices(int $bundleId): array
     {
-        $stmt = $this->db->prepare(
-            'SELECT bs.*, s.service_name, s.base_tariff, s.image_url, s.description, s.est_duration
-             FROM bundle_services bs
-             JOIN services s ON bs.service_id = s.service_id
-             WHERE bs.bundle_id = :bundle_id AND s.is_active = TRUE
-             ORDER BY bs.sequence_order'
-        );
-        $stmt->execute([':bundle_id' => $bundleId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        try {
+            $stmt = $this->db->prepare(
+                'SELECT bs.*, s.service_name, s.base_tariff, s.image_url, s.description, s.est_duration
+                 FROM bundle_services bs
+                 JOIN services s ON bs.service_id = s.service_id
+                 WHERE bs.bundle_id = :bundle_id AND s.is_active = TRUE
+                 ORDER BY bs.sequence_order'
+            );
+            $stmt->execute([':bundle_id' => $bundleId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return [];
+        }
     }
 
     /**

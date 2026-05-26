@@ -138,9 +138,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="index.php?page=services">Services</a>
                     </li>
-                    <?php if (isset($_SESSION['user_id']) && $_SESSION['role'] === 'Customer'): ?>
+                    <?php if (isset($_SESSION['user_id'])): ?>
                         <li class="nav-item">
-                            <a class="nav-link" href="index.php?page=customer">Dashboard</a>
+                            <a class="nav-link" href="index.php?page=home">Home</a>
                         </li>
                         <li class="nav-item">
                             <span class="user-badge">Hi, <?php echo htmlspecialchars(substr($_SESSION['full_name'] ?? 'User', 0, 20)); ?>!</span>

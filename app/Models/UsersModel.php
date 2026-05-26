@@ -73,7 +73,15 @@ class UsersModel
             return false;
         }
 
-        if (!password_verify($password, $user['PASSWORD'])) {
+        $storedPassword = (string) ($user['PASSWORD'] ?? '');
+        $isBcryptHash = str_starts_with($storedPassword, '$2y$') || str_starts_with($storedPassword, '$argon2');
+
+        if ($isBcryptHash) {
+            if (!password_verify($password, $storedPassword)) {
+                return false;
+            }
+        } elseif (!hash_equals($storedPassword, $password)) {
+            // Support legacy seed data that still stores plaintext passwords.
             return false;
         }
 

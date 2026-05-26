@@ -1,3 +1,7 @@
+<?php
+$isLoggedIn = isset($_SESSION['user_id']);
+$displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -5,499 +9,537 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Merish Services - Premium Salon & Artisan Cafe. Discover our signature treatments.">
     <title>Services - Merish Premium Salon & Artisan Cafe</title>
-    
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
-    
-    <!-- Bootstrap 5.3.0 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="/SIB/PROJECT-APLIN/assets/css/style.css">
-    
+
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <style>
-        /* Services Page Custom Styles */
+        :root {
+            --soft-bg: #f3eded;
+            --hero-tint: rgba(240, 234, 232, 0.72);
+            --line: #e4dcdc;
+            --ink: #5a4a51;
+            --muted: #756a6f;
+            --accent: #7a4f61;
+            --accent-deep: #694352;
+            --card-bg: #f7f4f4;
+            --filter-bg: #f8f3f3;
+        }
+
+        html,
+        body {
+            background: var(--soft-bg);
+            color: var(--ink);
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .top-nav {
+            background: #faf7f7;
+            border-bottom: 1px solid #e7dfdf;
+            min-height: 72px;
+        }
+
+        .brand {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            font-weight: 600;
+            line-height: 1;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .nav-link-custom {
+            color: #5b4f54;
+            text-transform: uppercase;
+            letter-spacing: 1.9px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 0.5rem 0.95rem;
+            text-decoration: none;
+        }
+
+        .nav-link-custom:hover,
+        .nav-link-custom.active-link {
+            color: var(--accent);
+        }
+
+        .signin-btn {
+            color: #5f5358;
+            border: 1px solid #cfc2c7;
+            border-radius: 0;
+            text-transform: uppercase;
+            font-size: 0.72rem;
+            letter-spacing: 1.8px;
+            font-weight: 600;
+            padding: 0.5rem 1.3rem;
+            background: transparent;
+        }
+
+        .signin-btn:hover {
+            color: #fff;
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
         .services-hero {
-            background: linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15)), 
-                        url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 1200 400%22%3E%3Crect fill=%22%23f5f3f0%22 width=%221200%22 height=%22400%22/%3E%3Crect fill=%22%23e8ddd8%22 x=%220%22 y=%220%22 width=%22300%22 height=%22400%22 opacity=%220.5%22/%3E%3C/svg%3E');
-            background-attachment: fixed;
-            background-position: center;
-            background-size: cover;
-            min-height: 350px;
+            min-height: 505px;
             display: flex;
             align-items: center;
-            justify-content: center;
+            position: relative;
+            border-bottom: 1px solid #ebe3e3;
+            background-image:
+                linear-gradient(var(--hero-tint), var(--hero-tint)),
+                radial-gradient(circle at 10% 40%, rgba(255, 255, 255, 0.46) 0 16%, transparent 17%),
+                linear-gradient(90deg, rgba(235, 228, 225, 0.85) 0 22%, rgba(0, 0, 0, 0) 22%),
+                repeating-linear-gradient(
+                    to right,
+                    rgba(175, 160, 153, 0.16) 0 6px,
+                    rgba(236, 230, 226, 0.08) 6px 16px
+                ),
+                linear-gradient(130deg, #e8ded8 0%, #dfd3ce 42%, #d8cbc5 100%);
+            background-size: cover;
+            background-position: center;
         }
 
-        .category-filters {
+        .hero-heading {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.2rem, 4vw, 4rem);
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+        }
+
+        .hero-sub {
+            color: #6f6669;
+            font-size: 1.03rem;
+            margin-bottom: 1.6rem;
+        }
+
+        .promo-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.7rem;
+            border: 1px solid #ddcfd1;
+            border-radius: 7px;
+            background: rgba(251, 247, 247, 0.78);
+            color: #7a606a;
+            text-transform: uppercase;
+            font-size: 0.69rem;
+            letter-spacing: 1.8px;
+            font-weight: 700;
+            padding: 0.75rem 1.2rem;
+        }
+
+        .divider-band {
+            height: 86px;
+            border-bottom: 1px solid var(--line);
+            background: #f6f0f0;
+        }
+
+        .filters {
             display: flex;
             justify-content: center;
-            gap: 15px;
             flex-wrap: wrap;
-            margin-bottom: 50px;
+            gap: 0.6rem;
+            margin: 0 auto;
         }
 
-        .category-btn {
-            padding: 8px 20px;
-            border: 1px solid #8b7f7f;
-            background: transparent;
-            color: #8b7f7f;
-            font-family: 'Montserrat', sans-serif;
-            font-size: 12px;
-            font-weight: 600;
-            letter-spacing: 1px;
+        .filter-btn {
+            border: 1px solid #d7cccf;
+            background: var(--filter-bg);
+            color: #62565b;
+            border-radius: 0;
             text-transform: uppercase;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border-radius: 4px;
+            letter-spacing: 1.5px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            min-width: 72px;
+            padding: 0.45rem 0.9rem;
         }
 
-        .category-btn:hover,
-        .category-btn.active {
-            background-color: #8b7f7f;
-            color: white;
-            border-color: #8b7f7f;
+        .filter-btn.active,
+        .filter-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        .service-grid {
+            padding: 3rem 0 3.3rem;
+            background: #f4eded;
         }
 
         .service-card {
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #e2d8d8;
+            background: var(--card-bg);
+            padding: 0.6rem;
             height: 100%;
-            display: flex;
-            flex-direction: column;
         }
 
-        .service-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        .service-visual {
+            height: 390px;
+            border: 1px solid #d9cece;
+            position: relative;
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
+            filter: grayscale(100%);
         }
 
-        .service-image {
-            width: 100%;
-            height: 280px;
-            background: linear-gradient(135deg, #e8ddd8 0%, #d4c8c0 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #8b7f7f;
-            font-weight: 600;
-            font-size: 14px;
+        .visual-hair {
+            background-image:
+                linear-gradient(120deg, rgba(0, 0, 0, 0.08), rgba(255, 255, 255, 0.06)),
+                repeating-linear-gradient(130deg, #7f8188 0 6px, #9ca0a6 6px 13px, #70737a 13px 19px);
+        }
+
+        .visual-nails {
+            background-image:
+                radial-gradient(circle at 40% 70%, #d9d9d9 0 16%, transparent 17%),
+                linear-gradient(145deg, #9ba0a7 0%, #b8bcc1 45%, #8f949a 100%);
+        }
+
+        .visual-lashes {
+            background-image:
+                linear-gradient(90deg, #babec4 0 14%, #d2d4d8 14% 100%),
+                linear-gradient(140deg, #a9adb4 0%, #d6d8dc 100%);
+        }
+
+        .service-body {
+            padding: 1.25rem 0.2rem 0.1rem;
             text-align: center;
-            padding: 20px;
         }
 
-        .service-info {
-            padding: 25px;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .service-name {
+        .service-title {
             font-family: 'Playfair Display', serif;
-            font-size: 18px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 10px;
+            font-size: 2.05rem;
+            color: #6f4e5f;
+            margin-bottom: 0.5rem;
+            line-height: 1.15;
         }
 
         .service-price {
-            font-size: 16px;
-            color: #8b7f7f;
-            font-weight: 600;
-            margin-bottom: 15px;
+            color: #8a7d82;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
         }
 
-        .service-btn {
-            align-self: flex-start;
-            background: #8b7f7f;
-            color: white;
-            padding: 10px 20px;
+        .book-btn {
+            width: 100%;
+            border-radius: 0;
             border: none;
-            border-radius: 4px;
-            font-family: 'Montserrat', sans-serif;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 1px;
+            background: var(--accent);
+            color: #fff;
             text-transform: uppercase;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            letter-spacing: 1.5px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.72rem;
         }
 
-        .service-btn:hover {
-            background: #7a6f6f;
+        .book-btn:hover {
+            background: var(--accent-deep);
+            color: #fff;
+        }
+
+        .experts-section {
+            background: #ece5e5;
+            padding: 4.8rem 0 4.2rem;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.2rem, 4vw, 4rem);
+            color: var(--accent);
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 0.6rem;
+        }
+
+        .section-sub {
+            text-align: center;
+            color: #766a6f;
+            margin-bottom: 2.6rem;
         }
 
         .expert-card {
             text-align: center;
-            padding: 30px;
+            padding: 0.25rem 1.2rem;
         }
 
         .expert-photo {
-            width: 200px;
-            height: 200px;
-            margin: 0 auto 20px;
-            border-radius: 8px;
-            background: linear-gradient(135deg, #d4c8c0 0%, #c5b8af 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #8b7f7f;
-            font-weight: 600;
-            overflow: hidden;
+            width: 188px;
+            height: 188px;
+            margin: 0 auto 1.1rem;
+            border-radius: 12px;
+            border: 3px solid #ece4e4;
+            background-size: cover;
+            background-position: center;
+            filter: grayscale(100%);
+        }
+
+        .expert-elena {
+            background-image: linear-gradient(140deg, #d5d7da 0%, #abafb6 100%);
+        }
+
+        .expert-marcus {
+            background-image: linear-gradient(140deg, #2f3135 0%, #7c828b 100%);
+        }
+
+        .expert-chloe {
+            background-image: linear-gradient(140deg, #b7bbc2 0%, #8f949d 100%);
         }
 
         .expert-name {
             font-family: 'Playfair Display', serif;
-            font-size: 20px;
-            color: #333;
-            margin-bottom: 5px;
-            font-weight: 600;
+            font-size: 2rem;
+            color: #714f5e;
+            margin-bottom: 0.35rem;
+            line-height: 1.1;
         }
 
-        .expert-title {
-            font-family: 'Montserrat', sans-serif;
-            font-size: 11px;
-            color: #8b7f7f;
-            letter-spacing: 1.5px;
+        .expert-role {
             text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.7rem;
             font-weight: 700;
-            margin-bottom: 15px;
+            color: #7f7176;
+            margin-bottom: 0.55rem;
         }
 
-        .expert-rating {
-            margin-bottom: 15px;
+        .expert-stars {
+            color: #7a5a68;
+            letter-spacing: 4px;
+            font-size: 0.78rem;
+            margin-bottom: 0.85rem;
         }
 
-        .expert-rating span {
-            color: #8b7f7f;
-            font-size: 14px;
+        .expert-copy {
+            color: #6f6569;
+            font-size: 0.97rem;
+            line-height: 1.65;
+            max-width: 300px;
+            margin: 0 auto;
         }
 
-        .expert-description {
-            font-size: 13px;
-            color: #666;
-            line-height: 1.8;
+        .site-footer {
+            background: #f8f3f3;
+            border-top: 1px solid #dfd4d4;
+            padding: 2.3rem 0;
         }
 
-        .promo-badge {
-            display: inline-block;
-            background: rgba(139, 127, 127, 0.1);
-            padding: 15px 25px;
-            border-radius: 4px;
-            font-size: 12px;
-            color: #8b7f7f;
-            font-weight: 600;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            margin-bottom: 30px;
+        .footer-brand {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            color: #76525f;
+            line-height: 1;
+            text-decoration: none;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1.45rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a,
+        .footer-copy {
+            color: #756a6f;
+            font-size: 0.9rem;
+            text-decoration: none;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+
+        @media (max-width: 991.98px) {
+            .brand {
+                font-size: 2.25rem;
+            }
+
+            .services-hero {
+                min-height: 420px;
+            }
+
+            .service-visual {
+                height: 320px;
+            }
+
+            .footer-links {
+                margin: 0.9rem 0;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- ============================================
-         HEADER / NAVIGATION
-         ============================================ -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top border-bottom">
-        <div class="container-xl">
-            <a href="index.php" class="navbar-brand fw-normal" style="font-family: 'Playfair Display', serif; font-size: 24px; letter-spacing: 2px; color: #5a5a5a;">Merish</a>
-            
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+    <nav class="navbar navbar-expand-lg top-nav sticky-top">
+        <div class="container">
+            <a class="brand" href="index.php?page=home">Merish</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#servicesNav" aria-controls="servicesNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav mx-auto gap-4">
-                    <li class="nav-item">
-                        <a class="nav-link text-uppercase fw-500" style="font-size: 13px; letter-spacing: 1px; color: #666;" href="index.php">HOME</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-uppercase fw-500" style="font-size: 13px; letter-spacing: 1px; color: #666;" href="#cafe">THE CAFE</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-uppercase fw-500" style="font-size: 13px; letter-spacing: 1px; color: #666;" href="index.php?page=services">SERVICES</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-uppercase fw-500" style="font-size: 13px; letter-spacing: 1px; color: #666;" href="index.php?page=booking&step=1">BOOK NOW</a>
-                    </li>
+            <div class="collapse navbar-collapse" id="servicesNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item"><a class="nav-link-custom" href="index.php?page=home">Home</a></li>
+                    <li class="nav-item"><a class="nav-link-custom" href="index.php?page=cafe">The Cafe</a></li>
+                    <li class="nav-item"><a class="nav-link-custom active-link" href="index.php?page=services">Services</a></li>
+                    <li class="nav-item"><a class="nav-link-custom" href="index.php?page=booking&step=1">Book Now</a></li>
                 </ul>
-                
-                <div class="ms-lg-auto">
-                    <a href="index.php?page=login" class="text-uppercase fw-500" style="font-size: 13px; letter-spacing: 1px; color: #666; text-decoration: none;">SIGN IN</a>
-                </div>
+                <?php if ($isLoggedIn): ?>
+                    <span class="me-3" style="color: #5f5358; font-size: 0.8rem; letter-spacing: 1.2px; text-transform: uppercase; font-weight: 700;">
+                        Hi, <?php echo htmlspecialchars($displayName); ?>
+                    </span>
+                    <a href="index.php?page=login&action=logout" class="btn signin-btn">Logout</a>
+                <?php else: ?>
+                    <a href="index.php?page=login" class="btn signin-btn">Sign In</a>
+                <?php endif; ?>
             </div>
         </div>
     </nav>
 
-    <!-- ============================================
-         SERVICES HERO SECTION
-         ============================================ -->
-    <section class="services-hero">
-        <div class="container-xl text-center px-4">
-            <h1 class="display-4 fw-normal" style="font-family: 'Playfair Display', serif; color: #8b7f7f; font-size: 48px; letter-spacing: -1px;">
-                Our Signature Treatments
-            </h1>
-            <p style="font-size: 16px; color: #7a7a7a; margin-top: 15px; max-width: 600px; margin-left: auto; margin-right: auto;">
-                Curated services designed to elevate your personal style with professional precision.
-            </p>
-        </div>
-    </section>
-
-    <!-- ============================================
-         PROMO BANNER
-         ============================================ -->
-    <section class="py-5" style="background-color: white;">
-        <div class="container-xl text-center px-4">
-            <div class="promo-badge">
-                ⭐ ENJOY A 25% SYNERGY DISCOUNT ON COMBINED SERVICES
+    <header class="services-hero">
+        <div class="container text-center">
+            <h1 class="hero-heading">Our Signature Treatments</h1>
+            <p class="hero-sub">Curated services designed to elevate your personal style with professional precision.</p>
+            <div class="promo-pill">
+                <span>✧</span>
+                <span>Enjoy a 20% synergy discount on combined services</span>
             </div>
         </div>
-    </section>
+    </header>
 
-    <!-- ============================================
-         CATEGORY FILTERS
-         ============================================ -->
-    <section class="py-5" style="background-color: white;">
-        <div class="container-xl px-4">
-            <div class="category-filters">
-                <button class="category-btn active" data-category="all">ALL</button>
-                <button class="category-btn" data-category="hair">HAIR</button>
-                <button class="category-btn" data-category="nails">NAILS</button>
-                <button class="category-btn" data-category="lashes">LASHES</button>
-                <button class="category-btn" data-category="wax">WAX & EYEBROWS</button>
+    <div class="divider-band d-flex align-items-center">
+        <div class="container">
+            <div class="filters">
+                <button type="button" class="btn filter-btn active" data-filter="all">All</button>
+                <button type="button" class="btn filter-btn" data-filter="hair">Hair</button>
+                <button type="button" class="btn filter-btn" data-filter="nails">Nails</button>
+                <button type="button" class="btn filter-btn" data-filter="lashes">Lashes</button>
+                <button type="button" class="btn filter-btn" data-filter="wax">Wax & Eyebrows</button>
             </div>
         </div>
-    </section>
+    </div>
 
-    <!-- ============================================
-         SERVICES GRID
-         ============================================ -->
-    <section class="py-5" style="background-color: #fafafa;">
-        <div class="container-xl px-4">
+    <section class="service-grid">
+        <div class="container">
             <div class="row g-4">
-                <!-- Service Card 1: Hair -->
-                <div class="col-lg-4 col-md-6" data-category="hair all">
-                    <div class="service-card">
-                        <div class="service-image">
-                            💇‍♀️ Signature Balayage
+                <div class="col-lg-4 col-md-6 service-item" data-category="hair">
+                    <article class="service-card">
+                        <div class="service-visual visual-hair"></div>
+                        <div class="service-body">
+                            <h3 class="service-title">Signature Balayage</h3>
+                            <p class="service-price">Starting from Rp 850.000</p>
+                            <button class="btn book-btn" type="button" onclick="bookService('Signature Balayage')">Book Now</button>
                         </div>
-                        <div class="service-info">
-                            <div>
-                                <h3 class="service-name">Signature Balayage</h3>
-                                <p class="service-price">Starting from Rp 850.000</p>
-                            </div>
-                            <button class="service-btn" onclick="bookService('Signature Balayage')">BOOK NOW</button>
-                        </div>
-                    </div>
+                    </article>
                 </div>
 
-                <!-- Service Card 2: Nails -->
-                <div class="col-lg-4 col-md-6" data-category="nails all">
-                    <div class="service-card">
-                        <div class="service-image">
-                            💅 Editorial Manicure
+                <div class="col-lg-4 col-md-6 service-item" data-category="nails">
+                    <article class="service-card">
+                        <div class="service-visual visual-nails"></div>
+                        <div class="service-body">
+                            <h3 class="service-title">Editorial Manicure</h3>
+                            <p class="service-price">Starting from Rp 350.000</p>
+                            <button class="btn book-btn" type="button" onclick="bookService('Editorial Manicure')">Book Now</button>
                         </div>
-                        <div class="service-info">
-                            <div>
-                                <h3 class="service-name">Editorial Manicure</h3>
-                                <p class="service-price">Starting from Rp 350.000</p>
-                            </div>
-                            <button class="service-btn" onclick="bookService('Editorial Manicure')">BOOK NOW</button>
-                        </div>
-                    </div>
+                    </article>
                 </div>
 
-                <!-- Service Card 3: Lashes -->
-                <div class="col-lg-4 col-md-6" data-category="lashes all">
-                    <div class="service-card">
-                        <div class="service-image">
-                            ✨ Volume Lash Extensions
+                <div class="col-lg-4 col-md-6 service-item" data-category="lashes">
+                    <article class="service-card">
+                        <div class="service-visual visual-lashes"></div>
+                        <div class="service-body">
+                            <h3 class="service-title">Volume Lash Extensions</h3>
+                            <p class="service-price">Starting from Rp 550.000</p>
+                            <button class="btn book-btn" type="button" onclick="bookService('Volume Lash Extensions')">Book Now</button>
                         </div>
-                        <div class="service-info">
-                            <div>
-                                <h3 class="service-name">Volume Lash Extensions</h3>
-                                <p class="service-price">Starting from Rp 550.000</p>
-                            </div>
-                            <button class="service-btn" onclick="bookService('Volume Lash Extensions')">BOOK NOW</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Service Card 4: Hair -->
-                <div class="col-lg-4 col-md-6" data-category="hair all">
-                    <div class="service-card">
-                        <div class="service-image">
-                            ✂️ Premium Hair Cut
-                        </div>
-                        <div class="service-info">
-                            <div>
-                                <h3 class="service-name">Premium Hair Cut</h3>
-                                <p class="service-price">Starting from Rp 250.000</p>
-                            </div>
-                            <button class="service-btn" onclick="bookService('Premium Hair Cut')">BOOK NOW</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Service Card 5: Wax & Eyebrows -->
-                <div class="col-lg-4 col-md-6" data-category="wax all">
-                    <div class="service-card">
-                        <div class="service-image">
-                            🎯 Eyebrow Design & Tint
-                        </div>
-                        <div class="service-info">
-                            <div>
-                                <h3 class="service-name">Eyebrow Design & Tint</h3>
-                                <p class="service-price">Starting from Rp 150.000</p>
-                            </div>
-                            <button class="service-btn" onclick="bookService('Eyebrow Design & Tint')">BOOK NOW</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Service Card 6: Nails -->
-                <div class="col-lg-4 col-md-6" data-category="nails all">
-                    <div class="service-card">
-                        <div class="service-image">
-                            💄 Gel Pedicure
-                        </div>
-                        <div class="service-info">
-                            <div>
-                                <h3 class="service-name">Gel Pedicure</h3>
-                                <p class="service-price">Starting from Rp 300.000</p>
-                            </div>
-                            <button class="service-btn" onclick="bookService('Gel Pedicure')">BOOK NOW</button>
-                        </div>
-                    </div>
+                    </article>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- ============================================
-         EXPERTS SECTION
-         ============================================ -->
-    <section class="py-5" style="background-color: white;">
-        <div class="container-xl px-4">
-            <div class="text-center mb-5">
-                <h2 class="display-5 fw-normal" style="font-family: 'Playfair Display', serif; color: #8b7f7f; font-size: 42px; font-weight: 400;">
-                    Meet the Experts
-                </h2>
-                <p style="font-size: 16px; color: #7a7a7a; margin-top: 10px;">
-                    Our top-rated professionals dedicated to elevating your experience.
-                </p>
-            </div>
+    <section class="experts-section">
+        <div class="container">
+            <h2 class="section-title">Meet the Experts</h2>
+            <p class="section-sub">Our top-rated professionals dedicated to elevating your experience.</p>
 
-            <div class="row g-4 mt-4">
-                <!-- Expert 1 -->
+            <div class="row g-4 mt-1">
                 <div class="col-lg-4 col-md-6">
-                    <div class="expert-card">
-                        <div class="expert-photo">
-                            👩‍💼
-                        </div>
+                    <article class="expert-card">
+                        <div class="expert-photo expert-elena"></div>
                         <h3 class="expert-name">Elena R.</h3>
-                        <p class="expert-title">COLOR DIRECTOR</p>
-                        <div class="expert-rating">
-                            <span>⭐⭐⭐⭐⭐</span>
-                        </div>
-                        <p class="expert-description">
-                            Master of dimensional color and balayage techniques with over a decade of high-fashion experience.
-                        </p>
-                    </div>
+                        <p class="expert-role">Color Director</p>
+                        <div class="expert-stars">☆☆☆☆☆</div>
+                        <p class="expert-copy">Master of dimensional color and balayage techniques with over a decade of high-fashion experience.</p>
+                    </article>
                 </div>
 
-                <!-- Expert 2 -->
                 <div class="col-lg-4 col-md-6">
-                    <div class="expert-card">
-                        <div class="expert-photo">
-                            👨‍💼
-                        </div>
+                    <article class="expert-card">
+                        <div class="expert-photo expert-marcus"></div>
                         <h3 class="expert-name">Marcus T.</h3>
-                        <p class="expert-title">MASTER CUTTER</p>
-                        <div class="expert-rating">
-                            <span>⭐⭐⭐⭐⭐</span>
-                        </div>
-                        <p class="expert-description">
-                            Precision cutting specialist known for creating effortless, structured silhouettes tailored to each individual.
-                        </p>
-                    </div>
+                        <p class="expert-role">Master Cutter</p>
+                        <div class="expert-stars">☆☆☆☆☆</div>
+                        <p class="expert-copy">Precision cutting specialist known for creating effortless, structured silhouettes tailored to each individual.</p>
+                    </article>
                 </div>
 
-                <!-- Expert 3 -->
                 <div class="col-lg-4 col-md-6">
-                    <div class="expert-card">
-                        <div class="expert-photo">
-                            👩‍💼
-                        </div>
+                    <article class="expert-card">
+                        <div class="expert-photo expert-chloe"></div>
                         <h3 class="expert-name">Chloe M.</h3>
-                        <p class="expert-title">SENIOR ESTHETICIAN</p>
-                        <div class="expert-rating">
-                            <span>⭐⭐⭐⭐⭐</span>
-                        </div>
-                        <p class="expert-description">
-                            Specializing in advanced skincare treatments and meticulous brow architecture to enhance natural beauty.
-                        </p>
-                    </div>
+                        <p class="expert-role">Senior Esthetician</p>
+                        <div class="expert-stars">☆☆☆☆☆</div>
+                        <p class="expert-copy">Specializing in advanced skincare treatments and meticulous brow architecture to enhance natural beauty.</p>
+                    </article>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- ============================================
-         FOOTER
-         ============================================ -->
-    <footer style="background-color: #f5f3f0; border-top: 1px solid #e8ddd8;">
-        <div class="container-xl px-4 py-5">
-            <div class="row align-items-start mb-5 pb-5" style="border-bottom: 1px solid #e8ddd8;">
-                <!-- Footer Left -->
-                <div class="col-lg-6">
-                    <h3 style="font-family: 'Playfair Display', serif; font-size: 28px; color: #8b7f7f; font-weight: 400; letter-spacing: 1px;">Merish</h3>
-                    <p style="font-size: 12px; color: #999; margin-top: 10px;">© 2024 Merish Beauty & Cafe. All rights reserved.</p>
+    <footer class="site-footer">
+        <div class="container">
+            <div class="row align-items-center g-3">
+                <div class="col-lg-3">
+                    <a class="footer-brand" href="index.php?page=home">Merish</a>
                 </div>
-                
-                <!-- Footer Right - Links -->
-                <div class="col-lg-6 text-lg-end">
-                    <div class="d-flex justify-content-lg-end gap-4 flex-wrap">
-                        <a href="#" style="font-size: 12px; color: #666; text-decoration: none; font-weight: 500;">Contact</a>
-                        <a href="#" style="font-size: 12px; color: #666; text-decoration: none; font-weight: 500;">Location</a>
-                        <a href="#" style="font-size: 12px; color: #666; text-decoration: none; font-weight: 500;">Instagram</a>
-                        <a href="#" style="font-size: 12px; color: #666; text-decoration: none; font-weight: 500;">Pinterest</a>
-                    </div>
+                <div class="col-lg-5">
+                    <nav class="footer-links">
+                        <a href="#">Contact</a>
+                        <a href="#">Location</a>
+                        <a href="#">Instagram</a>
+                        <a href="#">Pinterest</a>
+                    </nav>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <span class="footer-copy">&copy; 2026 Merish Beauty & Cafe. All rights reserved.</span>
                 </div>
             </div>
         </div>
     </footer>
 
-    <!-- Bootstrap 5.3.0 JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Category Filter Functionality
-        document.querySelectorAll('.category-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                // Update active button
-                document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                
-                // Filter services
-                const category = this.getAttribute('data-category');
-                document.querySelectorAll('[data-category]').forEach(card => {
-                    const categories = card.getAttribute('data-category').split(' ');
-                    if (categories.includes(category)) {
-                        card.style.display = '';
-                    } else {
-                        card.style.display = 'none';
-                    }
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const serviceItems = document.querySelectorAll('.service-item');
+
+        filterButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                filterButtons.forEach((item) => item.classList.remove('active'));
+                button.classList.add('active');
+
+                const selectedFilter = button.dataset.filter;
+
+                serviceItems.forEach((service) => {
+                    const category = service.dataset.category;
+                    const shouldShow = selectedFilter === 'all' || category === selectedFilter;
+                    service.style.display = shouldShow ? '' : 'none';
                 });
             });
         });
 
-        // Book Service Function
         function bookService(serviceName) {
-            // Redirect to booking page with service selected
             window.location.href = 'index.php?page=booking&step=1&service=' + encodeURIComponent(serviceName);
         }
     </script>

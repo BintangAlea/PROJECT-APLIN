@@ -4,7 +4,6 @@ require_once __DIR__ . '/bootstrap.php';
 use App\Controllers\Home;
 use App\Controllers\AuthController;
 use App\Controllers\AdminController;
-use App\Controllers\CustomerController;
 use App\Controllers\ReceptionistController;
 use App\Controllers\BeauticianController;
 use App\Controllers\BaristaController;
@@ -26,7 +25,6 @@ $controller = match($page) {
     'cafe'        => new CafeController(),
     'booking'     => new BookingController(),
     'admin'       => new AdminController(),
-    'customer'    => new CustomerController(),
     'receptionist' => new ReceptionistController(),
     'beautician'  => new BeauticianController(),
     'barista'     => new BaristaController(),

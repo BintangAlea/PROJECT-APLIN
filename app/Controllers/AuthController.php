@@ -16,9 +16,14 @@ class AuthController
     public function index()
     {
         $page = $_GET['page'] ?? 'login';
+        $context = $_GET['context'] ?? '';
         
         if ($page === 'register') {
             require __DIR__ . '/../Views/Auth/register.php';
+        } elseif ($page === 'login' && $context === 'register') {
+            require __DIR__ . '/../Views/Auth/register_login.php';
+        } elseif ($page === 'login' && $context === 'checkout') {
+            require __DIR__ . '/../Views/Auth/checkout_login.php';
         } else {
             require __DIR__ . '/../Views/Auth/login.php';
         }
@@ -35,10 +40,16 @@ class AuthController
     {
         $email = $_POST['email'] ?? '';
         $password = $_POST['password'] ?? '';
+        $context = $_POST['context'] ?? $_GET['context'] ?? '';
+
+        $loginRedirect = 'index.php?page=login';
+        if ($context !== '') {
+            $loginRedirect .= '&context=' . urlencode($context);
+        }
 
         if (!$email || !$password) {
             $_SESSION['error'] = 'Email dan password harus diisi';
-            header('Location: index.php?page=login');
+            header('Location: ' . $loginRedirect);
             exit;
         }
 
@@ -57,22 +68,29 @@ class AuthController
 
             error_log('Session set - User ID: ' . $user['user_id'] . ', Role: ' . $user['ROLE']);
 
-            // Redirect berdasarkan role
-            $redirectPage = match ($user['ROLE']) {
-                'Admin' => 'admin',
-                'Receptionist' => 'receptionist',
-                'Barista' => 'barista',
-                'Beautician' => 'beautician',
-                'Customer' => 'customer',
-                default => 'home',
-            };
+            $checkoutRedirect = $_SESSION['post_login_redirect'] ?? null;
+            if ($checkoutRedirect) {
+                unset($_SESSION['post_login_redirect']);
+                header('Location: ' . $checkoutRedirect);
+                exit;
+            }
 
-            error_log('Redirecting to: ' . $redirectPage);
-            header('Location: index.php?page=' . $redirectPage);
+            $role = strtolower(trim((string) $user['ROLE']));
+            if ($role === 'admin') {
+                header('Location: index.php?page=admin');
+            } elseif ($role === 'receptionist') {
+                header('Location: index.php?page=receptionist');
+            } elseif ($role === 'barista') {
+                header('Location: index.php?page=barista');
+            } elseif ($role === 'beautician') {
+                header('Location: index.php?page=beautician');
+            } else {
+                header('Location: index.php?page=home');
+            }
             exit;
         } else {
             $_SESSION['error'] = 'Email atau password salah';
-            header('Location: index.php?page=login');
+            header('Location: ' . $loginRedirect);
             exit;
         }
     }
@@ -124,7 +142,7 @@ class AuthController
             }
         }
 
-        $_SESSION['success'] = 'Registrasi berhasil! Silahkan login dengan akun anda';
+        $_SESSION['success'] = 'Registrasi berhasil! Silakan login dengan akun Anda.';
         header('Location: index.php?page=login');
         exit;
     }

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -264,7 +264,8 @@
             <div class="row g-0 align-items-stretch justify-content-center">
                 <div class="col-lg-5">
                     <section class="hero-panel h-100">
-                        <h1 class="hero-title">Welcome</h1>
+                        <span class="hero-kicker">Merish Access</span>
+                        <h1 class="hero-title">Welcome Back</h1>
                         <p class="hero-copy">Please sign in to continue your checkout or access your saved account details.</p>
                         <ul class="benefit-list">
                             <li><span class="benefit-dot">✓</span><span>Continue from your saved register form without re-entering booking data.</span></li>

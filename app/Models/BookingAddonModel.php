@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Core\Database;
 use PDO;
+use PDOException;
 
 /**
  * Booking Addon Model
@@ -23,10 +24,14 @@ class BookingAddonModel
      */
     public function getActiveAddons(): array
     {
-        $stmt = $this->db->query(
-            'SELECT * FROM booking_addons WHERE is_active = TRUE ORDER BY addon_name'
-        );
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        try {
+            $stmt = $this->db->query(
+                'SELECT * FROM booking_addons WHERE is_active = TRUE ORDER BY addon_name'
+            );
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return [];
+        }
     }
 
     /**
@@ -34,13 +39,17 @@ class BookingAddonModel
      */
     public function getAddonsByType(string $type): array
     {
-        $stmt = $this->db->prepare(
-            'SELECT * FROM booking_addons 
-             WHERE addon_type = :type AND is_active = TRUE 
-             ORDER BY price DESC'
-        );
-        $stmt->execute([':type' => $type]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        try {
+            $stmt = $this->db->prepare(
+                'SELECT * FROM booking_addons 
+                 WHERE addon_type = :type AND is_active = TRUE 
+                 ORDER BY price DESC'
+            );
+            $stmt->execute([':type' => $type]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return [];
+        }
     }
 
     /**
@@ -48,11 +57,15 @@ class BookingAddonModel
      */
     public function getAddonById(int $addonId): array|false
     {
-        $stmt = $this->db->prepare(
-            'SELECT * FROM booking_addons WHERE addon_id = :id'
-        );
-        $stmt->execute([':id' => $addonId]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            $stmt = $this->db->prepare(
+                'SELECT * FROM booking_addons WHERE addon_id = :id'
+            );
+            $stmt->execute([':id' => $addonId]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return false;
+        }
     }
 
     /**
@@ -79,12 +92,16 @@ class BookingAddonModel
      */
     public function getSuggestedAddons(int $limit = 4): array
     {
-        $stmt = $this->db->query(
-            'SELECT * FROM booking_addons 
-             WHERE is_active = TRUE 
-             ORDER BY price ASC 
-             LIMIT ' . (int)$limit
-        );
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        try {
+            $stmt = $this->db->query(
+                'SELECT * FROM booking_addons 
+                 WHERE is_active = TRUE 
+                 ORDER BY price ASC 
+                 LIMIT ' . (int)$limit
+            );
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return [];
+        }
     }
 }

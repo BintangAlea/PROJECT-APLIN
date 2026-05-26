@@ -35,14 +35,14 @@
                             'receptionist' => 'receptionist',
                             'barista' => 'barista',
                             'beautician' => 'beautician',
-                            'customer' => 'customer',
+                            'customer' => 'home',
                             default => 'home',
                         };
                     ?>
                     <a href="index.php?page=<?php echo $dashboardPage; ?>" class="btn btn-primary">Dashboard</a>
                 <?php else: ?>
                     <a href="index.php?page=login&action=login" class="btn btn-login">Login / Register</a>
-                    <a href="index.php?page=customer&action=appointment" class="btn btn-primary">Book Appointment</a>
+                    <a href="index.php?page=booking&step=1" class="btn btn-primary">Book Appointment</a>
                 <?php endif; ?>
             </div>
         </div>

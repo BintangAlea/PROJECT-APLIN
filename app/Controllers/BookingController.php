@@ -168,11 +168,11 @@ class BookingController
             // Get online beauticians
             $stmt = $this->db->prepare(
                 'SELECT sp.profile_id, u.user_id, u.NAME as name, u.email,
-                        sp.specialization, sp.photo_url, sp.rating, sp.bio
+                        sp.specialization, sp.work_status, sp.hire_date
                  FROM staff_profiles sp
                  JOIN users u ON sp.user_id = u.user_id
-                 WHERE sp.work_status = :status AND u.role = :role
-                 ORDER BY sp.rating DESC'
+                 WHERE sp.work_status = :status AND u.ROLE = :role
+                 ORDER BY u.NAME ASC'
             );
             $stmt->execute([
                 ':status' => 'Online',
@@ -187,7 +187,7 @@ class BookingController
                     'step' => 4,
                     'title' => 'Pilih Beautician',
                     'booking' => $_SESSION['booking'] ?? [],
-                    'is_logged_in' => $this->session->isLoggedIn()
+                    'is_logged_in' => isset($_SESSION['user_id'])
                 ]
             ];
         }
@@ -236,7 +236,10 @@ class BookingController
                 }
 
                 // Login success
-                $this->session->createSession($user['user_id'], $user['role'], $user['NAME']);
+                $_SESSION['user_id'] = $user['user_id'];
+                $_SESSION['role'] = $user['ROLE'] ?? $user['role'] ?? 'Customer';
+                $_SESSION['full_name'] = $user['NAME'] ?? $user['name'] ?? 'User';
+                $_SESSION['user_login'] = $user['email'] ?? '';
                 header('Location: /index.php?page=booking&step=5');
                 exit;
             } elseif ($action === 'register') {
@@ -278,7 +281,10 @@ class BookingController
                 }
 
                 // Auto-login
-                $this->session->createSession($userId, 'Customer', $name);
+                $_SESSION['user_id'] = $userId;
+                $_SESSION['role'] = 'Customer';
+                $_SESSION['full_name'] = $name;
+                $_SESSION['user_login'] = $email;
                 header('Location: /index.php?page=booking&step=5');
                 exit;
             }
@@ -292,9 +298,15 @@ class BookingController
     {
         $booking = $_SESSION['booking'] ?? [];
 
-        if (empty($booking)) {
-            header('Location: /index.php?page=booking&step=1');
+        if (!isset($_SESSION['user_id'])) {
+            $_SESSION['booking_error'] = 'Silakan daftar terlebih dahulu untuk melanjutkan checkout';
+            $_SESSION['post_login_redirect'] = '/index.php?page=booking&step=5';
+            header('Location: /index.php?page=register');
             exit;
+        }
+
+        if (empty($booking)) {
+            $_SESSION['booking_error'] = 'Pilih layanan, jadwal, dan stylist terlebih dahulu. Checkout tetap bisa dibuka setelah draft booking tersimpan.';
         }
 
         // Calculate pricing
@@ -317,7 +329,7 @@ class BookingController
                 'booking' => $booking,
                 'details' => $details,
                 'pricing' => $pricing,
-                'is_logged_in' => $this->session->isLoggedIn()
+                'is_logged_in' => isset($_SESSION['user_id'])
             ]
         ];
     }
@@ -343,6 +355,34 @@ class BookingController
                 header('Location: /index.php?page=booking&step=1');
                 exit;
             }
+
+            $stmt = $this->db->prepare(
+                'SELECT rd.service_id,
+                        s.service_name,
+                        u.NAME AS beautician_name,
+                        sp.specialization,
+                        r.schedule_time
+                 FROM reservations r
+                 LEFT JOIN reservation_details rd ON rd.res_id = r.res_id
+                 LEFT JOIN services s ON s.service_id = rd.service_id
+                 LEFT JOIN users u ON u.user_id = rd.beautician_id
+                 LEFT JOIN staff_profiles sp ON sp.user_id = rd.beautician_id
+                 WHERE r.res_id = :res_id
+                 LIMIT 1'
+            );
+            $stmt->execute([':res_id' => $resId]);
+            $reservationDetails = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+
+            $scheduleTime = $reservation['reservation_date'] ?? null;
+            if (empty($scheduleTime) && !empty($reservation['schedule_time'])) {
+                $scheduleTime = $reservation['schedule_time'];
+            }
+
+            $reservation['service_name'] = $reservationDetails['service_name'] ?? 'Signature Look';
+            $reservation['beautician_name'] = $reservationDetails['beautician_name'] ?? 'Any Available Staff';
+            $reservation['specialization'] = $reservationDetails['specialization'] ?? 'Stylist';
+            $reservation['reservation_date'] = $reservation['reservation_date'] ?? (!empty($scheduleTime) ? date('Y-m-d', strtotime($scheduleTime)) : null);
+            $reservation['reservation_time'] = $reservation['reservation_time'] ?? (!empty($scheduleTime) ? date('H:i', strtotime($scheduleTime)) : null);
 
             return [
                 'view' => 'Booking/step6',
@@ -381,11 +421,12 @@ class BookingController
             $reservationsModel = new ReservationsModel();
             
             // Get current user ID or use from POST
-            $userId = $this->session->getUserId() ?? $_POST['user_id'] ?? null;
+            $userId = $_SESSION['user_id'] ?? $_POST['user_id'] ?? null;
 
             if (!$userId) {
-                $_SESSION['booking_error'] = 'Silakan login terlebih dahulu';
-                header('Location: /index.php?page=booking&step=4.1');
+                $_SESSION['booking_error'] = 'Silakan daftar terlebih dahulu untuk melanjutkan checkout';
+                $_SESSION['post_login_redirect'] = '/index.php?page=booking&step=5';
+                header('Location: /index.php?page=register');
                 exit;
             }
 
@@ -397,6 +438,23 @@ class BookingController
                 $booking['addon_ids'] ?? [],
                 $_POST['promo_code'] ?? null
             );
+
+            $paymentProofUrl = null;
+            if (!empty($_FILES['payment_proof']['name']) && ($_FILES['payment_proof']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
+                $proofDir = __DIR__ . '/../../uploads/payment_proofs';
+                if (!is_dir($proofDir)) {
+                    mkdir($proofDir, 0755, true);
+                }
+
+                $originalName = basename($_FILES['payment_proof']['name']);
+                $safeName = preg_replace('/[^a-zA-Z0-9_\.-]/', '_', $originalName);
+                $fileName = time() . '_' . $safeName;
+                $targetPath = $proofDir . DIRECTORY_SEPARATOR . $fileName;
+
+                if (move_uploaded_file($_FILES['payment_proof']['tmp_name'], $targetPath)) {
+                    $paymentProofUrl = '/uploads/payment_proofs/' . $fileName;
+                }
+            }
 
             // Create reservation
             $resId = $reservationsModel->create([
@@ -411,6 +469,7 @@ class BookingController
                 'promo_discount' => $pricing['promo_discount'],
                 'total_price' => $pricing['total_price'],
                 'payment_method' => $_POST['payment_method'] ?? 'cash',
+                'payment_proof_url' => $paymentProofUrl,
                 'status' => 'Pending'
             ]);
 

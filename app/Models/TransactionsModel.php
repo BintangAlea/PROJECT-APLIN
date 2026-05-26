@@ -84,7 +84,7 @@ class TransactionsModel
         return $stmt->execute([':id' => $id]);
     }
 
-    public function getTotalRevenue(string $startDate = null, string $endDate = null): float
+    public function getTotalRevenue(?string $startDate = null, ?string $endDate = null): float
     {
         $query = 'SELECT SUM(total_amount) as total FROM transactions';
         $params = [];

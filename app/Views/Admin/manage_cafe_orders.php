@@ -1,9 +1,8 @@
 <?php
-$pageTitle = 'Salon VIP Appointments - Merish Admin';
-$displayName = $_SESSION['full_name'] ?? 'Admin';
-$editData = $reservationForEdit ?? null;
-$formattedDate = $editData['reservation_date'] ?? date('Y-m-d');
-$formattedTime = $editData['reservation_time'] ?? date('H:i');
+$pageTitle = 'Cafe Orders Live - Merish Admin';
+$editOrder = $orderForEdit ?? null;
+$availableMenu = $menus ?? [];
+$availableReservations = $reservations ?? [];
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -104,7 +103,7 @@ $formattedTime = $editData['reservation_time'] ?? date('H:i');
             align-items: center;
             justify-content: space-between;
             gap: 1rem;
-            margin-bottom: 1.25rem;
+            margin-bottom: 1.2rem;
         }
 
         .search-box {
@@ -148,16 +147,14 @@ $formattedTime = $editData['reservation_time'] ?? date('H:i');
         .hero-title {
             font-family: 'Playfair Display', serif;
             color: var(--accent);
-            font-size: clamp(2.5rem, 4vw, 4rem);
-            margin-bottom: 0.35rem;
+            font-size: clamp(2.4rem, 4vw, 3.8rem);
+            margin-bottom: 0.3rem;
         }
 
         .hero-subtitle {
             color: #72666b;
-            margin-bottom: 0;
         }
 
-        .hero-actions .btn,
         .action-btn {
             background: var(--accent);
             color: #fff;
@@ -170,19 +167,9 @@ $formattedTime = $editData['reservation_time'] ?? date('H:i');
             padding: 0.85rem 1rem;
         }
 
-        .hero-actions .btn:hover,
         .action-btn:hover {
             background: var(--accent-dark);
             color: #fff;
-        }
-
-        .filter-bar .form-control,
-        .filter-bar .form-select {
-            border-radius: 0;
-            border: 1px solid #ded1d2;
-            background: rgba(255, 255, 255, 0.72);
-            color: #5f5358;
-            min-height: 50px;
         }
 
         .table-card,
@@ -192,7 +179,7 @@ $formattedTime = $editData['reservation_time'] ?? date('H:i');
             box-shadow: 0 12px 22px rgba(83, 58, 64, 0.04);
         }
 
-        .appointments-table thead th {
+        .orders-table thead th {
             border-bottom: 1px solid #eee3e1 !important;
             color: #7f6f74;
             text-transform: uppercase;
@@ -202,25 +189,19 @@ $formattedTime = $editData['reservation_time'] ?? date('H:i');
             background: #fff;
         }
 
-        .appointments-table td {
+        .orders-table td {
             color: #66575d;
             border-color: #f2e7e6;
             vertical-align: middle;
             font-size: 0.9rem;
         }
 
-        .badge-status {
+        .badge-soft {
             border-radius: 999px;
             padding: 0.4rem 0.7rem;
             font-size: 0.72rem;
             font-weight: 700;
             border: 1px solid transparent;
-        }
-
-        .badge-confirmed {
-            background: #eee7d9;
-            color: #6b614e;
-            border-color: #ddd3c0;
         }
 
         .badge-progress {
@@ -229,22 +210,32 @@ $formattedTime = $editData['reservation_time'] ?? date('H:i');
             border-color: #e0cbd6;
         }
 
-        .badge-waiting {
+        .badge-ready {
+            background: #eee7d9;
+            color: #6b614e;
+            border-color: #ddd3c0;
+        }
+
+        .badge-new {
             background: #e8e1de;
             color: #6e6462;
             border-color: #dbd1cc;
         }
 
-        .badge-canceled {
-            background: #f4d8db;
-            color: #8f5b63;
-            border-color: #e5bdc3;
-        }
-
-        .form-card {
-            padding: 1.3rem;
+        .menu-panel {
+            background: var(--panel);
+            border: 1px solid #efe4e2;
+            padding: 1rem 1.05rem 1.1rem;
+            box-shadow: 0 12px 22px rgba(83, 58, 64, 0.04);
             position: sticky;
             top: 1.2rem;
+        }
+
+        .menu-title {
+            font-family: 'Playfair Display', serif;
+            color: #3e3136;
+            font-size: 1.45rem;
+            margin-bottom: 0.75rem;
         }
 
         .form-label {
@@ -289,7 +280,7 @@ $formattedTime = $editData['reservation_time'] ?? date('H:i');
                 border-bottom: 1px solid #eadfdc;
             }
 
-            .form-card {
+            .menu-panel {
                 position: static;
             }
         }
@@ -303,12 +294,12 @@ $formattedTime = $editData['reservation_time'] ?? date('H:i');
             <div class="brand-sub">Luxury Suite</div>
         </div>
 
-        <button class="new-booking btn w-100" type="button" onclick="document.getElementById('reservation-form').scrollIntoView({behavior:'smooth'})">New Appointment</button>
+        <button class="new-booking btn w-100" type="button" onclick="document.getElementById('order-form').scrollIntoView({behavior:'smooth'})">New Booking</button>
 
         <nav class="nav flex-column side-nav gap-1">
             <a class="nav-link" href="index.php?page=admin">Dashboard</a>
-            <a class="nav-link active" href="index.php?page=admin&action=manageReservations">Appointments</a>
-            <a class="nav-link" href="index.php?page=admin&action=manageCafeOrders">Cafe Orders</a>
+            <a class="nav-link" href="index.php?page=admin&action=manageReservations">Appointments</a>
+            <a class="nav-link active" href="index.php?page=admin&action=manageCafeOrders">Cafe Orders</a>
             <a class="nav-link" href="index.php?page=admin&action=manageMenus">Inventory</a>
             <a class="nav-link" href="index.php?page=admin&action=manageStaff">Staff Management</a>
             <a class="nav-link" href="index.php?page=admin&action=reports">Analytics</a>
@@ -336,11 +327,11 @@ $formattedTime = $editData['reservation_time'] ?? date('H:i');
 
         <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
             <div>
-                <h2 class="hero-title">Salon VIP Appointments</h2>
-                <p class="hero-subtitle">Manage exclusive bookings and curate the editorial experience.</p>
+                <h2 class="hero-title">Pesanan Cafe (Live)</h2>
+                <p class="hero-subtitle">Pantau order F&B yang sedang berjalan, selesai, atau perlu intervensi.</p>
             </div>
-            <div class="hero-actions">
-                <button class="btn">New Booking</button>
+            <div>
+                <button class="action-btn" type="button" onclick="document.getElementById('order-form').scrollIntoView({behavior:'smooth'})">Add / Edit Order</button>
             </div>
         </div>
 
@@ -353,84 +344,58 @@ $formattedTime = $editData['reservation_time'] ?? date('H:i');
 
         <div class="row g-4">
             <div class="col-xl-8">
-                <div class="filter-bar row g-3 mb-3">
-                    <div class="col-md-4">
-                        <select class="form-select" aria-label="Filter by stylist">
-                            <option selected>By Stylist</option>
-                            <?php foreach ($beauticians as $beautician): ?>
-                                <option><?php echo htmlspecialchars($beautician['NAME']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <select class="form-select" aria-label="Filter by status">
-                            <option selected>By Status</option>
-                            <option>Pending</option>
-                            <option>Confirmed</option>
-                            <option>In-Service</option>
-                            <option>Selesai</option>
-                            <option>Canceled</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control" placeholder="Search client or service...">
-                    </div>
-                </div>
-
                 <div class="table-card rounded-3 overflow-hidden">
                     <div class="table-responsive">
-                        <table class="table appointments-table mb-0 align-middle">
+                        <table class="table orders-table mb-0 align-middle">
                             <thead>
                                 <tr>
-                                    <th>Client</th>
-                                    <th>Service</th>
-                                    <th>Seat</th>
-                                    <th>Time</th>
-                                    <th>Stylist</th>
+                                    <th>Coordinate</th>
+                                    <th>Customer</th>
+                                    <th>Order</th>
+                                    <th>Qty</th>
                                     <th>Status</th>
+                                    <th>Bill</th>
                                     <th class="text-end">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (!empty($reservations)): ?>
-                                    <?php foreach ($reservations as $reservation): ?>
+                                <?php if (!empty($orders)): ?>
+                                    <?php foreach ($orders as $order): ?>
                                         <?php
-                                            $status = (string) ($reservation['status'] ?? 'Pending');
+                                            $status = (string) ($order['status'] ?? 'New');
                                             $statusClass = match ($status) {
-                                                'Confirmed' => 'badge-confirmed',
-                                                'In-Service' => 'badge-progress',
-                                                'Selesai' => 'badge-confirmed',
-                                                'Canceled' => 'badge-canceled',
-                                                default => 'badge-waiting',
+                                                'In Progress' => 'badge-progress',
+                                                'Selesai' => 'badge-ready',
+                                                default => 'badge-new',
                                             };
+                                            $lineTotal = ((float) ($order['price'] ?? 0)) * ((int) ($order['qty'] ?? 0));
                                         ?>
                                         <tr>
+                                            <td><?php echo htmlspecialchars($order['coordinate']); ?></td>
                                             <td>
-                                                <div class="fw-semibold"><?php echo htmlspecialchars($reservation['customer_name']); ?></div>
-                                                <div class="text-muted small">#<?php echo htmlspecialchars((string) $reservation['res_id']); ?></div>
+                                                <div class="fw-semibold"><?php echo htmlspecialchars($order['customer_name']); ?></div>
+                                                <div class="text-muted small"><?php echo htmlspecialchars((string) ($order['order_type'] ?? 'Dine-In')); ?></div>
                                             </td>
-                                            <td><?php echo htmlspecialchars($reservation['service_name']); ?></td>
-                                            <td><?php echo htmlspecialchars($reservation['seat_id']); ?></td>
-                                            <td>
-                                                <div><?php echo htmlspecialchars((string) $reservation['reservation_date']); ?></div>
-                                                <div class="text-muted small"><?php echo htmlspecialchars(substr((string) $reservation['reservation_time'], 0, 5)); ?></div>
-                                            </td>
-                                            <td><?php echo htmlspecialchars($reservation['beautician_name']); ?></td>
-                                            <td><span class="badge-status <?php echo $statusClass; ?>"><?php echo htmlspecialchars($status); ?></span></td>
+                                            <td><?php echo htmlspecialchars($order['menu_name']); ?></td>
+                                            <td><?php echo (int) $order['qty']; ?></td>
+                                            <td><span class="badge-soft <?php echo $statusClass; ?>"><?php echo htmlspecialchars($status); ?></span></td>
+                                            <td><?php echo 'Rp ' . number_format($lineTotal, 0, ',', '.'); ?></td>
                                             <td class="text-end">
-                                                <a class="small-link me-3" href="index.php?page=admin&action=manageReservations&edit=<?php echo (int) $reservation['res_id']; ?>">Add/Edit Booking</a>
-                                                <form method="POST" action="index.php?page=admin&action=cancelReservation" class="d-inline" onsubmit="return confirm('Cancel booking ini?');">
-                                                    <input type="hidden" name="res_id" value="<?php echo (int) $reservation['res_id']; ?>">
-                                                    <button type="submit" class="btn btn-link p-0 small-link text-danger text-decoration-none">Cancel</button>
+                                                <a class="small-link me-3" href="index.php?page=admin&action=manageCafeOrders&edit=<?php echo (int) $order['order_id']; ?>">Edit Order</a>
+                                                <form method="POST" action="index.php?page=admin&action=forceCompleteOrder" class="d-inline me-2">
+                                                    <input type="hidden" name="order_id" value="<?php echo (int) $order['order_id']; ?>">
+                                                    <button type="submit" class="btn btn-link p-0 small-link text-decoration-none">Force Complete</button>
+                                                </form>
+                                                <form method="POST" action="index.php?page=admin&action=cancelCafeOrder" class="d-inline" onsubmit="return confirm('Cancel order ini?');">
+                                                    <input type="hidden" name="order_id" value="<?php echo (int) $order['order_id']; ?>">
+                                                    <button type="submit" class="btn btn-link p-0 small-link text-danger text-decoration-none">Cancel Order</button>
                                                 </form>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <tr>
-                                        <td colspan="7">
-                                            <div class="empty-state text-center">Belum ada booking yang tercatat.</div>
-                                        </td>
+                                        <td colspan="7"><div class="empty-state text-center">Belum ada pesanan cafe yang masuk.</div></td>
                                     </tr>
                                 <?php endif; ?>
                             </tbody>
@@ -439,33 +404,33 @@ $formattedTime = $editData['reservation_time'] ?? date('H:i');
                 </div>
             </div>
 
-            <div class="col-xl-4" id="reservation-form">
-                <div class="form-card rounded-3">
+            <div class="col-xl-4" id="order-form">
+                <div class="menu-panel rounded-3">
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <div>
-                            <h3 class="section-title mb-1"><?php echo $editData ? 'Edit Booking' : 'Add Booking'; ?></h3>
-                            <div class="text-muted small">Create or reschedule a salon VIP reservation.</div>
+                            <h3 class="menu-title mb-1"><?php echo $editOrder ? 'Edit Order' : 'Add Order'; ?></h3>
+                            <div class="text-muted small">Intervensi transaksi F&B live tanpa keluar dari dashboard.</div>
                         </div>
-                        <?php if ($editData): ?>
-                            <a class="small-link" href="index.php?page=admin&action=manageReservations">Reset</a>
+                        <?php if ($editOrder): ?>
+                            <a class="small-link" href="index.php?page=admin&action=manageCafeOrders">Reset</a>
                         <?php endif; ?>
                     </div>
 
-                    <form method="POST" action="index.php?page=admin&action=saveReservation">
-                        <input type="hidden" name="res_id" value="<?php echo htmlspecialchars((string) ($editData['res_id'] ?? '')); ?>">
+                    <form method="POST" action="index.php?page=admin&action=saveCafeOrder">
+                        <input type="hidden" name="order_id" value="<?php echo htmlspecialchars((string) ($editOrder['order_id'] ?? '')); ?>">
 
                         <div class="mb-3">
-                            <label class="form-label">Customer Name</label>
-                            <input type="text" name="guest_name" class="form-control" value="<?php echo htmlspecialchars($editData['guest_name'] ?? ''); ?>" placeholder="Enter customer name" required>
+                            <label class="form-label">Customer / Guest</label>
+                            <input type="text" name="guest_name" class="form-control" value="<?php echo htmlspecialchars($editOrder['guest_name'] ?? ''); ?>" placeholder="Optional guest name">
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Seat / Coordinate</label>
-                            <select name="seat_id" class="form-select" required>
-                                <option value="">Choose seat</option>
-                                <?php foreach ($seats as $seat): ?>
-                                    <option value="<?php echo htmlspecialchars($seat['seat_id']); ?>" <?php echo (($editData['seat_id'] ?? '') === $seat['seat_id']) ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($seat['seat_name']); ?> - <?php echo htmlspecialchars($seat['zone_type']); ?>
+                            <label class="form-label">Reservation Reference</label>
+                            <select name="res_id" class="form-select">
+                                <option value="">Walk-in / no reservation</option>
+                                <?php foreach ($availableReservations as $reservation): ?>
+                                    <option value="<?php echo (int) $reservation['res_id']; ?>" <?php echo (($editOrder['res_id'] ?? '') == $reservation['res_id']) ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($reservation['label'] . ' - ' . $reservation['customer_name']); ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
@@ -473,52 +438,59 @@ $formattedTime = $editData['reservation_time'] ?? date('H:i');
 
                         <div class="row g-3 mb-3">
                             <div class="col-6">
-                                <label class="form-label">Date</label>
-                                <input type="date" name="reservation_date" class="form-control" value="<?php echo htmlspecialchars($formattedDate); ?>" required>
+                                <label class="form-label">Seat / Table</label>
+                                <input type="text" name="seat_id" class="form-control" value="<?php echo htmlspecialchars($editOrder['seat_id'] ?? ''); ?>" placeholder="S01 / C01">
                             </div>
                             <div class="col-6">
-                                <label class="form-label">Time</label>
-                                <input type="time" name="reservation_time" class="form-control" value="<?php echo htmlspecialchars(substr($formattedTime, 0, 5)); ?>" required>
+                                <label class="form-label">Order Type</label>
+                                <select name="order_type" class="form-select">
+                                    <?php foreach (['Dine-In', 'Takeaway'] as $type): ?>
+                                        <option value="<?php echo $type; ?>" <?php echo (($editOrder['order_type'] ?? 'Dine-In') === $type) ? 'selected' : ''; ?>><?php echo $type; ?></option>
+                                    <?php endforeach; ?>
+                                </select>
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Service</label>
-                            <select name="service_id" class="form-select">
-                                <option value="">Choose service</option>
-                                <?php foreach ($services as $service): ?>
-                                    <option value="<?php echo htmlspecialchars($service['service_id']); ?>" <?php echo (($editData['service_id'] ?? '') === $service['service_id']) ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($service['service_name']); ?>
+                            <label class="form-label">Menu Item</label>
+                            <select name="menu_id" class="form-select" required>
+                                <option value="">Choose menu</option>
+                                <?php foreach ($availableMenu as $menu): ?>
+                                    <option value="<?php echo htmlspecialchars($menu['menu_id']); ?>" <?php echo (($editOrder['menu_id'] ?? '') === $menu['menu_id']) ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($menu['menu_name'] . ' - Rp ' . number_format((float) $menu['price'], 0, ',', '.')); ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Stylist</label>
-                            <select name="beautician_id" class="form-select">
-                                <option value="">Choose stylist</option>
-                                <?php foreach ($beauticians as $beautician): ?>
-                                    <option value="<?php echo htmlspecialchars((string) $beautician['user_id']); ?>" <?php echo (($editData['beautician_id'] ?? '') == $beautician['user_id']) ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($beautician['NAME']); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
+                        <div class="row g-3 mb-3">
+                            <div class="col-4">
+                                <label class="form-label">Qty</label>
+                                <input type="number" min="1" name="qty" class="form-control" value="<?php echo htmlspecialchars((string) ($editOrder['qty'] ?? 1)); ?>" required>
+                            </div>
+                            <div class="col-8">
+                                <label class="form-label">Payment Status</label>
+                                <select name="payment_status" class="form-select">
+                                    <?php foreach (['Unpaid', 'Paid'] as $paymentStatus): ?>
+                                        <option value="<?php echo $paymentStatus; ?>" <?php echo (($editOrder['payment_status'] ?? 'Unpaid') === $paymentStatus) ? 'selected' : ''; ?>><?php echo $paymentStatus; ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
                         </div>
 
                         <div class="mb-4">
                             <label class="form-label">Status</label>
                             <select name="status" class="form-select">
-                                <?php foreach (['Pending', 'Confirmed', 'In-Service', 'Selesai', 'Canceled'] as $option): ?>
-                                    <option value="<?php echo $option; ?>" <?php echo (($editData['STATUS'] ?? 'Pending') === $option) ? 'selected' : ''; ?>><?php echo $option; ?></option>
+                                <?php foreach (['New', 'In Progress', 'Selesai'] as $state): ?>
+                                    <option value="<?php echo $state; ?>" <?php echo (($editOrder['status'] ?? 'New') === $state) ? 'selected' : ''; ?>><?php echo $state; ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
 
                         <div class="d-grid gap-2">
-                            <button type="submit" class="action-btn"><?php echo $editData ? 'Save Changes' : 'Add Booking'; ?></button>
-                            <?php if ($editData): ?>
-                                <a href="index.php?page=admin&action=manageReservations" class="btn btn-outline-secondary rounded-0 text-uppercase fw-semibold" style="letter-spacing: 1.2px;">Cancel Edit</a>
+                            <button type="submit" class="action-btn"><?php echo $editOrder ? 'Save Changes' : 'Add Order'; ?></button>
+                            <?php if ($editOrder): ?>
+                                <a href="index.php?page=admin&action=manageCafeOrders" class="btn btn-outline-secondary rounded-0 text-uppercase fw-semibold" style="letter-spacing: 1.2px;">Cancel Edit</a>
                             <?php endif; ?>
                         </div>
                     </form>

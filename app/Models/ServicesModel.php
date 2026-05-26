@@ -16,13 +16,18 @@ class ServicesModel
 
     public function findAll(): array
     {
-        // Include a promo flag when a promotion exists for the service (uses promotions.service_id_req)
+        // Use EXISTS to compute promo flag without GROUP BY, compatible with ONLY_FULL_GROUP_BY.
         $sql = '
             SELECT s.*,
-                   CASE WHEN p.promo_id IS NOT NULL THEN 1 ELSE 0 END AS promo
+                   CASE
+                       WHEN EXISTS (
+                           SELECT 1
+                           FROM promotions p
+                           WHERE p.service_id_req = s.service_id
+                       ) THEN 1
+                       ELSE 0
+                   END AS promo
             FROM services s
-            LEFT JOIN promotions p ON p.service_id_req = s.service_id
-            GROUP BY s.service_id
         ';
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll();
