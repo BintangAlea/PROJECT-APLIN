@@ -502,19 +502,55 @@ $formatCurrency = static fn ($value): string => 'Rp ' . number_format((float) $v
                             </div>
 
                             <div class="pay-form">
-                                <form method="post" action="index.php?page=receptionist&action=processPayment">
+                                <form id="paymentForm" method="post" action="index.php?page=receptionist&action=processPayment">
                                     <input type="hidden" name="res_id" value="<?php echo $escape((string) $selectedBill['reservation']['res_id']); ?>">
+                                    <input type="hidden" name="payment_method" id="payment_method" value="QRIS">
 
-                                    <label class="form-label">Metode Pembayaran</label>
-                                    <select class="form-select" name="payment_method">
-                                        <option value="Cash">Cash</option>
-                                        <option value="QRIS" selected>QRIS</option>
-                                        <option value="Debit">Debit</option>
-                                        <option value="Transfer">Transfer</option>
-                                    </select>
-
-                                    <button type="submit" class="pay-btn">Terima Pembayaran (Process Payment)</button>
+                                    <button type="button" id="openPaymentGatewayBtn" class="pay-btn">Terima Pembayaran (Process Payment)</button>
                                 </form>
+                            </div>
+
+                            <div id="warningModal" class="modal-overlay hidden">
+                                <div class="modal-window alert-modal">
+                                    <h2>Peringatan!</h2>
+                                    <p>Terdapat pesanan Cafe <strong><?php echo count($selectedBill['cafe_in_progress_items'] ?? []); ?> item</strong> yang masih berstatus <strong>[In Progress]</strong> oleh Barista.</p>
+                                    <?php if (!empty($selectedBill['cafe_in_progress_items'])): ?>
+                                        <ul class="warning-list">
+                                            <?php foreach ($selectedBill['cafe_in_progress_items'] as $item): ?>
+                                                <li><?php echo $escape((string) $item['qty']); ?>x <?php echo $escape($item['menu_name']); ?></li>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                    <?php endif; ?>
+                                    <div class="modal-actions">
+                                        <button type="button" class="btn-secondary" id="checkKitchenBtn">Cek Dapur</button>
+                                        <button type="button" class="btn-primary" id="proceedPaymentBtn">Tetap Lanjutkan</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="paymentModal" class="modal-overlay hidden">
+                                <div class="modal-window">
+                                    <h2>Payment Gateway</h2>
+                                    <p>Pilih metode bayar untuk menyelesaikan transaksi.</p>
+                                    <div class="payment-grid">
+                                        <label class="payment-choice active">
+                                            <input type="radio" class="d-none" name="payment_gateway_method" value="QRIS" checked>
+                                            QRIS
+                                        </label>
+                                        <label class="payment-choice">
+                                            <input type="radio" class="d-none" name="payment_gateway_method" value="Cash">
+                                            Cash
+                                        </label>
+                                        <label class="payment-choice">
+                                            <input type="radio" class="d-none" name="payment_gateway_method" value="Debit">
+                                            Debit
+                                        </label>
+                                    </div>
+                                    <div class="modal-actions">
+                                        <button type="button" class="btn-secondary" id="closePaymentModalBtn">Batal</button>
+                                        <button type="button" class="btn-primary" id="printReceiptBtn">Cetak Struk</button>
+                                    </div>
+                                </div>
                             </div>
                         </article>
                     <?php endif; ?>
@@ -522,6 +558,172 @@ $formatCurrency = static fn ($value): string => 'Rp ' . number_format((float) $v
             </div>
         </main>
     </div>
+
+    <style>
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1050;
+            padding: 1.5rem;
+        }
+        .modal-overlay.hidden {
+            display: none;
+        }
+        .modal-window {
+            width: min(500px, 100%);
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.15);
+            padding: 1.5rem;
+            border: 1px solid #ddd;
+        }
+        .alert-modal {
+            border-left: 6px solid #d9534f;
+            background: #fff4f4;
+        }
+        .alert-modal h2 {
+            margin-top: 0;
+            color: #b82b2b;
+        }
+        .warning-list {
+            margin: 0.75rem 0 1rem;
+            padding-left: 1.3rem;
+            color: #4a2f2f;
+        }
+        .warning-list li {
+            margin-bottom: 0.35rem;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+        .btn-primary, .btn-secondary {
+            border: 0;
+            padding: 0.85rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background: #d9534f;
+            color: #fff;
+        }
+        .btn-secondary {
+            background: #f7f7f7;
+            color: #333;
+        }
+        .payment-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        .payment-choice {
+            border: 1px solid #ddd;
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.12s ease-in-out;
+            color: #4a3b41;
+            font-weight: 700;
+        }
+        .payment-choice.active {
+            border-color: #d9534f;
+            background: #f9e6e6;
+            color: #bf2c32;
+        }
+    </style>
+
+    <script>
+        (function () {
+            const selectedItems = <?php echo json_encode($selectedBill['cafe_in_progress_items'] ?? []); ?>;
+            const openBtn = document.getElementById('openPaymentGatewayBtn');
+            const warningModal = document.getElementById('warningModal');
+            const paymentModal = document.getElementById('paymentModal');
+            const closePaymentModalBtn = document.getElementById('closePaymentModalBtn');
+            const checkKitchenBtn = document.getElementById('checkKitchenBtn');
+            const proceedPaymentBtn = document.getElementById('proceedPaymentBtn');
+            const printReceiptBtn = document.getElementById('printReceiptBtn');
+            const paymentMethodInput = document.getElementById('payment_method');
+            const paymentChoices = Array.from(document.querySelectorAll('.payment-choice'));
+            const paymentForm = document.getElementById('paymentForm');
+
+            function openModal(modal) {
+                modal.classList.remove('hidden');
+            }
+            function closeModal(modal) {
+                modal.classList.add('hidden');
+            }
+            function openPaymentDialog() {
+                openModal(paymentModal);
+            }
+            function highlightPaymentChoice(label) {
+                paymentChoices.forEach((item) => item.classList.toggle('active', item === label));
+            }
+
+            if (openBtn) {
+                openBtn.addEventListener('click', function () {
+                    if (selectedItems.length > 0) {
+                        openModal(warningModal);
+                        return;
+                    }
+                    openPaymentDialog();
+                });
+            }
+
+            if (checkKitchenBtn) {
+                checkKitchenBtn.addEventListener('click', function () {
+                    closeModal(warningModal);
+                    alert('Silakan cek status pesanan Cafe di dapur atau pada tab Barista.');
+                });
+            }
+
+            if (proceedPaymentBtn) {
+                proceedPaymentBtn.addEventListener('click', function () {
+                    closeModal(warningModal);
+                    openPaymentDialog();
+                });
+            }
+
+            if (closePaymentModalBtn) {
+                closePaymentModalBtn.addEventListener('click', function () {
+                    closeModal(paymentModal);
+                });
+            }
+
+            paymentChoices.forEach((choice) => {
+                choice.addEventListener('click', function () {
+                    paymentChoices.forEach((item) => item.classList.remove('active'));
+                    this.classList.add('active');
+                    const radio = this.querySelector('input[type="radio"]');
+                    if (radio) {
+                        radio.checked = true;
+                    }
+                });
+            });
+
+            if (printReceiptBtn) {
+                printReceiptBtn.addEventListener('click', function () {
+                    const selectedRadio = document.querySelector('input[name="payment_gateway_method"]:checked');
+                    if (!selectedRadio) {
+                        alert('Pilih metode pembayaran terlebih dahulu.');
+                        return;
+                    }
+                    paymentMethodInput.value = selectedRadio.value;
+                    paymentForm.submit();
+                });
+            }
+        }());
+    </script>
 </body>
 </html>
 

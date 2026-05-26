@@ -689,6 +689,7 @@ class ReceptionistController
             "SELECT m.menu_name,
                     o.qty,
                     m.price,
+                    o.STATUS AS order_status,
                     (o.qty * m.price) AS line_total
              FROM orders o
              JOIN menus m ON m.menu_id = o.menu_id
@@ -696,6 +697,9 @@ class ReceptionistController
         );
         $cafeStmt->execute([':res_id' => $reservationId]);
         $cafeItems = $cafeStmt->fetchAll();
+        $cafeInProgressItems = array_filter($cafeItems, static function (array $item): bool {
+            return strtoupper(trim((string) ($item['order_status'] ?? ''))) === 'IN PROGRESS';
+        });
 
         $salonTotal = array_reduce($salonItems, static function (float $carry, array $item): float {
             return $carry + (float) ($item['base_tariff'] ?? 0);
@@ -715,6 +719,7 @@ class ReceptionistController
             'reservation' => $reservation,
             'salon_items' => $salonItems,
             'cafe_items' => $cafeItems,
+            'cafe_in_progress_items' => array_values($cafeInProgressItems),
             'summary' => [
                 'salon_total' => $salonTotal,
                 'cafe_total' => $cafeTotal,
