@@ -59,6 +59,59 @@ class ReservationsModel
         return $stmt->fetchAll();
     }
 
+    public function getTodayScheduleByBeautician(int $beauticianId): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT r.res_id,
+                    r.STATUS AS status,
+                    r.schedule_time,
+                    DATE(r.schedule_time) AS reservation_date,
+                    TIME(r.schedule_time) AS reservation_time,
+                    u.NAME AS customer_name,
+                    s.service_name,
+                    s.category,
+                    se.seat_name
+             FROM reservations r
+             JOIN reservation_details rd ON r.res_id = rd.res_id
+             JOIN users u ON r.user_id = u.user_id
+             LEFT JOIN services s ON rd.service_id = s.service_id
+             LEFT JOIN seats se ON r.seat_id = se.seat_id
+             WHERE rd.beautician_id = :beautician_id
+               AND DATE(r.schedule_time) = CURDATE()
+             ORDER BY r.schedule_time ASC'
+        );
+        $stmt->execute([':beautician_id' => $beauticianId]);
+        return $stmt->fetchAll();
+    }
+
+    public function getUpcomingByBeautician(int $beauticianId, int $days = 7): array
+    {
+        $endDate = date('Y-m-d', strtotime('+' . max(1, $days) . ' days'));
+        $stmt = $this->db->prepare(
+            'SELECT r.res_id,
+                    r.STATUS AS status,
+                    r.schedule_time,
+                    DATE(r.schedule_time) AS reservation_date,
+                    TIME(r.schedule_time) AS reservation_time,
+                    u.NAME AS customer_name,
+                    s.service_name,
+                    s.category,
+                    se.seat_name
+             FROM reservations r
+             JOIN reservation_details rd ON r.res_id = rd.res_id
+             JOIN users u ON r.user_id = u.user_id
+             LEFT JOIN services s ON rd.service_id = s.service_id
+             LEFT JOIN seats se ON r.seat_id = se.seat_id
+             WHERE rd.beautician_id = :beautician_id
+                             AND DATE(r.schedule_time) BETWEEN CURDATE() AND :end_date
+             ORDER BY r.schedule_time ASC'
+        );
+        $stmt->bindValue(':beautician_id', $beauticianId, PDO::PARAM_INT);
+                $stmt->bindValue(':end_date', $endDate);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
     public function generateResId(): string
     {
         $timestamp = time();

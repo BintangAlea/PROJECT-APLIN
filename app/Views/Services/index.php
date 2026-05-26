@@ -429,7 +429,7 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
                         <div class="service-body">
                             <h3 class="service-title">Signature Balayage</h3>
                             <p class="service-price">Starting from Rp 850.000</p>
-                            <button class="btn book-btn" type="button" onclick="bookService('Signature Balayage')">Book Now</button>
+                            <button class="btn book-btn" type="button" onclick="bookService('SV01', 'Signature Balayage')">Book Now</button>
                         </div>
                     </article>
                 </div>
@@ -440,7 +440,7 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
                         <div class="service-body">
                             <h3 class="service-title">Editorial Manicure</h3>
                             <p class="service-price">Starting from Rp 350.000</p>
-                            <button class="btn book-btn" type="button" onclick="bookService('Editorial Manicure')">Book Now</button>
+                            <button class="btn book-btn" type="button" onclick="bookService('SV03', 'Editorial Manicure')">Book Now</button>
                         </div>
                     </article>
                 </div>
@@ -451,7 +451,7 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
                         <div class="service-body">
                             <h3 class="service-title">Volume Lash Extensions</h3>
                             <p class="service-price">Starting from Rp 550.000</p>
-                            <button class="btn book-btn" type="button" onclick="bookService('Volume Lash Extensions')">Book Now</button>
+                            <button class="btn book-btn" type="button" onclick="bookService('SV05', 'Volume Lash Extensions')">Book Now</button>
                         </div>
                     </article>
                 </div>
@@ -539,8 +539,14 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
             });
         });
 
-        function bookService(serviceName) {
-            window.location.href = 'index.php?page=booking&step=1&service=' + encodeURIComponent(serviceName);
+        function bookService(serviceId, serviceName) {
+            const params = new URLSearchParams({
+                page: 'booking',
+                step: '1',
+                service_id: serviceId,
+                service: serviceName
+            });
+            window.location.href = 'index.php?' + params.toString();
         }
     </script>
 </body>

@@ -26,7 +26,7 @@ class BeauticianController
     {
         $userId = $_SESSION['user_id'];
         $beautician = $this->beauticiansModel->findByUserId($userId);
-        $beauticiansId = $beautician['id'] ?? null;
+        $beauticiansId = $beautician['user_id'] ?? $beautician['profile_id'] ?? null;
 
         if (!$beauticiansId) {
             $_SESSION['error'] = 'Beautician profile not found';
@@ -36,15 +36,17 @@ class BeauticianController
 
         $todaySchedule = $this->reservationsModel->getTodayScheduleByBeautician($beauticiansId);
         $upcomingSchedule = $this->reservationsModel->getUpcomingByBeautician($beauticiansId);
+        $pageTitle = 'Beautician Dashboard';
+        $activeMenu = 'dashboard';
 
         require __DIR__ . '/../Views/Beautician/index.php';
     }
 
-    public function todaySchedule()
+    public function schedule()
     {
         $userId = $_SESSION['user_id'];
         $beautician = $this->beauticiansModel->findByUserId($userId);
-        $beauticiansId = $beautician['id'] ?? null;
+        $beauticiansId = $beautician['user_id'] ?? $beautician['profile_id'] ?? null;
 
         if (!$beauticiansId) {
             $_SESSION['error'] = 'Beautician profile not found';
@@ -52,25 +54,79 @@ class BeauticianController
             exit;
         }
 
-        $schedule = $this->reservationsModel->getTodayScheduleByBeautician($beauticiansId);
-        require __DIR__ . '/../Views/Beautician/today_schedule.php';
+        $todaySchedule = $this->reservationsModel->getTodayScheduleByBeautician($beauticiansId);
+        $upcomingSchedule = $this->reservationsModel->getUpcomingByBeautician($beauticiansId, 14);
+        $pageTitle = 'Schedule';
+        $activeMenu = 'schedule';
+
+        require __DIR__ . '/../Views/Beautician/schedule.php';
+    }
+
+    public function treatments()
+    {
+        $pageTitle = 'Treatments';
+        $activeMenu = 'treatments';
+
+        $treatments = [
+            [
+                'name' => 'Luminous Balayage',
+                'subtitle' => 'Signature blonding & gloss service',
+                'duration' => '180 min',
+                'status' => 'Booked',
+                'note' => 'Focus on soft dimension and face-framing brightness.',
+            ],
+            [
+                'name' => 'Classic Manicure',
+                'subtitle' => 'Clean finish for daily elegance',
+                'duration' => '60 min',
+                'status' => 'Available',
+                'note' => 'Ideal for quick refresh appointments.',
+            ],
+            [
+                'name' => 'Lash Lift',
+                'subtitle' => 'Natural curl and lift treatment',
+                'duration' => '75 min',
+                'status' => 'Available',
+                'note' => 'Low-maintenance enhancement with long wear.',
+            ],
+        ];
+
+        $materials = [
+            ['name' => 'Hair Color Tube', 'qty' => '1x'],
+            ['name' => 'Developer (30 Vol)', 'qty' => '50ml'],
+            ['name' => 'Repair Vitamin', 'qty' => '1x'],
+        ];
+
+        require __DIR__ . '/../Views/Beautician/treatments.php';
+    }
+
+    public function achievements()
+    {
+        $pageTitle = 'Achievements';
+        $activeMenu = 'achievements';
+
+        $stats = [
+            ['label' => 'Avg Rating', 'value' => '4.9', 'hint' => 'Client satisfaction'],
+            ['label' => 'Total Clients', 'value' => '124', 'hint' => 'This quarter'],
+            ['label' => 'Repeat Clients', 'value' => '86%', 'hint' => 'Loyalty score'],
+        ];
+
+        $reviews = [
+            ['name' => 'Sarah Jenkins', 'tag' => 'Balayage', 'text' => 'Elena is a master of color. Highly professional and welcoming.'],
+            ['name' => 'Michelle T.', 'tag' => 'Color Correction', 'text' => 'Best experience ever. The result matched exactly what I wanted.'],
+        ];
+
+        require __DIR__ . '/../Views/Beautician/achievements.php';
+    }
+
+    public function todaySchedule()
+    {
+        $this->schedule();
     }
 
     public function upcomingSchedule()
     {
-        $userId = $_SESSION['user_id'];
-        $beautician = $this->beauticiansModel->findByUserId($userId);
-        $beauticiansId = $beautician['id'] ?? null;
-
-        if (!$beauticiansId) {
-            $_SESSION['error'] = 'Beautician profile not found';
-            header('Location: index.php?page=login');
-            exit;
-        }
-
-        $days = $_GET['days'] ?? 30;
-        $schedule = $this->reservationsModel->getUpcomingByBeautician($beauticiansId, $days);
-        require __DIR__ . '/../Views/Beautician/upcoming_schedule.php';
+        $this->schedule();
     }
 
     public function updateReservationStatus()
