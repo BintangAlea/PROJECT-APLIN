@@ -3,10 +3,12 @@
 namespace App\Controllers;
 
 use App\Models\OrdersModel;
+use App\Models\MenusModel;
 
 class BaristaController
 {
     private OrdersModel $ordersModel;
+    private MenusModel $menusModel;
 
     public function __construct()
     {
@@ -17,12 +19,23 @@ class BaristaController
         }
         
         $this->ordersModel = new OrdersModel();
+        $this->menusModel = new MenusModel();
     }
 
     public function index()
     {
         $orders = $this->ordersModel->findPendingOrInProgress();
+        $pageTitle = 'Barista Dashboard';
+        $activeMenu = 'kds';
         require __DIR__ . '/../Views/Barista/index.php';
+    }
+
+    public function menuAvailability()
+    {
+        $menus = $this->menusModel->findAll();
+        $pageTitle = 'Item Availability Manager';
+        $activeMenu = 'availability';
+        require __DIR__ . '/../Views/Barista/menu_availability.php';
     }
 
     public function updateOrderStatus()

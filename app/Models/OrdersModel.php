@@ -71,7 +71,7 @@ class OrdersModel
              FROM orders o
              JOIN menus m ON o.menu_id = m.menu_id
              LEFT JOIN reservations r ON o.res_id = r.res_id
-             WHERE o.STATUS IN ("In Progress", "Selesai")
+             WHERE o.STATUS IN ("New", "Pending", "In Progress", "Selesai")
              ORDER BY o.order_id DESC'
         );
         return $stmt->fetchAll();
