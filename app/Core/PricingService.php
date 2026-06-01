@@ -29,10 +29,10 @@ class PricingService
      * @return array Pricing breakdown
      */
     public function calculateTotal(
-        int $serviceId = null,
-        int $bundleId = null,
+        ?int $serviceId = null,
+        ?int $bundleId = null,
         array $addonIds = [],
-        string $promoCode = null
+        ?string $promoCode = null
     ): array {
         $basePrice = 0;
         $description = '';
@@ -160,7 +160,7 @@ class PricingService
     public function updateReservationPricing(
         int $resId,
         array $pricing,
-        string $paymentMethod = null
+        ?string $paymentMethod = null
     ): bool {
         $stmt = $this->db->prepare(
             'UPDATE reservations 

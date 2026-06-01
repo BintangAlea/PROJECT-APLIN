@@ -3,6 +3,7 @@ $pageTitle = 'Cart - MERISH Cafe';
 $isLoggedIn = isset($_SESSION['user_id']);
 $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
 $cart = $_SESSION['cart'] ?? [];
+$menus = $menus ?? [];
 
 $cartItems = [];
 $totalPrice = 0;
@@ -134,6 +135,92 @@ $selectedGuest = $_SESSION['cafe_order']['guest_name'] ?? $displayName;
             color: #3f3137;
             font-size: 1.5rem;
             margin-bottom: 1.3rem;
+        }
+
+        .menu-picker {
+            margin-bottom: 2rem;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.9rem;
+        }
+
+        .menu-card {
+            border: 1px solid #e6dada;
+            background: #fffafa;
+            box-shadow: 0 10px 20px rgba(78, 54, 61, 0.04);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 100%;
+        }
+
+        .menu-card-visual {
+            height: 126px;
+            background-size: cover;
+            background-position: center;
+            border-bottom: 1px solid #eadede;
+        }
+
+        .menu-card-body {
+            padding: 0.9rem 0.85rem 0.95rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+            flex: 1;
+        }
+
+        .menu-card-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            color: #3d3036;
+            line-height: 1.1;
+            margin: 0;
+        }
+
+        .menu-card-meta {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.75rem;
+            align-items: center;
+            color: #7a6d71;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .menu-card-price {
+            color: var(--accent);
+            font-weight: 700;
+            font-size: 0.88rem;
+        }
+
+        .menu-card-desc {
+            color: #75696d;
+            font-size: 0.78rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .add-menu-btn {
+            margin-top: auto;
+            border: 1px solid #b58f9b;
+            background: #fff;
+            color: #7d5161;
+            text-transform: uppercase;
+            letter-spacing: 1.15px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.62rem 0.8rem;
+            width: 100%;
+        }
+
+        .add-menu-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
         }
 
         .cart-item {
@@ -416,12 +503,20 @@ $selectedGuest = $_SESSION['cafe_order']['guest_name'] ?? $displayName;
                 gap: 2rem;
             }
 
+            .menu-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
             .summary-card {
                 position: static;
             }
         }
 
         @media (max-width: 575.98px) {
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+
             .cart-item {
                 grid-template-columns: 62px minmax(0, 1fr);
             }
@@ -458,6 +553,42 @@ $selectedGuest = $_SESSION['cafe_order']['guest_name'] ?? $displayName;
 
         <div class="layout">
             <section>
+                <div class="menu-picker">
+                    <h2 class="section-title">Pilih Menu</h2>
+                    <div class="menu-grid">
+                        <?php foreach ($menus as $menu): ?>
+                            <?php
+                            $menuId = (string) ($menu['menu_id'] ?? '');
+                            $menuName = (string) ($menu['menu_name'] ?? 'Menu Item');
+                            $menuPrice = (int) ($menu['price'] ?? 0);
+                            $menuCategory = strtolower((string) ($menu['category'] ?? 'kopi'));
+                            $menuImage = (string) ($menu['image'] ?? '');
+                            $description = (string) ($menu['description'] ?? '');
+                            $visualClass = $menuImage !== '' ? $menuImage : ($menuCategory === 'pastry' ? 'croissant' : ($menuCategory === 'teh' ? 'rose-latte' : 'signature-latte'));
+                            ?>
+                            <article class="menu-card">
+                                <div class="menu-card-visual <?php echo htmlspecialchars($visualClass); ?>"></div>
+                                <div class="menu-card-body">
+                                    <div class="menu-card-meta">
+                                        <span><?php echo htmlspecialchars($menuCategory); ?></span>
+                                        <span class="menu-card-price">IDR <?php echo number_format($menuPrice, 0, ',', '.'); ?></span>
+                                    </div>
+                                    <h3 class="menu-card-name"><?php echo htmlspecialchars($menuName); ?></h3>
+                                    <p class="menu-card-desc"><?php echo htmlspecialchars($description !== '' ? $description : 'Tambahkan menu ini ke keranjang sebelum lanjut ke pembayaran.'); ?></p>
+                                    <form method="POST" action="index.php?page=cafe&action=addToCart" class="m-0">
+                                        <input type="hidden" name="menu_id" value="<?php echo htmlspecialchars($menuId); ?>">
+                                        <input type="hidden" name="menu_name" value="<?php echo htmlspecialchars($menuName); ?>">
+                                        <input type="hidden" name="price" value="<?php echo htmlspecialchars((string) $menuPrice); ?>">
+                                        <input type="hidden" name="image" value="<?php echo htmlspecialchars($menuImage); ?>">
+                                        <input type="hidden" name="category" value="<?php echo htmlspecialchars($menuCategory); ?>">
+                                        <button type="submit" class="add-menu-btn">Tambah ke Keranjang</button>
+                                    </form>
+                                </div>
+                            </article>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
                 <h2 class="section-title">Your Order</h2>
 
                 <?php if (!empty($cartItems)): ?>
@@ -483,7 +614,7 @@ $selectedGuest = $_SESSION['cafe_order']['guest_name'] ?? $displayName;
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <div class="empty-state">Keranjang masih kosong. Silakan pilih menu dulu sebelum checkout.</div>
+                    <div class="empty-state">Keranjang masih kosong. Silakan pilih menu di atas dulu sebelum checkout.</div>
                 <?php endif; ?>
 
                 <h2 class="delivery-title">Delivery Method</h2>

@@ -2,6 +2,8 @@
 $booking = $booking ?? [];
 $minDate = $min_date ?? date('Y-m-d', strtotime('+1 day'));
 $maxDate = $max_date ?? date('Y-m-d', strtotime('+30 days'));
+$vipAccessEnabled = (bool) ($vip_access_enabled ?? false);
+$memberName = $member_name ?? 'Guest';
 $selectedDate = $booking['reservation_date'] ?? $minDate;
 $selectedTime = $booking['reservation_time'] ?? '10:00';
 
@@ -477,7 +479,9 @@ $afternoonSlots = [
                             <h1 class="panel-title">Select Date & Time</h1>
                             <p class="panel-subtitle">Choose a convenient slot for your Signature Style Session. Availability is shown in your local timezone.</p>
 
-                            <div class="vip-note">★ <strong>VIP Member Access Unlocked</strong><br><small>You have extended 14-day booking availability. Regular members are restricted to booking 24 hours in advance.</small></div>
+                            <?php if ($vipAccessEnabled): ?>
+                                <div class="vip-note">★ <strong>VIP Member Access Unlocked</strong><br><small>Hi, <?php echo htmlspecialchars($memberName); ?>. You have extended 14-day booking availability.</small></div>
+                            <?php endif; ?>
 
                             <div class="card-soft">
                                 <div class="month-header">

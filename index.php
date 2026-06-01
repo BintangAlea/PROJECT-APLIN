@@ -7,7 +7,7 @@ use App\Controllers\AdminController;
 use App\Controllers\ReceptionistController;
 use App\Controllers\BeauticianController;
 use App\Controllers\BaristaController;
-use App\Controllers\QrOrder;
+use App\Controllers\QROrderController;
 use App\Controllers\UnifiedBilling;
 use App\Controllers\BookingController;
 use App\Controllers\ServicesController;
@@ -28,7 +28,7 @@ $controller = match($page) {
     'receptionist' => new ReceptionistController(),
     'beautician'  => new BeauticianController(),
     'barista'     => new BaristaController(),
-    'qrorder'     => new QrOrder(),
+    'qrorder'     => new QROrderController(),
     'billing'     => new UnifiedBilling(),
     default       => new Home(),
 };

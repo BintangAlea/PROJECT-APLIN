@@ -128,6 +128,20 @@ class BookingController
     public function step3()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $isLoggedIn = isset($_SESSION['user_id']);
+            $user = null;
+            $vipAccessEnabled = false;
+            $bookingWindowDays = 1;
+
+            if ($isLoggedIn) {
+                $usersModel = new UsersModel();
+                $user = $usersModel->findById((int) $_SESSION['user_id']);
+                $totalSpent = (int) ($user['total_spent'] ?? 0);
+                $loyaltyStage = (int) ($user['loyalty_stage'] ?? 1);
+                $vipAccessEnabled = $loyaltyStage >= 3 || $totalSpent >= 2000000;
+                $bookingWindowDays = $vipAccessEnabled ? 14 : 1;
+            }
+
             return [
                 'view' => 'Booking/step3',
                 'data' => [
@@ -135,7 +149,9 @@ class BookingController
                     'title' => 'Pilih Tanggal & Waktu',
                     'booking' => $_SESSION['booking'] ?? [],
                     'min_date' => date('Y-m-d', strtotime('+1 day')),
-                    'max_date' => date('Y-m-d', strtotime('+30 days'))
+                    'max_date' => date('Y-m-d', strtotime('+' . $bookingWindowDays . ' days')),
+                    'vip_access_enabled' => $vipAccessEnabled,
+                    'member_name' => $user['NAME'] ?? ($_SESSION['full_name'] ?? 'Guest')
                 ]
             ];
         }

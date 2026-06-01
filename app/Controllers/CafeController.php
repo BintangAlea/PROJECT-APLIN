@@ -2,6 +2,8 @@
 
 namespace App\Controllers;
 
+use App\Models\MenusModel;
+
 class CafeController
 {
     /**
@@ -17,6 +19,9 @@ class CafeController
 
     public function cart()
     {
+        $menusModel = new MenusModel();
+        $menus = $menusModel->findAll();
+
         require __DIR__ . '/../Views/Cafe/cart.php';
     }
 
