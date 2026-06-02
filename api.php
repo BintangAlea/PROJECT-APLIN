@@ -21,6 +21,7 @@ use App\Controllers\ApiKasirController;
 use App\Controllers\ApiBookingController;
 use App\Controllers\ApiInventarisController;
 use App\Controllers\ApiAdminDashboardController;
+use App\Controllers\ApiCafeIntegrationController;
 
 header('Content-Type: application/json');
 
@@ -54,6 +55,11 @@ $routes = [
     // ORDER ROUTES
     'POST:orders/create' => [ApiOrderController::class, 'create'],
     'GET:orders' => [ApiOrderController::class, 'getAll'],
+
+    // CAFE INTEGRATION ROUTES
+    'POST:cafe/scan-qr' => [ApiCafeIntegrationController::class, 'scanQR'],
+    'POST:cafe/add-order' => [ApiCafeIntegrationController::class, 'addOrder'],
+    'POST:cafe/payment' => [ApiCafeIntegrationController::class, 'processPayment'],
 
     // KASIR ROUTES
     'POST:billing/calculate' => [ApiKasirController::class, 'calculate'],
@@ -136,6 +142,15 @@ if (preg_match('/^billing\/(\d+)$/', $route, $matches)) {
     if ($method === 'GET') {
         $controller = new ApiKasirController();
         $controller->getBilling($matches[1]);
+        exit;
+    }
+}
+
+// Cafe integration parameterized routes
+if (preg_match('/^cafe\/bill\/(\d+)\/summary$/', $route, $matches)) {
+    if ($method === 'GET') {
+        $controller = new ApiCafeIntegrationController();
+        $controller->getBillSummary($matches[1]);
         exit;
     }
 }

@@ -28,7 +28,7 @@ class ApiAdminDashboardController
      */
     private function requireAdmin()
     {
-        if ($_SESSION['role'] !== 'Admin') {
+        if (($_SESSION['role'] ?? '') !== 'Admin') {
             echo ApiResponse::forbidden('Only admin can access this resource');
             exit;
         }
@@ -59,7 +59,7 @@ class ApiAdminDashboardController
         // Total orders (today)
         $orders = $this->db->query(
             "SELECT COUNT(*) as total FROM orders 
-             WHERE DATE(CURDATE()) = CURDATE()"
+             WHERE DATE(payment_date) = CURDATE()"
         );
         $totalOrders = $orders->fetch()['total'] ?? 0;
 
@@ -123,4 +123,226 @@ class ApiAdminDashboardController
             'warning' => count(array_filter($alertItems, fn($a) => $a['alert_type'] === 'Warning')),
             'items' => $alertItems
         ], 'Low stock alerts', 200);
-    }  /**\n     * GET /api/admin/revenue\n     * Get revenue report\n     * \n     * Query params:\n     * - period: today, week, month, year\n     */\n    public function getRevenue()\n    {\n        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {\n            echo ApiResponse::error('Method not allowed', 405);\n            return;\n        }\n\n        $this->requireAdmin();\n\n        $period = $_GET['period'] ?? 'today';\n\n        $where = match($period) {\n            'today' => 'DATE(payment_date) = CURDATE()',\n            'week' => 'WEEK(payment_date) = WEEK(CURDATE()) AND YEAR(payment_date) = YEAR(CURDATE())',\n            'month' => 'MONTH(payment_date) = MONTH(CURDATE()) AND YEAR(payment_date) = YEAR(CURDATE())',\n            'year' => 'YEAR(payment_date) = YEAR(CURDATE())',\n            default => 'DATE(payment_date) = CURDATE()'\n        };\n\n        $revenue = $this->db->prepare(\n            \"SELECT SUM(total_amount) as total, COUNT(*) as transaction_count\n             FROM transactions\n             WHERE {$where}\"\n        );\n        $revenue->execute();\n        $data = $revenue->fetch();\n\n        echo ApiResponse::success([\n            'period' => $period,\n            'total_revenue' => (float)($data['total'] ?? 0),\n            'transaction_count' => (int)($data['transaction_count'] ?? 0),\n            'average_transaction' => (float)(($data['total'] ?? 0) / max(($data['transaction_count'] ?? 1), 1))\n        ], 'Revenue report', 200);\n    }\n\n    /**\n     * GET /api/admin/users\n     * Get user statistics\n     */\n    public function getUsers()\n    {\n        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {\n            echo ApiResponse::error('Method not allowed', 405);\n            return;\n        }\n\n        $this->requireAdmin();\n\n        $roles = ['Admin', 'Receptionist', 'Barista', 'Beautician', 'Customer'];\n        $userStats = [];\n\n        foreach ($roles as $role) {\n            $stmt = $this->db->prepare('SELECT COUNT(*) as count FROM users WHERE ROLE = :role');\n            $stmt->execute([':role' => $role]);\n            $count = $stmt->fetch()['count'];\n            $userStats[] = ['role' => $role, 'count' => $count];\n        }\n\n        $total = $this->db->query('SELECT COUNT(*) as count FROM users');\n        $totalUsers = $total->fetch()['count'];\n\n        echo ApiResponse::success([\n            'total_users' => $totalUsers,\n            'by_role' => $userStats\n        ], 'User statistics', 200);\n    }\n\n    /**\n     * GET /api/admin/top-menus\n     * Get top selling menus\n     */\n    public function getTopMenus()\n    {\n        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {\n            echo ApiResponse::error('Method not allowed', 405);\n            return;\n        }\n\n        $this->requireAdmin();\n\n        $limit = $_GET['limit'] ?? 10;\n\n        $top = $this->db->query(\n            \"SELECT m.menu_id, m.menu_name, m.price,\n                    SUM(o.qty) as total_qty,\n                    COUNT(o.order_id) as order_count,\n                    SUM(o.qty * m.price) as total_revenue\n             FROM orders o\n             JOIN menus m ON o.menu_id = m.menu_id\n             GROUP BY m.menu_id\n             ORDER BY total_qty DESC\n             LIMIT {$limit}\"\n        );\n        $topMenus = $top->fetchAll();\n\n        echo ApiResponse::success($topMenus, 'Top selling menus', 200);\n    }\n\n    /**\n     * POST /api/admin/trigger-low-stock-alert\n     * Trigger alert when stock hits minimum\n     * (Auto-called after stock deduction)\n     * \n     * Request body:\n     * {\n     *   \"item_id\": 1\n     * }\n     */\n    public function triggerLowStockAlert()\n    {\n        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {\n            echo ApiResponse::error('Method not allowed', 405);\n            return;\n        }\n\n        $this->requireAdmin();\n\n        $input = json_decode(file_get_contents('php://input'), true);\n\n        if (empty($input['item_id'])) {\n            echo ApiResponse::validationError(['item_id' => 'Item ID required']);\n            return;\n        }\n\n        $item = $this->db->prepare('SELECT * FROM inventories WHERE item_id = :item_id');\n        $item->execute([':item_id' => $input['item_id']]);\n        $itemData = $item->fetch();\n\n        if (!$itemData) {\n            echo ApiResponse::notFound('Item not found');\n            return;\n        }\n\n        if ($itemData['stock_qty'] > $itemData['min_stock']) {\n            echo ApiResponse::success([\n                'item_id' => $input['item_id'],\n                'alert_triggered' => false,\n                'reason' => 'Stock is above minimum threshold'\n            ], 'No alert needed', 200);\n            return;\n        }\n\n        // Alert triggered\n        $alertLevel = $itemData['stock_qty'] == 0 ? 'CRITICAL' : 'WARNING';\n        $message = \"Stock Alert: {$itemData['item_name']} is at critical level (Stock: {$itemData['stock_qty']}, Min: {$itemData['min_stock']})\";\n\n        echo ApiResponse::success([\n            'item_id' => $input['item_id'],\n            'item_name' => $itemData['item_name'],\n            'current_stock' => $itemData['stock_qty'],\n            'minimum_stock' => $itemData['min_stock'],\n            'alert_level' => $alertLevel,\n            'alert_triggered' => true,\n            'message' => $message,\n            'timestamp' => date('Y-m-d H:i:s')\n        ], 'Alert triggered', 200);\n    }\n\n    /**\n     * GET /api/admin/bookings\n     * Get booking statistics\n     * \n     * Query params:\n     * - date: YYYY-MM-DD (specific date)\n     * - status: Pending, Confirmed, In-Service, Selesai, Canceled\n     */\n    public function getBookings()\n    {\n        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {\n            echo ApiResponse::error('Method not allowed', 405);\n            return;\n        }\n\n        $this->requireAdmin();\n\n        $date = $_GET['date'] ?? date('Y-m-d');\n        $status = $_GET['status'] ?? null;\n\n        $where = \"DATE(schedule_time) = :date\";\n        $params = [':date' => $date];\n\n        if ($status) {\n            $where .= \" AND STATUS = :status\";\n            $params[':status'] = $status;\n        }\n\n        $bookings = $this->db->prepare(\n            \"SELECT res_id, guest_name, STATUS, schedule_time, dp_amount, is_dp_paid\n             FROM reservations\n             WHERE {$where}\n             ORDER BY schedule_time ASC\"\n        );\n        $bookings->execute($params);\n        $bookingData = $bookings->fetchAll();\n\n        // Get summary\n        $total = count($bookingData);\n        $confirmed = count(array_filter($bookingData, fn($b) => $b['STATUS'] === 'Confirmed'));\n        $inService = count(array_filter($bookingData, fn($b) => $b['STATUS'] === 'In-Service'));\n        $completed = count(array_filter($bookingData, fn($b) => $b['STATUS'] === 'Selesai'));\n\n        echo ApiResponse::success([\n            'date' => $date,\n            'summary' => [\n                'total_bookings' => $total,\n                'confirmed' => $confirmed,\n                'in_service' => $inService,\n                'completed' => $completed\n            ],\n            'bookings' => $bookingData\n        ], 'Booking statistics', 200);\n    }\n}\n
+    }
+
+    /**
+     * GET /api/admin/revenue
+     * Get revenue report
+     * 
+     * Query params:
+     * - period: today, week, month, year
+     */
+    public function getRevenue()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            echo ApiResponse::error('Method not allowed', 405);
+            return;
+        }
+
+        $this->requireAdmin();
+
+        $period = $_GET['period'] ?? 'today';
+
+        $where = match($period) {
+            'today' => 'DATE(payment_date) = CURDATE()',
+            'week' => 'WEEK(payment_date) = WEEK(CURDATE()) AND YEAR(payment_date) = YEAR(CURDATE())',
+            'month' => 'MONTH(payment_date) = MONTH(CURDATE()) AND YEAR(payment_date) = YEAR(CURDATE())',
+            'year' => 'YEAR(payment_date) = YEAR(CURDATE())',
+            default => 'DATE(payment_date) = CURDATE()'
+        };
+
+        $revenue = $this->db->prepare(
+            "SELECT SUM(total_amount) as total, COUNT(*) as transaction_count
+             FROM transactions
+             WHERE {$where}"
+        );
+        $revenue->execute();
+        $data = $revenue->fetch();
+
+        echo ApiResponse::success([
+            'period' => $period,
+            'total_revenue' => (float)($data['total'] ?? 0),
+            'transaction_count' => (int)($data['transaction_count'] ?? 0),
+            'average_transaction' => (float)(($data['total'] ?? 0) / max(($data['transaction_count'] ?? 1), 1))
+        ], 'Revenue report', 200);
+    }
+
+    /**
+     * GET /api/admin/users
+     * Get user statistics
+     */
+    public function getUsers()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            echo ApiResponse::error('Method not allowed', 405);
+            return;
+        }
+
+        $this->requireAdmin();
+
+        $roles = ['Admin', 'Receptionist', 'Barista', 'Beautician', 'Customer'];
+        $userStats = [];
+
+        foreach ($roles as $role) {
+            $stmt = $this->db->prepare('SELECT COUNT(*) as count FROM users WHERE ROLE = :role');
+            $stmt->execute([':role' => $role]);
+            $count = $stmt->fetch()['count'];
+            $userStats[] = ['role' => $role, 'count' => $count];
+        }
+
+        $total = $this->db->query('SELECT COUNT(*) as count FROM users');
+        $totalUsers = $total->fetch()['count'];
+
+        echo ApiResponse::success([
+            'total_users' => $totalUsers,
+            'by_role' => $userStats
+        ], 'User statistics', 200);
+    }
+
+    /**
+     * GET /api/admin/top-menus
+     * Get top selling menus
+     */
+    public function getTopMenus()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            echo ApiResponse::error('Method not allowed', 405);
+            return;
+        }
+
+        $this->requireAdmin();
+
+        $limit = (int)($_GET['limit'] ?? 10);
+
+        $top = $this->db->query(
+            "SELECT m.menu_id, m.menu_name, m.price,
+                    SUM(o.qty) as total_qty,
+                    COUNT(o.order_id) as order_count,
+                    SUM(o.qty * m.price) as total_revenue
+             FROM orders o
+             JOIN menus m ON o.menu_id = m.menu_id
+             GROUP BY m.menu_id
+             ORDER BY total_qty DESC
+             LIMIT {$limit}"
+        );
+        $topMenus = $top->fetchAll();
+
+        echo ApiResponse::success($topMenus, 'Top selling menus', 200);
+    }
+
+    /**
+     * POST /api/admin/trigger-low-stock-alert
+     * Trigger alert when stock hits minimum
+     * (Auto-called after stock deduction)
+     *
+     * Request body:
+     * {
+     *   "item_id": 1
+     * }
+     */
+    public function triggerLowStockAlert()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo ApiResponse::error('Method not allowed', 405);
+            return;
+        }
+
+        $this->requireAdmin();
+
+        $input = json_decode(file_get_contents('php://input'), true);
+
+        if (empty($input['item_id'])) {
+            echo ApiResponse::validationError(['item_id' => 'Item ID required']);
+            return;
+        }
+
+        $item = $this->db->prepare('SELECT * FROM inventories WHERE item_id = :item_id');
+        $item->execute([':item_id' => $input['item_id']]);
+        $itemData = $item->fetch();
+
+        if (!$itemData) {
+            echo ApiResponse::notFound('Item not found');
+            return;
+        }
+
+        if ($itemData['stock_qty'] > $itemData['min_stock']) {
+            echo ApiResponse::success([
+                'item_id' => $input['item_id'],
+                'alert_triggered' => false,
+                'reason' => 'Stock is above minimum threshold'
+            ], 'No alert needed', 200);
+            return;
+        }
+
+        // Alert triggered
+        $alertLevel = $itemData['stock_qty'] == 0 ? 'CRITICAL' : 'WARNING';
+        $message = "Stock Alert: {$itemData['item_name']} is at critical level (Stock: {$itemData['stock_qty']}, Min: {$itemData['min_stock']})";
+
+        echo ApiResponse::success([
+            'item_id' => $input['item_id'],
+            'item_name' => $itemData['item_name'],
+            'current_stock' => $itemData['stock_qty'],
+            'minimum_stock' => $itemData['min_stock'],
+            'alert_level' => $alertLevel,
+            'alert_triggered' => true,
+            'message' => $message,
+            'timestamp' => date('Y-m-d H:i:s')
+        ], 'Alert triggered', 200);
+    }
+
+    /**
+     * GET /api/admin/bookings
+     * Get booking statistics
+     * 
+     * Query params:
+     * - date: YYYY-MM-DD (specific date)
+     * - status: Pending, Confirmed, In-Service, Selesai, Canceled
+     */
+    public function getBookings()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            echo ApiResponse::error('Method not allowed', 405);
+            return;
+        }
+
+        $this->requireAdmin();
+
+        $date = $_GET['date'] ?? date('Y-m-d');
+        $status = $_GET['status'] ?? null;
+
+        $where = "DATE(schedule_time) = :date";
+        $params = [':date' => $date];
+
+        if ($status) {
+            $where .= " AND STATUS = :status";
+            $params[':status'] = $status;
+        }
+
+        $bookings = $this->db->prepare(
+            "SELECT res_id, guest_name, STATUS, schedule_time, dp_amount, is_dp_paid
+             FROM reservations
+             WHERE {$where}
+             ORDER BY schedule_time ASC"
+        );
+        $bookings->execute($params);
+        $bookingData = $bookings->fetchAll();
+
+        // Get summary
+        $total = count($bookingData);
+        $confirmed = count(array_filter($bookingData, fn($b) => $b['STATUS'] === 'Confirmed'));
+        $inService = count(array_filter($bookingData, fn($b) => $b['STATUS'] === 'In-Service'));
+        $completed = count(array_filter($bookingData, fn($b) => $b['STATUS'] === 'Selesai'));
+
+        echo ApiResponse::success([
+            'date' => $date,
+            'summary' => [
+                'total_bookings' => $total,
+                'confirmed' => $confirmed,
+                'in_service' => $inService,
+                'completed' => $completed
+            ],
+            'bookings' => $bookingData
+        ], 'Booking statistics', 200);
+    }
+
+}

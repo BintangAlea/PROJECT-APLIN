@@ -275,6 +275,9 @@ class ReceptionistController
                 ':res_id' => $reservationId,
             ]);
 
+            // Create or update open bill for unified billing
+            $this->createOrUpdateOpenBill($reservationId, $salonSeatId, $hasCompanion ? $loungeSeatId : null);
+
             $_SESSION['success'] = 'Check-In & alokasi berhasil disimpan.';
         } catch (\Throwable $exception) {
             $_SESSION['error'] = 'Gagal check-in: ' . $exception->getMessage();
@@ -378,12 +381,34 @@ class ReceptionistController
             );
             $updateReservation->execute([':res_id' => $reservationId]);
 
-            $markOrdersPaid = $this->db->prepare(
-                "UPDATE orders
-                 SET payment_status = 'Paid'
+            // Close open bill
+            $closeBillStmt = $this->db->prepare(
+                "UPDATE open_bills
+                 SET bill_status = 'Closed',
+                     closed_at = NOW(),
+                     updated_at = NOW()
                  WHERE res_id = :res_id"
             );
-            $markOrdersPaid->execute([':res_id' => $reservationId]);
+            $closeBillStmt->execute([':res_id' => $reservationId]);
+
+            // Mark all orders in bill as paid
+            $billId = (int) ($bill['bill_id'] ?? 0);
+            if ($billId > 0) {
+                $markOrdersPaid = $this->db->prepare(
+                    "UPDATE orders
+                     SET payment_status = 'Paid'
+                     WHERE bill_id = :bill_id"
+                );
+                $markOrdersPaid->execute([':bill_id' => $billId]);
+            } else {
+                // Fallback for older orders without bill_id
+                $markOrdersPaid = $this->db->prepare(
+                    "UPDATE orders
+                     SET payment_status = 'Paid'
+                     WHERE res_id = :res_id"
+                );
+                $markOrdersPaid->execute([':res_id' => $reservationId]);
+            }
 
             $this->db->commit();
             $_SESSION['success'] = 'Pembayaran berhasil diterima dan setruk siap dicetak.';
@@ -615,9 +640,10 @@ class ReceptionistController
     private function getActiveBillsForCheckout(): array
     {
         $stmt = $this->db->query(
-            "SELECT r.res_id,
+            "SELECT b.bill_id,
+                    r.res_id,
                     r.schedule_time,
-                    COALESCE(r.guest_name, u.NAME, 'Guest') AS customer_name,
+                    COALESCE(r.guest_name, u.NAME, b.guest_name, 'Guest') AS customer_name,
                     COALESCE((
                         SELECT SUM(s.base_tariff)
                         FROM reservation_details rd
@@ -628,14 +654,16 @@ class ReceptionistController
                         SELECT SUM(o.qty * m.price)
                         FROM orders o
                         JOIN menus m ON m.menu_id = o.menu_id
-                        WHERE o.res_id = r.res_id
+                        WHERE o.bill_id = b.bill_id
+                        AND o.payment_status = 'Unpaid'
                     ), 0) AS cafe_total
-             FROM reservations r
+             FROM open_bills b
+             LEFT JOIN reservations r ON b.res_id = r.res_id
              LEFT JOIN users u ON r.user_id = u.user_id
              LEFT JOIN transactions t ON t.res_id = r.res_id
-             WHERE r.STATUS IN ('Confirmed', 'In-Service', 'Selesai')
+             WHERE b.bill_status = 'Open'
              AND t.trans_id IS NULL
-             ORDER BY r.schedule_time ASC"
+             ORDER BY r.schedule_time ASC, b.created_at ASC"
         );
 
         $rows = $stmt->fetchAll();
@@ -646,6 +674,7 @@ class ReceptionistController
             $subtotal = $salonTotal + $cafeTotal;
             return [
                 'res_id' => (int) ($row['res_id'] ?? 0),
+                'bill_id' => (int) ($row['bill_id'] ?? 0),
                 'customer_name' => $row['customer_name'] ?? 'Guest',
                 'schedule_time' => $row['schedule_time'] ?? null,
                 'salon_total' => $salonTotal,
@@ -658,6 +687,22 @@ class ReceptionistController
 
     private function buildUnifiedBill(int $reservationId): ?array
     {
+        // Get open bill for this reservation
+        $billStmt = $this->db->prepare(
+            "SELECT bill_id, res_id, guest_name
+             FROM open_bills
+             WHERE res_id = :res_id
+             LIMIT 1"
+        );
+        $billStmt->execute([':res_id' => $reservationId]);
+        $openBill = $billStmt->fetch();
+        
+        if (!$openBill) {
+            return null;
+        }
+        
+        $billId = (int) ($openBill['bill_id'] ?? 0);
+
         $reservationStmt = $this->db->prepare(
             "SELECT r.res_id,
                     r.schedule_time,
@@ -685,6 +730,7 @@ class ReceptionistController
         $salonStmt->execute([':res_id' => $reservationId]);
         $salonItems = $salonStmt->fetchAll();
 
+        // Query cafe items using bill_id instead of res_id
         $cafeStmt = $this->db->prepare(
             "SELECT m.menu_name,
                     o.qty,
@@ -693,9 +739,10 @@ class ReceptionistController
                     (o.qty * m.price) AS line_total
              FROM orders o
              JOIN menus m ON m.menu_id = o.menu_id
-             WHERE o.res_id = :res_id"
+             WHERE o.bill_id = :bill_id
+             AND o.payment_status = 'Unpaid'"
         );
-        $cafeStmt->execute([':res_id' => $reservationId]);
+        $cafeStmt->execute([':bill_id' => $billId]);
         $cafeItems = $cafeStmt->fetchAll();
         $cafeInProgressItems = array_filter($cafeItems, static function (array $item): bool {
             return strtoupper(trim((string) ($item['order_status'] ?? ''))) === 'IN PROGRESS';
@@ -716,6 +763,7 @@ class ReceptionistController
         $totalDue = $afterDiscount + $taxAmount;
 
         return [
+            'bill_id' => $billId,
             'reservation' => $reservation,
             'salon_items' => $salonItems,
             'cafe_items' => $cafeItems,
@@ -729,5 +777,67 @@ class ReceptionistController
                 'total_due' => $totalDue,
             ],
         ];
+    }
+
+    /**
+     * Create or update open_bill for unified billing
+     * Called when receptionist check-in customer (with or without companion)
+     */
+    private function createOrUpdateOpenBill(int $reservationId, string $mainSeatId, ?string $companionSeatId = null): void
+    {
+        try {
+            // Check if bill already exists
+            $existingStmt = $this->db->prepare(
+                "SELECT bill_id FROM open_bills WHERE res_id = :res_id LIMIT 1"
+            );
+            $existingStmt->execute([':res_id' => $reservationId]);
+            $existing = $existingStmt->fetch();
+
+            if ($existing) {
+                // Update existing bill with new seat allocation
+                $updateStmt = $this->db->prepare(
+                    "UPDATE open_bills
+                     SET main_seat_id = :main_seat_id,
+                         companion_seat_id = :companion_seat_id,
+                         zone_type = :zone_type,
+                         updated_at = NOW()
+                     WHERE res_id = :res_id"
+                );
+                $updateStmt->execute([
+                    ':main_seat_id' => $mainSeatId,
+                    ':companion_seat_id' => $companionSeatId,
+                    ':zone_type' => $companionSeatId ? 'Salon + Cafe' : 'Salon Only',
+                    ':res_id' => $reservationId
+                ]);
+            } else {
+                // Get customer name
+                $resStmt = $this->db->prepare(
+                    "SELECT COALESCE(guest_name, u.NAME, 'Customer') as name
+                     FROM reservations r
+                     LEFT JOIN users u ON r.user_id = u.user_id
+                     WHERE r.res_id = :res_id
+                     LIMIT 1"
+                );
+                $resStmt->execute([':res_id' => $reservationId]);
+                $resData = $resStmt->fetch();
+                $customerName = $resData['name'] ?? 'Customer';
+
+                // Create new bill
+                $insertStmt = $this->db->prepare(
+                    "INSERT INTO open_bills (res_id, guest_name, zone_type, main_seat_id, companion_seat_id, bill_status)
+                     VALUES (:res_id, :guest_name, :zone_type, :main_seat_id, :companion_seat_id, 'Open')"
+                );
+                $insertStmt->execute([
+                    ':res_id' => $reservationId,
+                    ':guest_name' => $customerName,
+                    ':zone_type' => $companionSeatId ? 'Salon + Cafe' : 'Salon Only',
+                    ':main_seat_id' => $mainSeatId,
+                    ':companion_seat_id' => $companionSeatId
+                ]);
+            }
+        } catch (\Throwable $e) {
+            // Log error but don't break check-in flow
+            error_log('Error creating open bill: ' . $e->getMessage());
+        }
     }
 }

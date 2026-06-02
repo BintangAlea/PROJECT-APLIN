@@ -101,6 +101,14 @@ class CafeController
 
     public function checkout()
     {
+        // Check if this is QR-based flow or legacy session-based
+        if (isset($_GET['qr']) || isset($_SESSION['cafe_bill_id'])) {
+            // QR-based flow
+            require __DIR__ . '/../Views/Cafe/checkout_qr.php';
+            exit;
+        }
+
+        // Legacy flow
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             require __DIR__ . '/../Views/Cafe/checkout.php';
             exit;
@@ -116,6 +124,30 @@ class CafeController
         ];
 
         require __DIR__ . '/../Views/Cafe/confirm.php';
+    }
+
+    /**
+     * New QR-based flow: Scan QR code at table
+     */
+    public function scan()
+    {
+        require __DIR__ . '/../Views/Cafe/qr_scan.php';
+    }
+
+    /**
+     * New QR-based flow: Select menu items
+     */
+    public function menu()
+    {
+        require __DIR__ . '/../Views/Cafe/menu_selection.php';
+    }
+
+    /**
+     * Success page after order placed
+     */
+    public function success()
+    {
+        require __DIR__ . '/../Views/Cafe/success.php';
     }
 
 }

@@ -430,6 +430,7 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
         <section class="order-wrap">
             <div class="container">
                 <button class="btn order-btn" type="button" id="orderNowBtn">Order Now <span class="ms-2">→</span></button>
+                <button class="btn order-btn" type="button" id="scanQrBtn" style="background: #667eea; color: white; margin-top: 10px; margin-left: 0;">📱 Scan QR di Meja <span class="ms-2">→</span></button>
             </div>
         </section>
     </main>
@@ -479,6 +480,10 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
 
         document.getElementById('orderNowBtn').addEventListener('click', () => {
             window.location.href = 'index.php?page=cafe&action=cart';
+        });
+
+        document.getElementById('scanQrBtn').addEventListener('click', () => {
+            window.location.href = '/?page=cafe&action=scan';
         });
     </script>
 </body>
