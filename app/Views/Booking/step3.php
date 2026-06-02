@@ -1,15 +1,17 @@
 <?php
 $booking = $booking ?? [];
 $minDate = $min_date ?? date('Y-m-d', strtotime('+1 day'));
-$maxDate = $max_date ?? date('Y-m-d', strtotime('+30 days'));
+$bookingWindowDays = max(1, (int) ($booking_window_days ?? 1));
+$maxDate = $max_date ?? date('Y-m-d', strtotime('+' . $bookingWindowDays . ' days'));
 $vipAccessEnabled = (bool) ($vip_access_enabled ?? false);
 $memberName = $member_name ?? 'Guest';
+$memberTierName = $member_tier_name ?? 'Guest';
 $selectedDate = $booking['reservation_date'] ?? $minDate;
 $selectedTime = $booking['reservation_time'] ?? '10:00';
 
 $startDate = new DateTime($minDate);
 $dayOptions = [];
-for ($i = 0; $i < 7; $i++) {
+for ($i = 0; $i < $bookingWindowDays; $i++) {
     $day = clone $startDate;
     $day->modify("+{$i} day");
     if ($day->format('Y-m-d') > $maxDate) {
@@ -477,10 +479,19 @@ $afternoonSlots = [
                     <div class="row g-4">
                         <div class="col-xl-8">
                             <h1 class="panel-title">Select Date & Time</h1>
-                            <p class="panel-subtitle">Choose a convenient slot for your Signature Style Session. Availability is shown in your local timezone.</p>
+                            <p class="panel-subtitle">Choose a convenient slot for your Signature Style Session. Availability follows your member tier and the active booking window.</p>
+
+                            <div class="vip-note">
+                                <strong><?php echo htmlspecialchars($memberTierName); ?></strong> booking window active.
+                                <?php if ($bookingWindowDays > 1): ?>
+                                    You can view dates up to <?php echo (int) $bookingWindowDays; ?> days ahead.
+                                <?php else: ?>
+                                    Booking is currently limited to the nearest available day.
+                                <?php endif; ?>
+                            </div>
 
                             <?php if ($vipAccessEnabled): ?>
-                                <div class="vip-note">★ <strong>VIP Member Access Unlocked</strong><br><small>Hi, <?php echo htmlspecialchars($memberName); ?>. You have extended 14-day booking availability.</small></div>
+                                <div class="vip-note">★ <strong>VIP Member Access Unlocked</strong><br><small>Hi, <?php echo htmlspecialchars($memberName); ?>. You have extended booking availability.</small></div>
                             <?php endif; ?>
 
                             <div class="card-soft">

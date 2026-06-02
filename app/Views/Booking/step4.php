@@ -1,35 +1,31 @@
 <?php
 $beauticians = $beauticians ?? [];
+$selectedCategory = $selected_category ?? 'hair';
+$selectedCategoryLabel = $selected_category_label ?? 'Hair';
+$selectedServiceName = $selected_service_name ?? 'Signature Service';
+$selectedDate = $selected_date ?? date('Y-m-d');
+$selectedTime = $selected_time ?? '10:00';
+$durationMinutes = (int) ($duration_minutes ?? 60);
+
+$categoryButtons = [
+    'hair' => 'Hair',
+    'nails' => 'Nails',
+    'lashes' => 'Lashes',
+    'wax' => 'Wax & Eyebrows',
+];
 
 $staffCards = [];
-if (!empty($beauticians)) {
-    foreach ($beauticians as $b) {
-        $specialization = (string)($b['specialization'] ?? 'Stylist');
-        $category = 'extensions';
-        if (stripos($specialization, 'hair') !== false || stripos($specialization, 'stylist') !== false) {
-            $category = 'hair';
-        } elseif (stripos($specialization, 'color') !== false) {
-            $category = 'colorist';
-        }
+foreach ($beauticians as $b) {
+    $specialization = (string) ($b['specialization'] ?? 'Hair Stylist');
+    $category = (string) ($b['category'] ?? 'hair');
 
-        $staffCards[] = [
-            'id' => (string)($b['user_id'] ?? ''),
-            'name' => (string)($b['name'] ?? 'Staff'),
-            'role' => strtoupper($specialization),
-            'category' => $category,
-            'available' => true,
-            'avatar' => 'avatar-' . (($b['user_id'] ?? 0) % 3),
-        ];
-    }
-}
-
-if (count($staffCards) < 4) {
-    $staffCards = [
-        ['id' => '101', 'name' => 'Elena R.', 'role' => 'MASTER STYLIST', 'category' => 'hair', 'available' => true, 'avatar' => 'avatar-0'],
-        ['id' => '102', 'name' => 'Sarah J.', 'role' => 'SENIOR STYLIST', 'category' => 'extensions', 'available' => false, 'avatar' => 'avatar-1'],
-        ['id' => '103', 'name' => 'Marcus T.', 'role' => 'CREATIVE DIRECTOR', 'category' => 'colorist', 'available' => true, 'avatar' => 'avatar-2'],
-        ['id' => '104', 'name' => 'Chloe M.', 'role' => 'STYLIST', 'category' => 'hair', 'available' => true, 'avatar' => 'avatar-1'],
-        ['id' => '105', 'name' => 'Jessica L.', 'role' => 'SENIOR STYLIST', 'category' => 'extensions', 'available' => false, 'avatar' => 'avatar-0'],
+    $staffCards[] = [
+        'id' => (string) ($b['user_id'] ?? ''),
+        'name' => (string) ($b['name'] ?? 'Staff'),
+        'role' => strtoupper($specialization),
+        'category' => $category,
+        'available' => true,
+        'avatar' => 'avatar-' . ((int) ($b['user_id'] ?? 0) % 3),
     ];
 }
 ?>
@@ -387,40 +383,44 @@ if (count($staffCards) < 4) {
 
             <main class="col-lg-9 col-xl-10 main-panel">
                 <h1 class="title">Select Your Stylist</h1>
-                <p class="subtitle">Choose an expert for your Hair Styling session. Our team is curated for excellence.</p>
+                <p class="subtitle"><?php echo htmlspecialchars($selectedServiceName); ?> · <?php echo htmlspecialchars($selectedCategoryLabel); ?> · <?php echo htmlspecialchars($selectedDate); ?> at <?php echo htmlspecialchars($selectedTime); ?> (<?php echo (int) $durationMinutes; ?> mins)</p>
 
                 <div class="filter-tabs" id="filterTabs">
-                    <button type="button" class="btn filter-btn active" data-filter="hair">✓ Hair Stylist</button>
-                    <button type="button" class="btn filter-btn" data-filter="colorist">Colorist</button>
-                    <button type="button" class="btn filter-btn" data-filter="extensions">Extensions</button>
+                    <?php foreach ($categoryButtons as $key => $label): ?>
+                        <button type="button" class="btn filter-btn <?php echo $selectedCategory === $key ? 'active' : ''; ?>" data-filter="<?php echo htmlspecialchars($key); ?>"><?php echo $selectedCategory === $key ? '✓ ' : ''; ?><?php echo htmlspecialchars($label); ?></button>
+                    <?php endforeach; ?>
                 </div>
 
                 <form method="POST" action="/index.php?page=booking&step=4" id="stylistForm">
                     <input type="hidden" name="beautician_id" id="beautician_id" value="">
 
                     <div class="staff-grid" id="staffGrid">
-                        <article class="staff-card auto-card" data-category="hair colorist extensions" data-available="true">
+                        <article class="staff-card auto-card" data-category="hair nails lashes wax" data-available="true">
                             <div class="auto-icon">🗂</div>
                             <h2 class="auto-title">Any Available Staff</h2>
                             <p class="auto-sub">Let us match you with the first available expert for your requested time.</p>
                             <button type="button" class="select-btn" data-select-id="">→</button>
                         </article>
 
-                        <?php foreach ($staffCards as $staff): ?>
-                            <article class="staff-card <?php echo !$staff['available'] ? 'unavailable' : ''; ?>" data-category="<?php echo htmlspecialchars($staff['category']); ?>" data-available="<?php echo $staff['available'] ? 'true' : 'false'; ?>">
-                                <div class="staff-visual <?php echo htmlspecialchars($staff['avatar']); ?>"></div>
-                                <?php if (!$staff['available']): ?>
-                                    <div class="unavailable-overlay">Not Available</div>
-                                <?php endif; ?>
-                                <div class="staff-info">
-                                    <h2 class="staff-name"><?php echo htmlspecialchars($staff['name']); ?></h2>
-                                    <p class="staff-role"><?php echo htmlspecialchars($staff['role']); ?></p>
-                                </div>
-                                <?php if ($staff['available']): ?>
-                                    <button type="button" class="select-btn" data-select-id="<?php echo htmlspecialchars($staff['id']); ?>">→</button>
-                                <?php endif; ?>
-                            </article>
-                        <?php endforeach; ?>
+                        <?php if (empty($staffCards)): ?>
+                            <div class="alert alert-light border mt-3 mb-0">Belum ada beautician online yang cocok untuk kategori <?php echo htmlspecialchars($selectedCategoryLabel); ?>.</div>
+                        <?php else: ?>
+                            <?php foreach ($staffCards as $staff): ?>
+                                <article class="staff-card <?php echo !$staff['available'] ? 'unavailable' : ''; ?>" data-category="<?php echo htmlspecialchars($staff['category']); ?>" data-available="<?php echo $staff['available'] ? 'true' : 'false'; ?>">
+                                    <div class="staff-visual <?php echo htmlspecialchars($staff['avatar']); ?>"></div>
+                                    <?php if (!$staff['available']): ?>
+                                        <div class="unavailable-overlay">Not Available</div>
+                                    <?php endif; ?>
+                                    <div class="staff-info">
+                                        <h2 class="staff-name"><?php echo htmlspecialchars($staff['name']); ?></h2>
+                                        <p class="staff-role"><?php echo htmlspecialchars($staff['role']); ?></p>
+                                    </div>
+                                    <?php if ($staff['available']): ?>
+                                        <button type="button" class="select-btn" data-select-id="<?php echo htmlspecialchars($staff['id']); ?>">→</button>
+                                    <?php endif; ?>
+                                </article>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </div>
                 </form>
             </main>
@@ -476,7 +476,7 @@ if (count($staffCards) < 4) {
         });
     });
 
-    applyFilter('hair');
+    applyFilter('<?php echo htmlspecialchars($selectedCategory); ?>');
 </script>
 </body>
 </html>

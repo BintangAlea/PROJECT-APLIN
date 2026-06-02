@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\Auth;
 use App\Core\Session;
 use App\Core\Database;
+use App\Models\LoyaltyModel;
 use App\Models\ServicesModel;
 use App\Models\UsersModel;
 use App\Models\ReservationsModel;
@@ -132,14 +133,17 @@ class BookingController
             $user = null;
             $vipAccessEnabled = false;
             $bookingWindowDays = 1;
+            $memberTierName = 'Guest';
 
             if ($isLoggedIn) {
                 $usersModel = new UsersModel();
                 $user = $usersModel->findById((int) $_SESSION['user_id']);
-                $totalSpent = (int) ($user['total_spent'] ?? 0);
                 $loyaltyStage = (int) ($user['loyalty_stage'] ?? 1);
+                $totalSpent = (float) ($user['total_spent'] ?? 0);
+
+                $bookingWindowDays = max(1, LoyaltyModel::getBookingWindow($loyaltyStage));
                 $vipAccessEnabled = $loyaltyStage >= 3 || $totalSpent >= 2000000;
-                $bookingWindowDays = $vipAccessEnabled ? 14 : 1;
+                $memberTierName = LoyaltyModel::getTierName($loyaltyStage);
             }
 
             return [
@@ -149,9 +153,11 @@ class BookingController
                     'title' => 'Pilih Tanggal & Waktu',
                     'booking' => $_SESSION['booking'] ?? [],
                     'min_date' => date('Y-m-d', strtotime('+1 day')),
-                    'max_date' => date('Y-m-d', strtotime('+' . $bookingWindowDays . ' days')),
+                    'max_date' => date('Y-m-d', strtotime('+' . max(1, $bookingWindowDays) . ' days')),
+                    'booking_window_days' => $bookingWindowDays,
                     'vip_access_enabled' => $vipAccessEnabled,
-                    'member_name' => $user['NAME'] ?? ($_SESSION['full_name'] ?? 'Guest')
+                    'member_name' => $user['NAME'] ?? ($_SESSION['full_name'] ?? 'Guest'),
+                    'member_tier_name' => $memberTierName
                 ]
             ];
         }
@@ -181,20 +187,15 @@ class BookingController
     public function step4()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-            // Get online beauticians
-            $stmt = $this->db->prepare(
-                'SELECT sp.profile_id, u.user_id, u.NAME as name, u.email,
-                        sp.specialization, sp.work_status, sp.hire_date
-                 FROM staff_profiles sp
-                 JOIN users u ON sp.user_id = u.user_id
-                 WHERE sp.work_status = :status AND u.ROLE = :role
-                 ORDER BY u.NAME ASC'
-            );
-            $stmt->execute([
-                ':status' => 'Online',
-                ':role' => 'Beautician'
-            ]);
-            $beauticians = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $booking = $_SESSION['booking'] ?? [];
+            $servicesModel = new ServicesModel();
+            $selectedServiceId = (string) ($booking['service_id'] ?? '');
+            $selectedService = $selectedServiceId !== '' ? $servicesModel->findById($selectedServiceId) : null;
+            $selectedCategory = $this->normalizeBookingCategory((string) ($selectedService['category'] ?? 'hair'));
+            $selectedDate = (string) ($booking['reservation_date'] ?? date('Y-m-d', strtotime('+1 day')));
+            $selectedTime = (string) ($booking['reservation_time'] ?? '10:00');
+            $durationMinutes = $this->getBookingDurationMinutes($booking);
+            $beauticians = $this->getAvailableBeauticiansForBooking($selectedCategory, $selectedDate, $selectedTime, $durationMinutes);
 
             return [
                 'view' => 'Booking/step4',
@@ -202,8 +203,14 @@ class BookingController
                     'beauticians' => $beauticians,
                     'step' => 4,
                     'title' => 'Pilih Beautician',
-                    'booking' => $_SESSION['booking'] ?? [],
-                    'is_logged_in' => isset($_SESSION['user_id'])
+                    'booking' => $booking,
+                    'is_logged_in' => isset($_SESSION['user_id']),
+                    'selected_category' => $selectedCategory,
+                    'selected_category_label' => $this->getCategoryLabel($selectedCategory),
+                    'selected_service_name' => $selectedService['service_name'] ?? 'Signature Service',
+                    'selected_date' => $selectedDate,
+                    'selected_time' => $selectedTime,
+                    'duration_minutes' => $durationMinutes
                 ]
             ];
         }
@@ -237,15 +244,21 @@ class BookingController
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $action = $_POST['action'] ?? 'login';
+            $usersModel = new UsersModel();
 
             if ($action === 'login') {
                 $email = $_POST['email'] ?? null;
                 $password = $_POST['password'] ?? null;
 
-                $usersModel = new UsersModel();
-                $user = $usersModel->findByEmail($email);
+                if (!$email || !$password) {
+                    $_SESSION['booking_error'] = 'Email dan password harus diisi';
+                    header('Location: /index.php?page=booking&step=4.1');
+                    exit;
+                }
 
-                if (!$user || !password_verify($password, $user['password'])) {
+                $user = $usersModel->login((string) $email, (string) $password);
+
+                if (!$user) {
                     $_SESSION['booking_error'] = 'Email atau password salah';
                     header('Location: /index.php?page=booking&step=4.1');
                     exit;
@@ -271,8 +284,6 @@ class BookingController
                     exit;
                 }
 
-                $usersModel = new UsersModel();
-                
                 // Check if email exists
                 if ($usersModel->findByEmail($email)) {
                     $_SESSION['booking_error'] = 'Email sudah terdaftar';
@@ -281,26 +292,20 @@ class BookingController
                 }
 
                 // Register new user
-                $userId = $usersModel->create([
-                    'NAME' => $name,
-                    'user_login' => $email,
-                    'email' => $email,
-                    'phone' => $phone,
-                    'password' => password_hash($password, PASSWORD_BCRYPT),
-                    'role' => 'Customer'
-                ]);
+                $registered = $usersModel->register((string) $email, (string) $password, (string) $name, (string) ($phone ?? ''), 'Customer');
 
-                if (!$userId) {
+                if (!$registered) {
                     $_SESSION['booking_error'] = 'Gagal membuat akun';
                     header('Location: /index.php?page=booking&step=4.1');
                     exit;
                 }
 
                 // Auto-login
-                $_SESSION['user_id'] = $userId;
-                $_SESSION['role'] = 'Customer';
-                $_SESSION['full_name'] = $name;
-                $_SESSION['user_login'] = $email;
+                $user = $usersModel->login((string) $email, (string) $password);
+                $_SESSION['user_id'] = $user['user_id'] ?? null;
+                $_SESSION['role'] = $user['ROLE'] ?? 'Customer';
+                $_SESSION['full_name'] = $user['NAME'] ?? $name;
+                $_SESSION['user_login'] = $user['email'] ?? $email;
                 header('Location: /index.php?page=booking&step=5');
                 exit;
             }
@@ -580,5 +585,139 @@ class BookingController
         $details['time'] = $booking['reservation_time'] ?? null;
 
         return $details;
+    }
+
+    private function normalizeBookingCategory(string $category): string
+    {
+        $value = strtolower(trim($category));
+
+        return match ($value) {
+            'hair' => 'hair',
+            'nails' => 'nails',
+            'lashes' => 'lashes',
+            'wax & eyebrows', 'wax', 'eyebrows', 'wax and eyebrows' => 'wax',
+            default => 'hair',
+        };
+    }
+
+    private function getCategoryLabel(string $category): string
+    {
+        return match ($category) {
+            'nails' => 'Nails',
+            'lashes' => 'Lashes',
+            'wax' => 'Wax & Eyebrows',
+            default => 'Hair',
+        };
+    }
+
+    private function getBeauticianCategoryFromSpecialization(string $specialization): string
+    {
+        $value = strtolower(trim($specialization));
+
+        return match (true) {
+            str_contains($value, 'nail') => 'nails',
+            str_contains($value, 'lash') => 'lashes',
+            str_contains($value, 'wax') => 'wax',
+            default => 'hair',
+        };
+    }
+
+    private function getSpecializationsForCategory(string $category): array
+    {
+        return match ($category) {
+            'nails' => ['Nailist'],
+            'lashes' => ['Lash Technician'],
+            'wax' => ['Wax & Threading Specialist'],
+            default => ['Hair Stylist'],
+        };
+    }
+
+    private function getBookingDurationMinutes(array $booking): int
+    {
+        $duration = 60;
+
+        if (!empty($booking['service_id'])) {
+            $servicesModel = new ServicesModel();
+            $service = $servicesModel->findById((string) $booking['service_id']);
+            if (!empty($service['est_duration'])) {
+                $duration = (int) $service['est_duration'];
+            }
+        }
+
+        return max(30, $duration);
+    }
+
+    private function getAvailableBeauticiansForBooking(string $category, string $reservationDate, string $reservationTime, int $durationMinutes): array
+    {
+        $specializations = $this->getSpecializationsForCategory($category);
+        $placeholders = implode(',', array_fill(0, count($specializations), '?'));
+
+        $stmt = $this->db->prepare(
+            "SELECT sp.profile_id,
+                    u.user_id,
+                    u.NAME AS name,
+                    u.email,
+                    sp.specialization,
+                    sp.work_status,
+                    sp.hire_date
+             FROM staff_profiles sp
+             JOIN users u ON sp.user_id = u.user_id
+             WHERE sp.work_status = 'Online'
+               AND u.ROLE = 'Beautician'
+               AND sp.specialization IN ({$placeholders})
+             ORDER BY u.NAME ASC"
+        );
+        $stmt->execute($specializations);
+        $candidates = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($candidates)) {
+            return [];
+        }
+
+        $busyStmt = $this->db->prepare(
+            "SELECT rd.beautician_id,
+                    r.schedule_time,
+                    COALESCE(s.est_duration, 60) AS est_duration
+             FROM reservations r
+             JOIN reservation_details rd ON rd.res_id = r.res_id
+             JOIN services s ON s.service_id = rd.service_id
+             WHERE DATE(r.schedule_time) = :date
+               AND r.STATUS IN ('Pending', 'Confirmed', 'In-Service')
+               AND rd.beautician_id IS NOT NULL"
+        );
+        $busyStmt->execute([':date' => $reservationDate]);
+        $busyRows = $busyStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $requestStart = new \DateTimeImmutable($reservationDate . ' ' . $reservationTime);
+        $requestEnd = $requestStart->modify('+' . max(30, $durationMinutes) . ' minutes');
+        $busyBeauticians = [];
+
+        foreach ($busyRows as $busyRow) {
+            $busyBeauticianId = (int) ($busyRow['beautician_id'] ?? 0);
+            if ($busyBeauticianId <= 0) {
+                continue;
+            }
+
+            $busyStart = new \DateTimeImmutable((string) ($busyRow['schedule_time'] ?? $reservationDate . ' 00:00:00'));
+            $busyEnd = $busyStart->modify('+' . max(30, (int) ($busyRow['est_duration'] ?? 60)) . ' minutes');
+
+            if ($requestStart < $busyEnd && $requestEnd > $busyStart) {
+                $busyBeauticians[$busyBeauticianId] = true;
+            }
+        }
+
+        $available = [];
+        foreach ($candidates as $candidate) {
+            $beauticianId = (int) ($candidate['user_id'] ?? 0);
+            if ($beauticianId <= 0 || isset($busyBeauticians[$beauticianId])) {
+                continue;
+            }
+
+            $candidate['category'] = $this->getBeauticianCategoryFromSpecialization((string) ($candidate['specialization'] ?? 'Hair Stylist'));
+            $candidate['available'] = true;
+            $available[] = $candidate;
+        }
+
+        return $available;
     }
 }

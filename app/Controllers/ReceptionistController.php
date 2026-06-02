@@ -91,6 +91,13 @@ class ReceptionistController
                 ':status' => $status,
             ]);
 
+            $this->createOrUpdateOpenBill(
+                (int) $this->db->lastInsertId(),
+                $targetSeatId,
+                null,
+                $destination === 'cafe' ? 'Cafe Only' : 'Salon Only'
+            );
+
             $_SESSION['success'] = $destination === 'salon'
                 ? 'Walk-in berhasil check-in dan langsung masuk kursi salon.'
                 : 'Walk-in berhasil check-in ke lounge (waiting is earning).';
@@ -164,6 +171,21 @@ class ReceptionistController
                 ':seat_id' => $targetSeatId,
                 ':res_id' => $reservationId,
             ]);
+
+            $billSeatStmt = $this->db->prepare(
+                "SELECT companion_seat_id
+                 FROM reservations
+                 WHERE res_id = :res_id
+                 LIMIT 1"
+            );
+            $billSeatStmt->execute([':res_id' => $reservationId]);
+            $billSeatRow = $billSeatStmt->fetch();
+            $this->createOrUpdateOpenBill(
+                $reservationId,
+                $targetSeatId,
+                $billSeatRow['companion_seat_id'] ?? null,
+                !empty($billSeatRow['companion_seat_id']) ? 'Salon + Cafe' : 'Salon Only'
+            );
 
             $_SESSION['success'] = 'Pelanggan berhasil dipindahkan ke kursi salon. Open bill tetap berjalan.';
         } catch (\Throwable $exception) {
@@ -783,7 +805,7 @@ class ReceptionistController
      * Create or update open_bill for unified billing
      * Called when receptionist check-in customer (with or without companion)
      */
-    private function createOrUpdateOpenBill(int $reservationId, string $mainSeatId, ?string $companionSeatId = null): void
+    private function createOrUpdateOpenBill(int $reservationId, string $mainSeatId, ?string $companionSeatId = null, ?string $billType = null): void
     {
         try {
             // Check if bill already exists
@@ -806,7 +828,7 @@ class ReceptionistController
                 $updateStmt->execute([
                     ':main_seat_id' => $mainSeatId,
                     ':companion_seat_id' => $companionSeatId,
-                    ':zone_type' => $companionSeatId ? 'Salon + Cafe' : 'Salon Only',
+                    ':zone_type' => $billType ?? ($companionSeatId ? 'Salon + Cafe' : 'Salon Only'),
                     ':res_id' => $reservationId
                 ]);
             } else {
@@ -830,7 +852,7 @@ class ReceptionistController
                 $insertStmt->execute([
                     ':res_id' => $reservationId,
                     ':guest_name' => $customerName,
-                    ':zone_type' => $companionSeatId ? 'Salon + Cafe' : 'Salon Only',
+                    ':zone_type' => $billType ?? ($companionSeatId ? 'Salon + Cafe' : 'Salon Only'),
                     ':main_seat_id' => $mainSeatId,
                     ':companion_seat_id' => $companionSeatId
                 ]);
