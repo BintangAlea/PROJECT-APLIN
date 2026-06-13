@@ -67,17 +67,24 @@ class BookingController
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $serviceIds = $_POST['service_ids'] ?? [];
             $serviceId = $_POST['service_id'] ?? null;
+            
+            if ($serviceId && !in_array($serviceId, $serviceIds)) {
+                $serviceIds[] = $serviceId;
+            }
 
-            if (!$serviceId) {
-                $_SESSION['booking_error'] = 'Pilih layanan terlebih dahulu';
+            if (empty($serviceIds)) {
+                $_SESSION['booking_error'] = 'Pilih minimal satu layanan terlebih dahulu';
                 header('Location: /index.php?page=booking&step=1');
                 exit;
             }
 
             // Store in session
             $_SESSION['booking'] = $_SESSION['booking'] ?? [];
-            $_SESSION['booking']['service_id'] = (int)$serviceId;
+            $_SESSION['booking']['service_ids'] = $serviceIds;
+            // Kept for backward compatibility if needed in UI
+            $_SESSION['booking']['service_id'] = $serviceIds[0]; 
 
             header('Location: /index.php?page=booking&step=2');
             exit;
@@ -86,19 +93,50 @@ class BookingController
 
     /**
      * Step 2: Bundle & Add-ons selection
+     * Bundles = promotions (promo_id, promo_name, included_fb_item, discount_value)
+     * Addons = services WHERE is_addon = TRUE (grouped by category)
      */
     public function step2()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-            $bundleModel = new \App\Models\ServiceBundleModel();
-            $addonModel = new \App\Models\BookingAddonModel();
+            $db = \App\Core\Database::getConnection();
 
-            $bundles = $bundleModel->getAllActiveBundles();
-            $addons = $addonModel->getAddonsGroupedByType();
+            // Addons = services with is_addon = TRUE, grouped by category
+            $addonStmt = $db->query(
+                "SELECT service_id, service_name, category, base_tariff, est_duration
+                 FROM services
+                 WHERE is_addon = TRUE
+                 ORDER BY category, service_name"
+            );
+            $allAddons = $addonStmt->fetchAll();
+            $addons = [];
+            foreach ($allAddons as $addon) {
+                $cat = $addon['category'];
+                if (!isset($addons[$cat])) {
+                    $addons[$cat] = [];
+                }
+                $addons[$cat][] = $addon;
+            }
 
-            // Enrich bundles with pricing
-            foreach ($bundles as &$bundle) {
-                $bundle = $bundleModel->getBundleWithPrice($bundle['bundle_id']);
+            // Bundles: use promotions table as bundle-like offers
+            $promoStmt = $db->query(
+                "SELECT promo_id, promo_name, included_fb_item, discount_value
+                 FROM promotions
+                 ORDER BY promo_id"
+            );
+            $promos = $promoStmt->fetchAll();
+
+            // Map promos to bundle-like format for the view
+            $bundles = [];
+            foreach ($promos as $promo) {
+                $bundles[] = [
+                    'bundle_id' => 'promo_' . $promo['promo_id'],
+                    'bundle_name' => $promo['promo_name'],
+                    'description' => 'Termasuk: ' . $promo['included_fb_item'],
+                    'discount_value' => (float)$promo['discount_value'],
+                    'badge' => 'Promo',
+                    'icon' => '✦',
+                ];
             }
 
             return [
@@ -115,7 +153,16 @@ class BookingController
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['booking'] = $_SESSION['booking'] ?? [];
-            $_SESSION['booking']['bundle_id'] = $_POST['bundle_id'] ?? null;
+
+            // Map bundle_id back to promo_id if it starts with "promo_"
+            $bundleId = $_POST['bundle_id'] ?? null;
+            if ($bundleId && str_starts_with($bundleId, 'promo_')) {
+                $_SESSION['booking']['promo_id'] = (int)substr($bundleId, 6);
+            } else {
+                $_SESSION['booking']['promo_id'] = null;
+            }
+
+            // Addon IDs are service_ids with is_addon=TRUE
             $_SESSION['booking']['addon_ids'] = $_POST['addon_ids'] ?? [];
 
             header('Location: /index.php?page=booking&step=3');
@@ -221,6 +268,11 @@ class BookingController
             $_SESSION['booking'] = $_SESSION['booking'] ?? [];
             $_SESSION['booking']['beautician_id'] = $beauticianId;
 
+            if (!isset($_SESSION['user_id'])) {
+                header('Location: /index.php?page=booking&step=4.1');
+                exit;
+            }
+
             header('Location: /index.php?page=booking&step=5');
             exit;
         }
@@ -280,14 +332,14 @@ class BookingController
 
                 if (!$name || !$email || !$password) {
                     $_SESSION['booking_error'] = 'Lengkapi semua data';
-                    header('Location: /index.php?page=booking&step=4.1');
+                    header('Location: /index.php?page=booking&step=4.1&mode=register');
                     exit;
                 }
 
                 // Check if email exists
                 if ($usersModel->findByEmail($email)) {
                     $_SESSION['booking_error'] = 'Email sudah terdaftar';
-                    header('Location: /index.php?page=booking&step=4.1');
+                    header('Location: /index.php?page=booking&step=4.1&mode=register');
                     exit;
                 }
 
@@ -296,7 +348,7 @@ class BookingController
 
                 if (!$registered) {
                     $_SESSION['booking_error'] = 'Gagal membuat akun';
-                    header('Location: /index.php?page=booking&step=4.1');
+                    header('Location: /index.php?page=booking&step=4.1&mode=register');
                     exit;
                 }
 
@@ -321,8 +373,7 @@ class BookingController
 
         if (!isset($_SESSION['user_id'])) {
             $_SESSION['booking_error'] = 'Silakan daftar terlebih dahulu untuk melanjutkan checkout';
-            $_SESSION['post_login_redirect'] = '/index.php?page=booking&step=5';
-            header('Location: /index.php?page=register');
+            header('Location: /index.php?page=booking&step=4.1');
             exit;
         }
 
@@ -334,9 +385,8 @@ class BookingController
         $pricingService = new \App\Core\PricingService();
         $pricing = $pricingService->calculateTotal(
             $booking['service_id'] ?? null,
-            $booking['bundle_id'] ?? null,
             $booking['addon_ids'] ?? [],
-            $_POST['promo_code'] ?? null
+            $booking['promo_id'] ?? null
         );
 
         // Get booking details for review
@@ -411,8 +461,8 @@ class BookingController
                     'step' => 6,
                     'title' => 'Konfirmasi Booking',
                     'reservation' => $reservation,
-                    'qr_code_url' => $reservation['booking_qr_code_url'],
-                    'confirmation_id' => $reservation['booking_confirmation_id']
+                    'qr_code_url' => $reservation['booking_qr_code_url'] ?? '',
+                    'confirmation_id' => $reservation['booking_confirmation_id'] ?? ''
                 ]
             ];
         }
@@ -446,8 +496,7 @@ class BookingController
 
             if (!$userId) {
                 $_SESSION['booking_error'] = 'Silakan daftar terlebih dahulu untuk melanjutkan checkout';
-                $_SESSION['post_login_redirect'] = '/index.php?page=booking&step=5';
-                header('Location: /index.php?page=register');
+                header('Location: /index.php?page=booking&step=4.1');
                 exit;
             }
 
@@ -455,9 +504,8 @@ class BookingController
             $pricingService = new \App\Core\PricingService();
             $pricing = $pricingService->calculateTotal(
                 $booking['service_id'] ?? null,
-                $booking['bundle_id'] ?? null,
                 $booking['addon_ids'] ?? [],
-                $_POST['promo_code'] ?? null
+                $booking['promo_id'] ?? null
             );
 
             $paymentProofUrl = null;
@@ -477,47 +525,40 @@ class BookingController
                 }
             }
 
-            // Create reservation
+            // Create reservation (only columns from original schema)
             $resId = $reservationsModel->create([
                 'user_id' => $userId,
                 'service_id' => $booking['service_id'],
                 'reservation_date' => $booking['reservation_date'],
                 'reservation_time' => $booking['reservation_time'],
-                'service_bundle_id' => $booking['bundle_id'],
-                'base_price' => $pricing['base_price'],
-                'addons_price' => $pricing['addons_price'],
                 'promo_id' => $pricing['promo_id'],
-                'promo_discount' => $pricing['promo_discount'],
-                'total_price' => $pricing['total_price'],
-                'payment_method' => $_POST['payment_method'] ?? 'cash',
                 'payment_proof_url' => $paymentProofUrl,
-                'status' => 'Pending'
+                'is_dp_paid' => $paymentProofUrl ? 1 : 0,
+                'dp_amount' => 50000,
+                'status' => 'Pending',
+                'service_ids' => array_merge(
+                    [$booking['service_id']],
+                    $booking['addon_ids'] ?? []
+                ),
+                'beautician_id' => $booking['beautician_id'] ?? null,
+                'seat_id' => $booking['seat_id'] ?? null
             ]);
 
             if (!$resId) {
                 throw new \Exception('Gagal membuat reservasi');
             }
 
-            // Add addons if any
-            if (!empty($booking['addon_ids'])) {
-                $resAddonModel = new \App\Models\ReservationAddonModel();
-                foreach ($booking['addon_ids'] as $addonId) {
-                    $resAddonModel->addAddonToReservation($resId, $addonId);
-                }
-            }
-
             // Generate QR code
             $qrService = new \App\Core\QrCodeService();
             $confirmationId = $qrService->generateBookingId();
             $qrCodeUrl = $qrService->generateQrCode([
-                'booking_confirmation_id' => $confirmationId,
+                'res_id' => $resId,
                 'user_id' => $userId,
                 'reservation_date' => $booking['reservation_date'],
                 'reservation_time' => $booking['reservation_time'],
-                'total_price' => $pricing['total_price']
             ]);
 
-            // Save QR code to DB
+            // Save QR code to session
             if ($qrCodeUrl) {
                 $qrService->saveQrCodeToReservation($resId, $confirmationId, $qrCodeUrl);
             }
@@ -549,19 +590,23 @@ class BookingController
             $details['service'] = $service;
         }
 
-        // Get bundle details
-        if (!empty($booking['bundle_id'])) {
-            $bundleModel = new \App\Models\ServiceBundleModel();
-            $bundle = $bundleModel->getBundleWithPrice($booking['bundle_id']);
-            $details['bundle'] = $bundle;
+        // Get bundle/promo details
+        if (!empty($booking['promo_id'])) {
+            $promoStmt = $this->db->prepare(
+                "SELECT promo_id, promo_name, included_fb_item, discount_value
+                 FROM promotions
+                 WHERE promo_id = :id"
+            );
+            $promoStmt->execute([':id' => $booking['promo_id']]);
+            $details['promo'] = $promoStmt->fetch(PDO::FETCH_ASSOC);
         }
 
-        // Get addon details
+        // Get addon details (addons = services WHERE is_addon = TRUE)
         if (!empty($booking['addon_ids'])) {
-            $addonModel = new \App\Models\BookingAddonModel();
             $addons = [];
+            $servicesModel = new ServicesModel();
             foreach ($booking['addon_ids'] as $addonId) {
-                $addon = $addonModel->getAddonById($addonId);
+                $addon = $servicesModel->findById($addonId);
                 if ($addon) {
                     $addons[] = $addon;
                 }
@@ -572,7 +617,7 @@ class BookingController
         // Get beautician details
         if (!empty($booking['beautician_id'])) {
             $stmt = $this->db->prepare(
-                'SELECT u.user_id, u.NAME as name, sp.specialization, sp.photo_url, sp.rating
+                'SELECT u.user_id, u.NAME as name, sp.specialization
                  FROM users u
                  JOIN staff_profiles sp ON u.user_id = sp.user_id
                  WHERE u.user_id = :id'
@@ -658,8 +703,7 @@ class BookingController
                     u.NAME AS name,
                     u.email,
                     sp.specialization,
-                    sp.work_status,
-                    sp.hire_date
+                    sp.work_status
              FROM staff_profiles sp
              JOIN users u ON sp.user_id = u.user_id
              WHERE sp.work_status = 'Online'

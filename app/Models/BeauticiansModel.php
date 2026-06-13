@@ -17,7 +17,7 @@ class BeauticiansModel
     public function findAll(): array
     {
         $stmt = $this->db->query(
-            'SELECT sp.profile_id, sp.user_id, sp.specialization, sp.hire_date, u.NAME, u.email
+            'SELECT sp.profile_id, sp.user_id, sp.specialization, u.NAME, u.email
              FROM staff_profiles sp
              JOIN users u ON sp.user_id = u.user_id
              WHERE u.ROLE = "Beautician"
@@ -29,7 +29,7 @@ class BeauticiansModel
     public function findById(int $id): array|false
     {
         $stmt = $this->db->prepare(
-            'SELECT sp.profile_id, sp.user_id, sp.specialization, sp.hire_date, u.NAME, u.email
+            'SELECT sp.profile_id, sp.user_id, sp.specialization, u.NAME, u.email
              FROM staff_profiles sp
              JOIN users u ON sp.user_id = u.user_id
              WHERE sp.profile_id = :id'
@@ -50,7 +50,7 @@ class BeauticiansModel
     public function findAvailable(): array
     {
         $stmt = $this->db->query(
-            'SELECT sp.profile_id, sp.user_id, sp.specialization, sp.hire_date, u.NAME, u.email
+            'SELECT sp.profile_id, sp.user_id, sp.specialization, u.NAME, u.email
              FROM staff_profiles sp
              JOIN users u ON sp.user_id = u.user_id
              WHERE u.ROLE = "Beautician"

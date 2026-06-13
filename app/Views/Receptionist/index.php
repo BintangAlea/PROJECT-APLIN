@@ -423,7 +423,7 @@ $statusClass = static function (string $status): string {
                     </div>
                 </div>
 
-                <div class="zone-head">Zone A: Active Area (Salon Seats)</div>
+                <div class="zone-head">Kursi Salon (Salon Seats)</div>
                 <section class="seat-grid">
                     <?php foreach ($activeAreaSeats as $seat): ?>
                         <?php
@@ -468,7 +468,7 @@ $statusClass = static function (string $status): string {
                     <?php endforeach; ?>
                 </section>
 
-                <div class="zone-head" style="margin-top:1.8rem;">Zone B: Relaxation Lounge (Cafe Tables)</div>
+                <div class="zone-head" style="margin-top:1.8rem;">Meja Kafe (Cafe Tables)</div>
                 <section class="seat-grid">
                     <?php for ($i = 0; $i < count($loungeSeats); $i++): ?>
                         <?php

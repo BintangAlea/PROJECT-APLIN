@@ -36,7 +36,8 @@ $controller = match($page) {
 // Route POST actions to appropriate controller methods
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Allow controllers to expose methods via action names if implemented
-    if (method_exists($controller, $action)) {
+    // Prevent hijacking POST requests to index() which breaks booking steps
+    if ($action !== 'index' && method_exists($controller, $action)) {
         $controller->{$action}();
         exit;
     }

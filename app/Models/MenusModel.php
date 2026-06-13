@@ -16,13 +16,13 @@ class MenusModel
 
     public function findAll(): array
     {
-        $stmt = $this->db->query('SELECT * FROM menus');
+        $stmt = $this->db->query('SELECT * FROM db_merish_cafe.menus WHERE is_available = TRUE');
         return $stmt->fetchAll();
     }
 
     public function findById(string $id): array|false
     {
-        $stmt = $this->db->prepare('SELECT * FROM menus WHERE menu_id = :id');
+        $stmt = $this->db->prepare('SELECT * FROM db_merish_cafe.menus WHERE menu_id = :id');
         $stmt->execute([':id' => $id]);
         return $stmt->fetch();
     }

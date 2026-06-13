@@ -350,13 +350,14 @@ $statusClass = static function (string $status): string {
                                 <th>Kapster</th>
                                 <th>Layanan</th>
                                 <th>Status</th>
+                                <th>Bukti DP</th>
                                 <th class="text-end pe-3">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($reservations)): ?>
                                 <tr>
-                                    <td colspan="6" class="py-4 text-center text-muted">Tidak ada appointment untuk tanggal ini.</td>
+                                    <td colspan="7" class="py-4 text-center text-muted">Tidak ada appointment untuk tanggal ini.</td>
                                 </tr>
                             <?php else: ?>
                                 <?php foreach ($reservations as $row): ?>
@@ -366,6 +367,8 @@ $statusClass = static function (string $status): string {
                                     $statusLabel = $isOverdue ? 'Overdue' : $status;
                                     $statusCss = $isOverdue ? 'status-overdue' : $statusClass($status);
                                     $isAllocated = in_array($status, ['In-Service', 'Confirmed'], true);
+                                    $proofUrl = $row['payment_proof_url'] ?? null;
+                                    $isDpPaid = !empty($row['is_dp_paid']);
                                     ?>
                                     <tr>
                                         <td class="px-3">
@@ -380,21 +383,46 @@ $statusClass = static function (string $status): string {
                                         <td>
                                             <span class="status-badge <?php echo $statusCss; ?>"><?php echo $escape($statusLabel); ?></span>
                                         </td>
-                                        <td class="text-end pe-3">
-                                            <?php if ($isAllocated): ?>
-                                                <button type="button" class="checkin-btn" disabled>Allocated (<?php echo $escape($row['seat_id']); ?>)</button>
+                                        <td>
+                                            <?php if ($proofUrl): ?>
+                                                <a href="#" class="proof-link" data-bs-toggle="modal" data-bs-target="#proofModal" data-proof-url="<?php echo $escape($proofUrl); ?>" data-customer-name="<?php echo $escape($row['customer_name']); ?>">
+                                                    <img src="<?php echo $escape($proofUrl); ?>" alt="Bukti DP" class="proof-thumb" style="width:56px;height:56px;object-fit:cover;border:1px solid #ddd;cursor:pointer;">
+                                                </a>
+                                                <?php if ($isDpPaid): ?>
+                                                    <div class="small text-success fw-bold mt-1">Lunas DP</div>
+                                                <?php else: ?>
+                                                    <div class="small text-warning fw-bold mt-1">Menunggu Verifikasi</div>
+                                                <?php endif; ?>
                                             <?php else: ?>
-                                                <button
-                                                    type="button"
-                                                    class="checkin-btn"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#checkInModal"
-                                                    data-res-id="<?php echo $escape($row['res_id']); ?>"
-                                                    data-customer-name="<?php echo $escape($row['customer_name']); ?>"
-                                                    data-date="<?php echo $escape($date); ?>">
-                                                    Check-In &amp; Allocate
-                                                </button>
+                                                <span class="text-muted small">Belum upload</span>
                                             <?php endif; ?>
+                                        </td>
+                                        <td class="text-end pe-3">
+                                            <div class="d-flex gap-1 justify-content-end flex-wrap">
+                                                <?php if ($status === 'Pending' && $proofUrl && !$isDpPaid): ?>
+                                                    <form method="post" action="index.php?page=receptionist&action=updateReservationStatus" style="display:inline;">
+                                                        <input type="hidden" name="reservation_id" value="<?php echo $escape($row['res_id']); ?>">
+                                                        <input type="hidden" name="status" value="Confirmed">
+                                                        <input type="hidden" name="date" value="<?php echo $escape($date); ?>">
+                                                        <input type="hidden" name="mark_dp_paid" value="1">
+                                                        <button type="submit" class="checkin-btn" style="background:#2c9b63;">Konfirmasi DP</button>
+                                                    </form>
+                                                <?php endif; ?>
+                                                <?php if ($isAllocated): ?>
+                                                    <button type="button" class="checkin-btn" disabled>Allocated (<?php echo $escape($row['seat_id']); ?>)</button>
+                                                <?php else: ?>
+                                                    <button
+                                                        type="button"
+                                                        class="checkin-btn"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#checkInModal"
+                                                        data-res-id="<?php echo $escape($row['res_id']); ?>"
+                                                        data-customer-name="<?php echo $escape($row['customer_name']); ?>"
+                                                        data-date="<?php echo $escape($date); ?>">
+                                                        Check-In &amp; Allocate
+                                                    </button>
+                                                <?php endif; ?>
+                                            </div>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -461,6 +489,24 @@ $statusClass = static function (string $status): string {
         </div>
     </div>
 
+    <!-- Modal: Lihat Bukti Pembayaran DP -->
+    <div class="modal fade" id="proofModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content rounded-0">
+                <div class="modal-header">
+                    <h5 class="modal-title">Bukti Pembayaran DP - <span id="proofCustomerName">-</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center" style="background:#f8f2f3;">
+                    <img id="proofImage" src="" alt="Bukti Pembayaran DP" style="max-width:100%;max-height:70vh;border:1px solid #ddd;">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light rounded-0" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const checkInModal = document.getElementById('checkInModal');
@@ -499,6 +545,21 @@ $statusClass = static function (string $status): string {
         if (companionCheckbox) {
             companionCheckbox.addEventListener('change', toggleCompanionFields);
             toggleCompanionFields();
+        }
+
+        // Modal bukti pembayaran DP
+        const proofModal = document.getElementById('proofModal');
+        if (proofModal) {
+            proofModal.addEventListener('show.bs.modal', function (event) {
+                const link = event.relatedTarget;
+                if (!link) return;
+                const proofUrl = link.getAttribute('data-proof-url') || '';
+                const customerName = link.getAttribute('data-customer-name') || '-';
+                const proofImage = document.getElementById('proofImage');
+                const proofCustomerName = document.getElementById('proofCustomerName');
+                if (proofImage) proofImage.src = proofUrl;
+                if (proofCustomerName) proofCustomerName.textContent = customerName;
+            });
         }
     </script>
 </body>

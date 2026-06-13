@@ -244,8 +244,19 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
         }
 
         .order-wrap {
-            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
             padding: 1.55rem 0 2.8rem;
+        }
+
+        .order-wrap .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
         }
 
         .order-btn {
@@ -430,7 +441,7 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
         <section class="order-wrap">
             <div class="container">
                 <button class="btn order-btn" type="button" id="orderNowBtn">Order Now <span class="ms-2">→</span></button>
-                <button class="btn order-btn" type="button" id="scanQrBtn" style="background: #667eea; color: white; margin-top: 10px; margin-left: 0;">📱 Scan QR di Meja <span class="ms-2">→</span></button>
+                <button class="btn order-btn" type="button" id="scanQrBtn">Scan QR di Meja <span class="ms-2">→</span></button>
             </div>
         </section>
     </main>

@@ -55,7 +55,7 @@ class AdminController
              FROM (
                  SELECT
                      MAX(CONCAT('Seat ', r.seat_id)) AS coordinate,
-                     MAX(COALESCE(r.guest_name, u.NAME, 'Guest')) AS customer_name,
+                     MAX(COALESCE(u.NAME, 'Guest')) AS customer_name,
                      COALESCE(GROUP_CONCAT(DISTINCT s.service_name SEPARATOR ' + '), 'Salon Service') AS order_detail,
                      MAX(r.STATUS) AS status,
                      MAX(r.schedule_time) AS queue_time,
@@ -71,21 +71,20 @@ class AdminController
 
                  SELECT
                      MAX(CONCAT('Cafe ', COALESCE(o.seat_id, 'Table'))) AS coordinate,
-                     MAX(COALESCE(r.guest_name, u.NAME, 'Guest')) AS customer_name,
-                     GROUP_CONCAT(CONCAT(o.qty, 'x ', m.menu_name) SEPARATOR ' + ') AS order_detail,
+                     MAX(o.guest_name) AS customer_name,
+                     GROUP_CONCAT(CONCAT(od.qty, 'x ', m.menu_name) SEPARATOR ' + ') AS order_detail,
                      CASE
-                         WHEN SUM(CASE WHEN o.STATUS = 'Selesai' THEN 1 ELSE 0 END) = COUNT(*) THEN 'Ready'
-                         WHEN SUM(CASE WHEN o.STATUS = 'In Progress' THEN 1 ELSE 0 END) > 0 THEN 'In Progress'
+                         WHEN o.STATUS = 'Completed' THEN 'Ready'
+                         WHEN o.STATUS = 'In Progress' THEN 'In Progress'
                          ELSE 'Waiting'
                      END AS status,
-                     MAX(COALESCE(r.schedule_time, NOW())) AS queue_time,
+                     MAX(o.order_date) AS queue_time,
                      'cafe' AS queue_type
-                 FROM orders o
-                 LEFT JOIN reservations r ON o.res_id = r.res_id
-                 LEFT JOIN users u ON r.user_id = u.user_id
-                 LEFT JOIN menus m ON o.menu_id = m.menu_id
-                 WHERE o.payment_status = 'Paid' OR o.STATUS IN ('New', 'In Progress', 'Selesai')
-                 GROUP BY COALESCE(o.res_id, CONCAT('G-', o.order_id))
+                 FROM db_merish_cafe.orders o
+                 LEFT JOIN db_merish_cafe.order_details od ON o.order_id = od.order_id
+                 LEFT JOIN db_merish_cafe.menus m ON od.menu_id = m.menu_id
+                 WHERE o.payment_status = 'Paid' OR o.STATUS IN ('New', 'In Progress', 'Ready')
+                 GROUP BY o.order_id
              ) AS queue_data
              ORDER BY queue_time DESC
              LIMIT 6"
@@ -143,7 +142,7 @@ class AdminController
 
         $reservationsStmt = $this->db->query(
             "SELECT r.res_id,
-                    COALESCE(r.guest_name, u.NAME, 'Guest') AS customer_name,
+                    COALESCE(u.NAME, 'Guest') AS customer_name,
                     r.seat_id,
                     r.STATUS AS status,
                     r.schedule_time,
@@ -156,7 +155,7 @@ class AdminController
              LEFT JOIN reservation_details rd ON r.res_id = rd.res_id
              LEFT JOIN services s ON rd.service_id = s.service_id
              LEFT JOIN users b ON rd.beautician_id = b.user_id
-             GROUP BY r.res_id, r.guest_name, u.NAME, r.seat_id, r.STATUS, r.schedule_time
+             GROUP BY r.res_id, u.NAME, r.seat_id, r.STATUS, r.schedule_time
              ORDER BY r.schedule_time DESC"
         );
         $reservations = $reservationsStmt->fetchAll();
@@ -166,7 +165,7 @@ class AdminController
             $reservationForEdit = $this->db->prepare(
                 "SELECT r.res_id,
                         r.user_id,
-                        r.guest_name,
+                        u.NAME AS guest_name,
                         r.seat_id,
                         r.STATUS,
                         DATE(r.schedule_time) AS reservation_date,
@@ -174,6 +173,7 @@ class AdminController
                         rd.service_id,
                         rd.beautician_id
                  FROM reservations r
+                 LEFT JOIN users u ON r.user_id = u.user_id
                  LEFT JOIN reservation_details rd ON r.res_id = rd.res_id
                  WHERE r.res_id = :id
                  LIMIT 1"
@@ -220,15 +220,13 @@ class AdminController
             if ($reservationId > 0) {
                 $stmt = $this->db->prepare(
                     'UPDATE reservations
-                     SET guest_name = :guest_name,
-                         seat_id = :seat_id,
+                     SET seat_id = :seat_id,
                          STATUS = :status,
                          schedule_time = :schedule_time,
                          user_id = NULL
                      WHERE res_id = :res_id'
                 );
                 $stmt->execute([
-                    ':guest_name' => $guestName,
                     ':seat_id' => $seatId,
                     ':status' => $status,
                     ':schedule_time' => $scheduleTime,
@@ -241,11 +239,10 @@ class AdminController
                 $targetResId = $reservationId;
             } else {
                 $stmt = $this->db->prepare(
-                    'INSERT INTO reservations (user_id, guest_name, seat_id, STATUS, schedule_time, is_dp_paid, dp_amount)
-                     VALUES (NULL, :guest_name, :seat_id, :status, :schedule_time, 0, 0)'
+                    'INSERT INTO reservations (user_id, seat_id, STATUS, schedule_time, is_dp_paid, dp_amount)
+                     VALUES (NULL, :seat_id, :status, :schedule_time, 0, 0)'
                 );
                 $stmt->execute([
-                    ':guest_name' => $guestName,
                     ':seat_id' => $seatId,
                     ':status' => $status,
                     ':schedule_time' => $scheduleTime,
@@ -340,17 +337,16 @@ class AdminController
                     m.menu_name,
                     m.price,
                     m.is_available,
-                    m.bom_recipe_id,
                     COUNT(bd.bom_recipe_id) AS ingredient_count,
                     COALESCE(GROUP_CONCAT(CONCAT(i.item_name, ' x ', bd.quantity_required, ' ', i.unit) SEPARATOR ', '), '-') AS bom_items,
                     CASE
-                        WHEN m.bom_recipe_id IS NULL THEN 'Incomplete'
+                        WHEN COUNT(bd.bom_recipe_id) = 0 THEN 'Incomplete'
                         ELSE 'Complete'
                     END AS bom_status
-             FROM menus m
-             LEFT JOIN bom_details bd ON m.bom_recipe_id = bd.bom_recipe_id
-             LEFT JOIN inventories i ON bd.item_id = i.item_id
-             GROUP BY m.menu_id, m.menu_name, m.price, m.is_available, m.bom_recipe_id
+             FROM db_merish_cafe.menus m
+             LEFT JOIN db_merish_cafe.bom_details bd ON bd.menu_id = m.menu_id
+             LEFT JOIN db_merish_cafe.inventories i ON bd.item_id = i.item_id
+             GROUP BY m.menu_id, m.menu_name, m.price, m.is_available
              ORDER BY m.menu_name ASC"
         );
         $menus = $menusStmt->fetchAll();
@@ -566,29 +562,25 @@ class AdminController
 
         $ordersStmt = $this->db->query(
             "SELECT o.order_id,
-                    o.res_id,
                     o.guest_name,
-                    o.order_type,
                     o.seat_id,
-                    o.menu_id,
-                    o.qty,
+                    o.total_amount,
+                    o.payment_method,
                     o.payment_status,
                     o.STATUS AS status,
-                    o.payment_status AS payment_status,
-                    m.menu_name,
-                    m.price,
-                    COALESCE(r.guest_name, u.NAME, 'Guest') AS customer_name,
-                    COALESCE(CONCAT('Seat ', r.seat_id), CONCAT('Table ', o.seat_id), 'Walk-in') AS coordinate,
+                    o.order_date,
+                    GROUP_CONCAT(CONCAT(od.qty, 'x ', m.menu_name) SEPARATOR ', ') AS order_items,
                     CASE
                         WHEN o.STATUS = 'In Progress' THEN 1
                         WHEN o.STATUS = 'New' THEN 2
-                        WHEN o.STATUS = 'Selesai' THEN 3
-                        ELSE 4
+                        WHEN o.STATUS = 'Ready' THEN 3
+                        WHEN o.STATUS = 'Completed' THEN 4
+                        ELSE 5
                     END AS sort_order
-             FROM orders o
-             JOIN menus m ON o.menu_id = m.menu_id
-             LEFT JOIN reservations r ON o.res_id = r.res_id
-             LEFT JOIN users u ON r.user_id = u.user_id
+             FROM db_merish_cafe.orders o
+             LEFT JOIN db_merish_cafe.order_details od ON o.order_id = od.order_id
+             LEFT JOIN db_merish_cafe.menus m ON od.menu_id = m.menu_id
+             GROUP BY o.order_id
              ORDER BY sort_order ASC, o.order_id DESC"
         );
         $orders = $ordersStmt->fetchAll();
@@ -596,11 +588,11 @@ class AdminController
         $orderForEdit = null;
         if ($editOrderId) {
             $orderStmt = $this->db->prepare(
-                "SELECT o.*, m.menu_name, m.price
-                 FROM orders o
-                 JOIN menus m ON o.menu_id = m.menu_id
-                 WHERE o.order_id = :id
-                 LIMIT 1"
+                "SELECT o.*, od.menu_id, od.qty, od.subtotal, m.menu_name, m.price
+                 FROM db_merish_cafe.orders o
+                 LEFT JOIN db_merish_cafe.order_details od ON o.order_id = od.order_id
+                 LEFT JOIN db_merish_cafe.menus m ON od.menu_id = m.menu_id
+                 WHERE o.order_id = :id"
             );
             $orderStmt->execute([':id' => $editOrderId]);
             $orderForEdit = $orderStmt->fetch() ?: null;
@@ -609,7 +601,7 @@ class AdminController
         $menus = $this->menusModel->findAll();
         $reservations = $this->db->query(
             "SELECT r.res_id,
-                    COALESCE(r.guest_name, u.NAME, 'Guest') AS customer_name,
+                    COALESCE(u.NAME, 'Guest') AS customer_name,
                     CONCAT('Seat ', r.seat_id, ' • ', DATE_FORMAT(r.schedule_time, '%d %b %Y %H:%i')) AS label
              FROM reservations r
              LEFT JOIN users u ON r.user_id = u.user_id
@@ -632,10 +624,8 @@ class AdminController
         $qty = max(1, (int) ($_POST['qty'] ?? 1));
         $status = trim($_POST['status'] ?? 'New');
         $seatId = trim($_POST['seat_id'] ?? '');
-        $orderType = trim($_POST['order_type'] ?? 'Dine-In');
         $paymentStatus = trim($_POST['payment_status'] ?? 'Unpaid');
-        $guestName = trim($_POST['guest_name'] ?? '');
-        $resId = trim($_POST['res_id'] ?? '');
+        $guestName = trim($_POST['guest_name'] ?? 'Guest');
 
         if ($menuId === '') {
             $_SESSION['error'] = 'Menu harus dipilih.';
@@ -644,46 +634,77 @@ class AdminController
         }
 
         try {
+            // Get menu price for subtotal calculation
+            $priceStmt = $this->db->prepare('SELECT price FROM db_merish_cafe.menus WHERE menu_id = :id');
+            $priceStmt->execute([':id' => $menuId]);
+            $menuPrice = (float) ($priceStmt->fetch()['price'] ?? 0);
+            $subtotal = $menuPrice * $qty;
+
             if ($orderId > 0) {
+                // Update orders header
                 $stmt = $this->db->prepare(
-                    'UPDATE orders
-                     SET res_id = :res_id,
-                         guest_name = :guest_name,
-                         order_type = :order_type,
+                    'UPDATE db_merish_cafe.orders
+                     SET guest_name = :guest_name,
                          seat_id = :seat_id,
-                         menu_id = :menu_id,
-                         qty = :qty,
+                         total_amount = :total_amount,
                          payment_status = :payment_status,
                          STATUS = :status
                      WHERE order_id = :order_id'
                 );
                 $stmt->execute([
-                    ':res_id' => $resId !== '' ? $resId : null,
-                    ':guest_name' => $guestName !== '' ? $guestName : null,
-                    ':order_type' => $orderType,
+                    ':guest_name' => $guestName,
                     ':seat_id' => $seatId !== '' ? $seatId : null,
-                    ':menu_id' => $menuId,
-                    ':qty' => $qty,
+                    ':total_amount' => $subtotal,
                     ':payment_status' => $paymentStatus,
                     ':status' => $status,
                     ':order_id' => $orderId,
                 ]);
-                $_SESSION['success'] = 'Order berhasil diperbarui.';
-            } else {
-                $stmt = $this->db->prepare(
-                    'INSERT INTO orders (res_id, guest_name, order_type, seat_id, menu_id, qty, payment_status, STATUS)
-                     VALUES (:res_id, :guest_name, :order_type, :seat_id, :menu_id, :qty, :payment_status, :status)'
+
+                // Delete old order details and re-insert
+                $this->db->prepare('DELETE FROM db_merish_cafe.order_details WHERE order_id = :id')
+                    ->execute([':id' => $orderId]);
+
+                $detStmt = $this->db->prepare(
+                    'INSERT INTO db_merish_cafe.order_details (order_id, menu_id, qty, subtotal)
+                     VALUES (:order_id, :menu_id, :qty, :subtotal)'
                 );
-                $stmt->execute([
-                    ':res_id' => $resId !== '' ? $resId : null,
-                    ':guest_name' => $guestName !== '' ? $guestName : null,
-                    ':order_type' => $orderType,
-                    ':seat_id' => $seatId !== '' ? $seatId : null,
+                $detStmt->execute([
+                    ':order_id' => $orderId,
                     ':menu_id' => $menuId,
                     ':qty' => $qty,
+                    ':subtotal' => $subtotal,
+                ]);
+
+                $_SESSION['success'] = 'Order berhasil diperbarui.';
+            } else {
+                // Insert new order header
+                $stmt = $this->db->prepare(
+                    'INSERT INTO db_merish_cafe.orders (guest_name, seat_id, total_amount, payment_method, payment_status, STATUS, order_date)
+                     VALUES (:guest_name, :seat_id, :total_amount, :payment_method, :payment_status, :status, NOW())'
+                );
+                $stmt->execute([
+                    ':guest_name' => $guestName,
+                    ':seat_id' => $seatId !== '' ? $seatId : null,
+                    ':total_amount' => $subtotal,
+                    ':payment_method' => 'Cash',
                     ':payment_status' => $paymentStatus,
                     ':status' => $status,
                 ]);
+
+                $newOrderId = (int) $this->db->lastInsertId();
+
+                // Insert order detail
+                $detStmt = $this->db->prepare(
+                    'INSERT INTO db_merish_cafe.order_details (order_id, menu_id, qty, subtotal)
+                     VALUES (:order_id, :menu_id, :qty, :subtotal)'
+                );
+                $detStmt->execute([
+                    ':order_id' => $newOrderId,
+                    ':menu_id' => $menuId,
+                    ':qty' => $qty,
+                    ':subtotal' => $subtotal,
+                ]);
+
                 $_SESSION['success'] = 'Order baru berhasil ditambahkan.';
             }
         } catch (\Throwable $exception) {
@@ -708,7 +729,7 @@ class AdminController
             exit;
         }
 
-        $stmt = $this->db->prepare("UPDATE orders SET STATUS = 'Selesai', payment_status = 'Paid' WHERE order_id = :order_id");
+        $stmt = $this->db->prepare("UPDATE db_merish_cafe.orders SET STATUS = 'Completed', payment_status = 'Paid' WHERE order_id = :order_id");
         $stmt->execute([':order_id' => $orderId]);
 
         $_SESSION['success'] = 'Order dipaksa selesai.';
@@ -730,7 +751,7 @@ class AdminController
             exit;
         }
 
-        $stmt = $this->db->prepare('DELETE FROM orders WHERE order_id = :order_id');
+        $stmt = $this->db->prepare('DELETE FROM db_merish_cafe.orders WHERE order_id = :order_id');
         $stmt->execute([':order_id' => $orderId]);
 
         $_SESSION['success'] = 'Order dibatalkan dan dihapus dari daftar.';
@@ -751,9 +772,10 @@ class AdminController
                     u.email,
                     u.ROLE,
                     COALESCE(AVG(rv.rating), 0) AS avg_rating,
-                    COUNT(rv.review_id) AS total_reviews
+                    COUNT(DISTINCT rv.review_id) AS total_reviews
              FROM users u
-             LEFT JOIN reviews rv ON rv.beautician_id = u.user_id
+             LEFT JOIN reservation_details rd_staff ON rd_staff.beautician_id = u.user_id
+             LEFT JOIN reviews rv ON rv.res_id = rd_staff.res_id
              WHERE u.ROLE IN ('Receptionist', 'Barista', 'Beautician')
              GROUP BY u.user_id, u.NAME, u.email, u.ROLE
              ORDER BY FIELD(u.ROLE, 'Beautician', 'Barista', 'Receptionist'), u.NAME ASC"
@@ -765,18 +787,16 @@ class AdminController
                     rv.rating,
                     rv.COMMENT AS review_comment,
                     rv.res_id,
-                    rv.menu_id,
-                    rv.review_id,
                     COALESCE(c.NAME, 'Guest') AS customer_name,
                     COALESCE(MAX(b.NAME), 'Unassigned') AS staff_name,
-                    COALESCE(MAX(s.service_name), MAX(m.menu_name), 'General Experience') AS subject_name
+                    COALESCE(MAX(s.service_name), 'General Experience') AS subject_name
              FROM reviews rv
-             LEFT JOIN users c ON rv.customer_id = c.user_id
+             LEFT JOIN reservations res ON rv.res_id = res.res_id
+             LEFT JOIN users c ON res.user_id = c.user_id
              LEFT JOIN reservation_details rd ON rv.res_id = rd.res_id
              LEFT JOIN services s ON rd.service_id = s.service_id
-             LEFT JOIN menus m ON rv.menu_id = m.menu_id
-             LEFT JOIN users b ON b.user_id = COALESCE(rv.beautician_id, rd.beautician_id)
-             GROUP BY rv.review_id, rv.rating, rv.COMMENT, rv.res_id, rv.menu_id, c.NAME
+             LEFT JOIN users b ON b.user_id = rd.beautician_id
+             GROUP BY rv.review_id, rv.rating, rv.COMMENT, rv.res_id, c.NAME
              ORDER BY rv.review_id DESC
              LIMIT 20"
         );
@@ -923,7 +943,7 @@ class AdminController
                     t.payment_method,
                     t.total_amount,
                     COALESCE(r.seat_id, '-') AS seat_id,
-                    COALESCE(u.NAME, r.guest_name, 'Guest') AS customer_name
+                    COALESCE(u.NAME, 'Guest') AS customer_name
              FROM transactions t
              LEFT JOIN reservations r ON t.res_id = r.res_id
              LEFT JOIN users u ON r.user_id = u.user_id
@@ -1049,11 +1069,8 @@ class AdminController
 
         $orderStmt = $this->db->prepare(
             "SELECT COUNT(*) AS total
-             FROM orders o
-             LEFT JOIN reservations r ON o.res_id = r.res_id
-             WHERE (
-                    r.schedule_time IS NOT NULL AND DATE(r.schedule_time) BETWEEN :start_date AND :end_date
-                ) OR o.res_id IS NULL"
+             FROM db_merish_cafe.orders
+             WHERE DATE(order_date) BETWEEN :start_date AND :end_date"
         );
         $orderStmt->execute([
             ':start_date' => $startDate,
@@ -1102,14 +1119,10 @@ class AdminController
             $trend['salon'][] = (float) ($salonStmt->fetch()['total'] ?? 0);
 
             $cafeStmt = $this->db->prepare(
-                "SELECT COALESCE(SUM(o.qty * m.price), 0) AS total
-                 FROM orders o
-                 JOIN menus m ON o.menu_id = m.menu_id
-                 LEFT JOIN reservations r ON o.res_id = r.res_id
-                 WHERE (
-                       (r.schedule_time IS NOT NULL AND DATE(r.schedule_time) BETWEEN :start_date AND :end_date)
-                    OR (o.res_id IS NULL)
-                 )"
+                "SELECT COALESCE(SUM(total_amount), 0) AS total
+                 FROM db_merish_cafe.orders
+                 WHERE payment_status = 'Paid'
+                   AND DATE(order_date) BETWEEN :start_date AND :end_date"
             );
             $cafeStmt->execute([
                 ':start_date' => $segmentStart->format('Y-m-d'),

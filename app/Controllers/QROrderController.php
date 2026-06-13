@@ -3,43 +3,31 @@
 namespace App\Controllers;
 
 use App\Models\SeatModel;
-use App\Models\QRTokenModel;
-use App\Models\OpenBillModel;
-use App\Models\CafeGuestOrderModel;
 use App\Models\MenusModel;
 use App\Models\OrdersModel;
-use App\Models\UsersModel;
 use App\Core\ApiResponse;
 
 /**
  * QR Order Controller
- * Handle cafe QR-based ordering for guest and member flows
+ * Handle cafe QR-based ordering
  * 
  * Flow:
- * 1. Guest scans QR → index.php?page=qrorder&action=start&token=ABC123
+ * 1. Guest scans QR → index.php?page=qrorder&action=start&token=S01
  * 2. Choose menu items
- * 3. Checkout with payment method (guest: QRIS only, member: add to bill)
- * 4. Payment processing or redirect to member bill
+ * 3. Checkout with payment method (QRIS or Cash)
+ * 4. Order created → success page
  */
 class QROrderController
 {
     private SeatModel $seatModel;
-    private QRTokenModel $tokenModel;
-    private OpenBillModel $billModel;
-    private CafeGuestOrderModel $guestOrderModel;
     private MenusModel $menusModel;
     private OrdersModel $ordersModel;
-    private UsersModel $usersModel;
 
     public function __construct()
     {
         $this->seatModel = new SeatModel();
-        $this->tokenModel = new QRTokenModel();
-        $this->billModel = new OpenBillModel();
-        $this->guestOrderModel = new CafeGuestOrderModel();
         $this->menusModel = new MenusModel();
         $this->ordersModel = new OrdersModel();
-        $this->usersModel = new UsersModel();
     }
 
     /**
@@ -49,18 +37,14 @@ class QROrderController
     public function start()
     {
         $token = $_GET['token'] ?? null;
-        
+
         if (!$token) {
             ApiResponse::error('Invalid QR token', 400);
             return;
         }
 
-        // Validate token and get seat
-        $seatId = $this->tokenModel->getSeatIdFromToken($token);
-        if (!$seatId) {
-            ApiResponse::error('QR token expired or invalid', 401);
-            return;
-        }
+        // Token is the seat_id (from QR code URL: merish.test/qr?seat=S01)
+        $seatId = strtoupper($token);
 
         // Get seat info
         $seat = $this->seatModel->findById($seatId);
@@ -73,28 +57,10 @@ class QROrderController
         $userId = $_SESSION['user_id'] ?? null;
         $isGuest = !$userId;
 
-        // Get or create open bill for this seat
-        $bill = $this->billModel->getActiveBillForSeat($seatId);
-        if (!$bill) {
-            // Create new bill
-            $billId = $this->billModel->create([
-                'user_id' => $userId,
-                'seat_id' => $seatId,
-                'guest_name' => $isGuest ? 'Guest' : ($this->usersModel->findById($userId)['NAME'] ?? 'Member'),
-                'bill_type' => 'Cafe Only'
-            ]);
-            if (!$billId) {
-                ApiResponse::error('Failed to create bill', 500);
-                return;
-            }
-            $bill = $this->billModel->findById($billId);
-        }
-
-        // Store in session
+        // Store in session (replaces open_bills)
         $_SESSION['qr_order'] = [
             'token' => $token,
             'seat_id' => $seatId,
-            'bill_id' => $bill['bill_id'],
             'is_guest' => $isGuest,
             'user_id' => $userId,
             'seat_name' => $seat['seat_name']
@@ -151,9 +117,7 @@ class QROrderController
                 'menu_id' => $menuId,
                 'menu_name' => $menu['menu_name'],
                 'price' => $menu['price'],
-                'category' => $menu['category'],
-                'qty' => $qty,
-                'image' => $menu['image'] ?? ''
+                'qty' => $qty
             ];
         }
 
@@ -225,10 +189,8 @@ class QROrderController
             $items[] = $item;
         }
 
-        // Get payment methods
-        $paymentMethods = $qrOrder['is_guest'] 
-            ? ['QRIS', 'LinkAja', 'Cash'] 
-            : ['Member Bill', 'QRIS', 'Cash'];
+        // Get payment methods (orders.payment_method ENUM: QRIS, Cash)
+        $paymentMethods = ['QRIS', 'Cash'];
 
         // View: checkout
         include __DIR__ . '/../Views/QrOrder/checkout.php';
@@ -259,9 +221,9 @@ class QROrderController
             return;
         }
 
-        // For guest: only QRIS/LinkAja/Cash
-        if ($qrOrder['is_guest'] && !in_array($paymentMethod, ['QRIS', 'LinkAja', 'Cash'])) {
-            ApiResponse::error('Payment method not allowed for guests', 403);
+        // Validate payment method (orders.payment_method ENUM: QRIS, Cash)
+        if (!in_array($paymentMethod, ['QRIS', 'Cash'])) {
+            ApiResponse::error('Invalid payment method', 400);
             return;
         }
 
@@ -271,66 +233,45 @@ class QROrderController
             $total += $item['price'] * $item['qty'];
         }
 
-        // Create cafe guest order record
-        $guestOrderId = $this->guestOrderModel->create([
-            'bill_id' => $qrOrder['bill_id'],
-            'seat_token' => $qrOrder['token'],
+        // Create cafe order record
+        $orderId = $this->ordersModel->create([
             'guest_name' => $qrOrder['is_guest'] ? 'Guest' : 'Member',
             'seat_id' => $qrOrder['seat_id'],
-            'total_amount' => $total
+            'total_amount' => $total,
+            'payment_method' => $paymentMethod,
+            'payment_status' => 'Unpaid',
+            'status' => 'New'
         ]);
 
-        if (!$guestOrderId) {
+        if (!$orderId) {
             ApiResponse::error('Failed to create order', 500);
             return;
         }
 
-        // Add items to orders table
+        // Add items to order_details table
         foreach ($cart as $item) {
-            $this->ordersModel->create([
-                'res_id' => 0,
-                'guest_name' => 'QR Order Guest',
-                'order_type' => 'Cafe',
-                'seat_id' => $qrOrder['seat_id'],
+            $this->ordersModel->createDetail([
+                'order_id' => $orderId,
                 'menu_id' => $item['menu_id'],
                 'qty' => $item['qty'],
-                'payment_status' => 'Pending',
-                'status' => 'New'
+                'subtotal' => $item['price'] * $item['qty']
             ]);
         }
 
-        // For guests: redirect to payment gateway
-        if ($qrOrder['is_guest']) {
-            // TODO: Integrate payment gateway (QRIS, LinkAja)
-            $_SESSION['payment'] = [
-                'guest_order_id' => $guestOrderId,
-                'amount' => $total,
-                'method' => $paymentMethod
-            ];
-
-            header('Location: index.php?page=payment&action=process&order_id=' . $guestOrderId);
-            exit;
-        }
-
-        // For members: add to open bill and redirect to member bill
-        $_SESSION['member_bill_items'][] = [
-            'guest_order_id' => $guestOrderId,
-            'items' => $cart,
-            'total' => $total
+        // Store payment info in session
+        $_SESSION['payment'] = [
+            'order_id' => $orderId,
+            'amount' => $total,
+            'method' => $paymentMethod,
+            'seat_name' => $qrOrder['seat_name'] ?? ''
         ];
 
-        // Update open bill with cafe charges
-        $this->billModel->updateBillTotals($qrOrder['bill_id'], [
-            'salon_subtotal' => 0,
-            'cafe_subtotal' => $total
-        ]);
-
-        // Clear cart
+        // Clear cart and order session
         unset($_SESSION['qr_cart']);
         unset($_SESSION['qr_order']);
 
-        // Redirect to member bill
-        header('Location: index.php?page=openbill&bill_id=' . $qrOrder['bill_id']);
+        // Redirect to success page
+        header('Location: index.php?page=qrorder&action=success&order_id=' . $orderId);
         exit;
     }
 
@@ -346,7 +287,7 @@ class QROrderController
             return;
         }
 
-        $order = $this->guestOrderModel->findById($guestOrderId);
+        $order = $this->ordersModel->findById((int)$guestOrderId);
         if (!$order) {
             ApiResponse::error('Order not found', 404);
             return;
@@ -357,16 +298,41 @@ class QROrderController
 
         if ($isPaid) {
             // Mark order as paid and move to barista queue
-            $this->guestOrderModel->updatePaymentStatus($guestOrderId, 'Paid', [
-                'payment_method' => $_GET['method'] ?? 'QRIS'
+            $this->ordersModel->update((int)$guestOrderId, [
+                'payment_status' => 'Paid',
+                'payment_method' => $_GET['method'] ?? 'QRIS',
+                'status' => 'In Progress'
             ]);
-
-            // Update order status to "In Progress" (barista queue)
-            $this->guestOrderModel->updateStatus($guestOrderId, 'In Progress');
         }
 
         // View: payment confirmation
         include __DIR__ . '/../Views/QrOrder/payment_status.php';
+    }
+
+    /**
+     * Order success page
+     * GET: index.php?page=qrorder&action=success&order_id=123
+     */
+    public function success()
+    {
+        $orderId = $_GET['order_id'] ?? null;
+        $payment = $_SESSION['payment'] ?? null;
+
+        if (!$orderId) {
+            header('Location: index.php');
+            exit;
+        }
+
+        $order = $this->ordersModel->findById((int)$orderId);
+        if (!$order) {
+            header('Location: index.php');
+            exit;
+        }
+
+        $orderDetails = $this->ordersModel->getOrderDetails((int)$orderId);
+
+        // View: success
+        include __DIR__ . '/../Views/QrOrder/success.php';
     }
 
     /**

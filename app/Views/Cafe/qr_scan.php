@@ -10,62 +10,142 @@ if (!isset($_GET['action']) || $_GET['action'] !== 'scan') {
     exit;
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scan QR Kafe - Pesan Menu</title>
+    <title>Scan QR Kafe - Merish</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --bg: #f4eded;
+            --surface: #f8f2f2;
+            --card: #fffafa;
+            --line: #d9ccd0;
+            --ink: #4f4248;
+            --muted: #7a6e73;
+            --accent: #8d616f;
+            --accent-dark: #724e5a;
+            --accent-soft: #ead2db;
+            --input-border: #c8b8bd;
+            --input-bg: #fdf8f8;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html, body {
+            min-height: 100vh;
+            font-family: 'Montserrat', sans-serif;
+            color: var(--ink);
+            background: var(--bg);
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
             min-height: 100vh;
+            background:
+                radial-gradient(circle at 2px 2px, rgba(141,97,111,0.06) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        /* ── Topbar ────────────────────────────────── */
+        .topbar {
             display: flex;
             align-items: center;
-            justify-content: center;
-            padding: 20px;
+            justify-content: space-between;
+            padding: 1.2rem 2.5rem;
+            background: rgba(255,249,249,0.92);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--line);
         }
 
-        .container {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        .brand {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 600;
+            letter-spacing: 3px;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            border: 1px solid #b79fa6;
+            color: #6d5660;
+            background: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 0.55rem 1.1rem;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .back-link:hover {
+            color: #fff;
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* ── Page label ─────────────────────────────── */
+        .page-label {
+            text-align: center;
+            padding: 1rem 1rem 0;
+            font-size: 0.72rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--muted);
+            font-weight: 700;
+        }
+
+        .page-label span { color: var(--accent); }
+
+        /* ── Main content ───────────────────────────── */
+        .scan-shell {
+            flex: 1;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 1.5rem 2rem 2rem;
+        }
+
+        .scan-card {
             max-width: 500px;
             width: 100%;
-            padding: 30px;
-            text-align: center;
+            border: 1px solid var(--line);
+            background: var(--card);
+            box-shadow: 0 16px 48px rgba(73,53,60,0.08);
+            padding: 2.6rem 2.4rem 2.2rem;
         }
 
-        .header {
-            margin-bottom: 30px;
+        .card-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.85rem;
+            color: #46373f;
+            margin-bottom: 0.35rem;
         }
 
-        .header h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 28px;
+        .card-sub {
+            color: var(--muted);
+            font-size: 0.88rem;
+            margin-bottom: 1.8rem;
+            line-height: 1.5;
         }
 
-        .header p {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .qr-scanner-wrapper {
+        /* ── QR Scanner area ────────────────────────── */
+        .scanner-area {
             position: relative;
-            margin: 25px 0;
-            background: #f5f5f5;
-            border-radius: 10px;
+            margin: 0 0 1.5rem;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 4px;
             overflow: hidden;
-            min-height: 400px;
+            min-height: 320px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -74,146 +154,245 @@ if (!isset($_GET['action']) || $_GET['action'] !== 'scan') {
         #qr-scanner {
             width: 100%;
             height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        #qr-scanner video {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover;
         }
 
         .scanner-placeholder {
             text-align: center;
-            padding: 40px 20px;
-            color: #999;
+            padding: 2.5rem 1.5rem;
+            color: var(--muted);
+            position: relative;
+            z-index: 1;
         }
 
         .scanner-placeholder svg {
-            width: 100px;
-            height: 100px;
-            margin-bottom: 20px;
-            opacity: 0.5;
+            width: 72px;
+            height: 72px;
+            margin-bottom: 1.2rem;
+            opacity: 0.4;
+            stroke: var(--accent);
         }
 
         .scanner-placeholder p {
-            font-size: 14px;
-            margin-bottom: 10px;
+            font-size: 0.85rem;
+            margin-bottom: 0.4rem;
+            line-height: 1.5;
         }
 
+        .scanner-placeholder .hint {
+            font-size: 0.75rem;
+            color: #b5a5aa;
+        }
+
+        /* ── Scan banner ────────────────────────────── */
+        .scan-banner {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.85rem 1rem;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            width: 100%;
+            cursor: default;
+            margin-bottom: 1.5rem;
+            font-size: 0.74rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .scan-banner svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+        }
+
+        .scan-banner .banner-arrow {
+            margin-left: auto;
+            font-size: 1rem;
+        }
+
+        /* ── Permission request ─────────────────────── */
         .permissions-request {
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            color: #856404;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
+            padding: 0.85rem 1rem;
+            margin-bottom: 1.2rem;
+            border: 1px solid #efc9d1;
+            background: #fbeaec;
+            color: #7c3547;
+            font-size: 0.84rem;
             display: none;
         }
 
         .permissions-request button {
-            background: #ffc107;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            display: block;
+            margin-top: 0.7rem;
+            padding: 0.6rem 1.2rem;
+            border: 1px solid var(--accent-dark);
+            background: var(--accent);
+            color: #fff;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
             cursor: pointer;
-            margin-top: 10px;
-            font-size: 14px;
-            font-weight: bold;
+            transition: background 0.2s;
         }
 
         .permissions-request button:hover {
-            background: #e0a800;
+            background: var(--accent-dark);
         }
 
+        /* ── Result box ─────────────────────────────── */
         .result-box {
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
+            padding: 1.2rem 1rem;
+            margin: 1.2rem 0;
+            border: 1px solid #c3d4c3;
+            background: #eef5ee;
+            color: #2d5a3d;
+            text-align: center;
             display: none;
         }
 
-        .result-box.error {
-            background: #f8d7da;
-            border-color: #f5c6cb;
-            color: #721c24;
+        .result-box .result-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: #3a7d52;
         }
 
         .result-box h3 {
-            margin-bottom: 10px;
-            font-size: 16px;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.15rem;
+            margin-bottom: 0.4rem;
         }
 
         .result-box p {
-            font-size: 14px;
-            margin-bottom: 10px;
+            font-size: 0.85rem;
+            margin-bottom: 0.8rem;
+            color: #4a6e55;
         }
 
         .result-box button {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 0.7rem 1.5rem;
+            border: 1px solid #2d5a3d;
+            background: #3a7d52;
+            color: #fff;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
             cursor: pointer;
-            font-size: 14px;
-            font-weight: bold;
-        }
-
-        .result-box.error button {
-            background: #dc3545;
+            transition: background 0.2s;
         }
 
         .result-box button:hover {
-            opacity: 0.9;
+            background: #2d5a3d;
         }
 
-        .manual-input {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 2px solid #eee;
+        .result-box.error {
+            border-color: #efc9d1;
+            background: #fbeaec;
+            color: #7c3547;
         }
 
-        .manual-input label {
+        .result-box.error .result-icon {
+            color: #a8405a;
+        }
+
+        .result-box.error button {
+            background: #a8405a;
+            border-color: #7c3547;
+        }
+
+        .result-box.error button:hover {
+            background: #7c3547;
+        }
+
+        /* ── Divider ────────────────────────────────── */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin: 1.5rem 0;
+            color: var(--muted);
+            font-size: 0.78rem;
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--line);
+        }
+
+        /* ── Manual input ───────────────────────────── */
+        .manual-section label {
             display: block;
-            margin-bottom: 10px;
-            color: #666;
-            font-size: 14px;
-            font-weight: bold;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: #6f5d64;
+            margin-bottom: 0.5rem;
         }
 
-        .manual-input input {
+        .manual-section input {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-
-        .manual-input input:focus {
+            padding: 0.7rem 0.85rem;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.9rem;
+            color: var(--ink);
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            margin-bottom: 0.8rem;
         }
 
-        .manual-input button {
+        .manual-section input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(141,97,111,0.1);
+        }
+
+        .manual-section input::placeholder {
+            color: #b5a5aa;
+        }
+
+        .submit-btn {
             width: 100%;
-            padding: 12px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            font-weight: bold;
+            padding: 0.85rem 1rem;
+            border: 1px solid var(--accent-dark);
+            background: var(--accent);
+            color: #fff;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.74rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
             cursor: pointer;
+            transition: background 0.2s;
         }
 
-        .manual-input button:hover {
-            background: #5568d3;
+        .submit-btn:hover {
+            background: var(--accent-dark);
         }
 
+        /* ── Loading spinner ────────────────────────── */
         .loading {
             display: none;
             text-align: center;
-            padding: 20px;
+            padding: 1.2rem;
         }
 
         .loading::after {
@@ -221,10 +400,10 @@ if (!isset($_GET['action']) || $_GET['action'] !== 'scan') {
             display: inline-block;
             width: 20px;
             height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
+            border: 3px solid var(--accent-soft);
+            border-top: 3px solid var(--accent);
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: spin 0.8s linear infinite;
         }
 
         @keyframes spin {
@@ -232,58 +411,119 @@ if (!isset($_GET['action']) || $_GET['action'] !== 'scan') {
             100% { transform: rotate(360deg); }
         }
 
-        .error-icon, .success-icon {
-            font-size: 40px;
-            margin-bottom: 10px;
+        /* ── Footer ─────────────────────────────────── */
+        .scan-footer {
+            background: #e7e1e0;
+            border-top: 1px solid #d4c9cc;
+            padding: 1.5rem 2rem;
+            text-align: center;
+        }
+
+        .footer-brand {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            color: #74545f;
+            margin-bottom: 0.6rem;
+        }
+
+        .footer-copy {
+            font-size: 0.74rem;
+            color: #9a8b8f;
+        }
+
+        /* ── Responsive ─────────────────────────────── */
+        @media (max-width: 768px) {
+            .topbar { padding: 1rem 1.2rem; }
+            .scan-shell { padding: 1rem; }
+            .scan-card { padding: 2rem 1.5rem; }
+        }
+
+        @media (max-width: 480px) {
+            .brand { font-size: 1.4rem; }
+            .card-title { font-size: 1.5rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>☕ Pesan Menu Kafe</h1>
-            <p>Scan kode QR meja Anda untuk mulai memesan</p>
-        </div>
 
-        <div class="permissions-request" id="permissionsRequest">
-            <p>Izin akses kamera diperlukan untuk scan QR code</p>
-            <button onclick="requestCameraPermission()">Berikan Izin Kamera</button>
-        </div>
+    <header class="topbar">
+        <a href="/index.php?page=home" class="brand">MERISH</a>
+        <a href="/index.php?page=cafe" class="back-link">← Back to Cafe</a>
+    </header>
 
-        <div class="qr-scanner-wrapper">
-            <div id="qr-scanner"></div>
-            <div class="scanner-placeholder" id="scannerPlaceholder">
+    <div class="page-label">Cafe Order — <span>Scan QR</span></div>
+
+    <section class="scan-shell">
+        <div class="scan-card">
+
+            <h1 class="card-title">Pesan Menu Kafe</h1>
+            <p class="card-sub">Scan kode QR meja Anda untuk mulai memesan menu.</p>
+
+            <!-- Scan banner -->
+            <div class="scan-banner">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M3 9V5a2 2 0 0 1 2-2h4M21 9V5a2 2 0 0 0-2-2h-4M3 15v4a2 2 0 0 0 2 2h4m12 0h4a2 2 0 0 0 2-2v-4"></path>
-                    <rect x="7" y="7" width="10" height="10" rx="1.5"></rect>
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
                 </svg>
-                <p>Kamera akan muncul di sini</p>
-                <p style="font-size: 12px; margin-top: 10px;">Pastikan browser memiliki akses ke kamera</p>
+                Scan QR di Meja
+                <span class="banner-arrow">→</span>
             </div>
-        </div>
 
-        <div class="result-box" id="resultBox">
-            <div class="success-icon">✓</div>
-            <h3>QR Terdeteksi!</h3>
-            <p>Memproses data meja Anda...</p>
-            <button onclick="proceedToMenu()">Lanjut ke Menu</button>
-        </div>
+            <!-- Permission request -->
+            <div class="permissions-request" id="permissionsRequest">
+                <p>Izin akses kamera diperlukan untuk scan QR code.</p>
+                <button onclick="requestCameraPermission()">Berikan Izin Kamera</button>
+            </div>
 
-        <div class="loading" id="loading">Memproses...</div>
+            <!-- Scanner area -->
+            <div class="scanner-area">
+                <div id="qr-scanner"></div>
+                <div class="scanner-placeholder" id="scannerPlaceholder">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M3 9V5a2 2 0 0 1 2-2h4M21 9V5a2 2 0 0 0-2-2h-4M3 15v4a2 2 0 0 0 2 2h4m12 0h4a2 2 0 0 0 2-2v-4"></path>
+                        <rect x="7" y="7" width="10" height="10" rx="1.5"></rect>
+                    </svg>
+                    <p>Kamera akan muncul di sini</p>
+                    <p class="hint">Pastikan browser memiliki akses ke kamera</p>
+                </div>
+            </div>
 
-        <div class="manual-input">
-            <label for="manualToken">Atau masukkan nomor meja:</label>
-            <input type="text" id="manualToken" placeholder="Contoh: C01 atau T-01" maxlength="10">
-            <button onclick="processManualToken()">Masuk ke Menu</button>
+            <!-- Result box -->
+            <div class="result-box" id="resultBox">
+                <div class="result-icon">✓</div>
+                <h3>QR Terdeteksi!</h3>
+                <p>Memproses data meja Anda...</p>
+                <button onclick="proceedToMenu()">Lanjut ke Menu</button>
+            </div>
+
+            <!-- Loading -->
+            <div class="loading" id="loading"></div>
+
+            <!-- Divider -->
+            <div class="divider">atau masukkan manual</div>
+
+            <!-- Manual input -->
+            <div class="manual-section">
+                <label for="manualToken">Nomor Meja</label>
+                <input type="text" id="manualToken" placeholder="Contoh: C01 atau T-01" maxlength="10">
+                <button class="submit-btn" onclick="processManualToken()">Masuk ke Menu</button>
+            </div>
+
         </div>
-    </div>
+    </section>
+
+    <footer class="scan-footer">
+        <div class="footer-brand">Merish</div>
+        <div class="footer-copy">&copy; 2024 Merish Beauty & Cafe. All rights reserved.</div>
+    </footer>
 
     <!-- Load jsQR library for QR code scanning -->
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
     <script>
         let currentToken = null;
         let cameraStream = null;
-        let html5QrcodeScanner = null;
 
         // Initialize QR scanner
         async function initQRScanner() {
@@ -293,7 +533,6 @@ if (!isset($_GET['action']) || $_GET['action'] !== 'scan') {
                 
                 if (permission.state === 'denied') {
                     document.getElementById('permissionsRequest').style.display = 'block';
-                    document.getElementById('qr-scanner').style.display = 'none';
                     return;
                 }
 
@@ -307,8 +546,6 @@ if (!isset($_GET['action']) || $_GET['action'] !== 'scan') {
                 video.srcObject = stream;
                 video.setAttribute('autoplay', true);
                 video.setAttribute('playsinline', true);
-                video.style.width = '100%';
-                video.style.height = '100%';
 
                 document.getElementById('qr-scanner').innerHTML = '';
                 document.getElementById('qr-scanner').appendChild(video);
@@ -343,7 +580,6 @@ if (!isset($_GET['action']) || $_GET['action'] !== 'scan') {
                     const code = jsQR(imageData.data, imageData.width, imageData.height);
 
                     if (code && code.data) {
-                        // QR code found
                         handleQRDetected(code.data);
                     }
                 }
@@ -441,7 +677,7 @@ if (!isset($_GET['action']) || $_GET['action'] !== 'scan') {
             const resultBox = document.getElementById('resultBox');
             resultBox.classList.add('error');
             resultBox.innerHTML = `
-                <div class="error-icon">✕</div>
+                <div class="result-icon">✕</div>
                 <h3>Error</h3>
                 <p>${message}</p>
                 <button onclick="location.reload()">Coba Lagi</button>

@@ -66,7 +66,7 @@ class ApiBookingController
         // Get beauticians
         $stmt = $this->db->prepare(
             "SELECT sp.profile_id, u.user_id, u.NAME as name, u.email, 
-                    sp.specialization, sp.work_status, sp.hire_date
+                    sp.specialization, sp.work_status
              FROM staff_profiles sp
              JOIN users u ON sp.user_id = u.user_id
              WHERE {$where}
@@ -101,7 +101,7 @@ class ApiBookingController
 
         $stmt = $this->db->prepare(
             'SELECT sp.profile_id, u.user_id, u.NAME as name, u.email, 
-                    sp.specialization, sp.work_status, sp.hire_date
+                    sp.specialization, sp.work_status
              FROM staff_profiles sp
              JOIN users u ON sp.user_id = u.user_id
              WHERE u.user_id = :user_id'
@@ -272,7 +272,7 @@ class ApiBookingController
 
     /**
      * GET /api/bundles/active
-     * Get all active service bundles dengan pricing
+     * Get all promotions (bundle-like offers)
      */
     public function getActiveBundles()
     {
@@ -282,16 +282,15 @@ class ApiBookingController
         }
 
         try {
-            $bundleModel = new \App\Models\ServiceBundleModel();
-            $bundles = $bundleModel->getAllActiveBundles();
-            
-            // Enrich dengan pricing
-            $enriched = [];
-            foreach ($bundles as $bundle) {
-                $enriched[] = $bundleModel->getBundleWithPrice($bundle['bundle_id']);
-            }
+            $db = Database::getConnection();
+            $stmt = $db->query(
+                "SELECT promo_id, promo_name, included_fb_item, discount_value
+                 FROM promotions
+                 ORDER BY promo_id"
+            );
+            $promos = $stmt->fetchAll();
 
-            echo ApiResponse::success($enriched, 'Active bundles retrieved', 200);
+            echo ApiResponse::success($promos, 'Active bundles retrieved', 200);
         } catch (\Exception $e) {
             echo ApiResponse::error('Failed to retrieve bundles: ' . $e->getMessage(), 500);
         }
@@ -299,7 +298,7 @@ class ApiBookingController
 
     /**
      * GET /api/bundles/:bundle_id/details
-     * Get bundle detail dengan services dan pricing
+     * Get promotion detail by promo_id
      */
     public function getBundleDetails($bundleId)
     {
@@ -309,15 +308,21 @@ class ApiBookingController
         }
 
         try {
-            $bundleModel = new \App\Models\ServiceBundleModel();
-            $bundle = $bundleModel->getBundleWithPrice($bundleId);
-            
-            if (!$bundle) {
+            $db = Database::getConnection();
+            $stmt = $db->prepare(
+                "SELECT promo_id, promo_name, included_fb_item, discount_value
+                 FROM promotions
+                 WHERE promo_id = :id"
+            );
+            $stmt->execute([':id' => $bundleId]);
+            $promo = $stmt->fetch();
+
+            if (!$promo) {
                 echo ApiResponse::notFound('Bundle not found');
                 return;
             }
 
-            echo ApiResponse::success($bundle, 'Bundle details retrieved', 200);
+            echo ApiResponse::success($promo, 'Bundle details retrieved', 200);
         } catch (\Exception $e) {
             echo ApiResponse::error('Failed to retrieve bundle: ' . $e->getMessage(), 500);
         }
@@ -325,7 +330,7 @@ class ApiBookingController
 
     /**
      * GET /api/addons/active
-     * Get all active booking add-ons grouped by type
+     * Get all add-on services (is_addon = TRUE) grouped by category
      */
     public function getActiveAddons()
     {
@@ -335,8 +340,24 @@ class ApiBookingController
         }
 
         try {
-            $addonModel = new \App\Models\BookingAddonModel();
-            $addons = $addonModel->getAddonsGroupedByType();
+            $db = Database::getConnection();
+            $stmt = $db->query(
+                "SELECT service_id, service_name, category, base_tariff, est_duration
+                 FROM services
+                 WHERE is_addon = TRUE
+                 ORDER BY category, service_name"
+            );
+            $allAddons = $stmt->fetchAll();
+
+            // Group by category
+            $addons = [];
+            foreach ($allAddons as $addon) {
+                $cat = $addon['category'];
+                if (!isset($addons[$cat])) {
+                    $addons[$cat] = [];
+                }
+                $addons[$cat][] = $addon;
+            }
 
             echo ApiResponse::success($addons, 'Active add-ons retrieved', 200);
         } catch (\Exception $e) {

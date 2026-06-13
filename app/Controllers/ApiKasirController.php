@@ -179,7 +179,7 @@ class ApiKasirController
             ]);
 
             echo ApiResponse::success([
-                'transaction_id' => $this->db->lastInsertId(),
+                'trans_id' => $this->db->lastInsertId(),
                 'res_id' => $input['res_id'],
                 'total_amount' => $input['total_amount'],
                 'payment_method' => $input['payment_method'],
@@ -220,9 +220,11 @@ class ApiKasirController
         }
 
         $stmt = $this->db->prepare(
-            'SELECT t.*, r.user_id, r.guest_name, r.STATUS as reservation_status
+            'SELECT t.trans_id, t.res_id, t.total_amount, t.payment_method, t.payment_date,
+                    r.user_id, COALESCE(u.NAME, \'Guest\') AS customer_name, r.STATUS as reservation_status
              FROM transactions t
              LEFT JOIN reservations r ON t.res_id = r.res_id
+             LEFT JOIN users u ON r.user_id = u.user_id
              WHERE t.res_id = :res_id'
         );
         $stmt->execute([':res_id' => $resId]);

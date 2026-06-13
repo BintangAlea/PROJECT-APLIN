@@ -561,10 +561,18 @@ $selectedGuest = $_SESSION['cafe_order']['guest_name'] ?? $displayName;
                             $menuId = (string) ($menu['menu_id'] ?? '');
                             $menuName = (string) ($menu['menu_name'] ?? 'Menu Item');
                             $menuPrice = (int) ($menu['price'] ?? 0);
-                            $menuCategory = strtolower((string) ($menu['category'] ?? 'kopi'));
-                            $menuImage = (string) ($menu['image'] ?? '');
-                            $description = (string) ($menu['description'] ?? '');
-                            $visualClass = $menuImage !== '' ? $menuImage : ($menuCategory === 'pastry' ? 'croissant' : ($menuCategory === 'teh' ? 'rose-latte' : 'signature-latte'));
+                            // Infer category from menu_name keywords (menus table has no category column)
+                            $nameLower = strtolower($menuName);
+                            if (str_contains($nameLower, 'kopi') || str_contains($nameLower, 'coffee') || str_contains($nameLower, 'latte') || str_contains($nameLower, 'espresso')) {
+                                $menuCategory = 'kopi';
+                            } elseif (str_contains($nameLower, 'teh') || str_contains($nameLower, 'tea') || str_contains($nameLower, 'matcha')) {
+                                $menuCategory = 'teh';
+                            } elseif (str_contains($nameLower, 'croissant') || str_contains($nameLower, 'pastry') || str_contains($nameLower, 'cake') || str_contains($nameLower, 'roti')) {
+                                $menuCategory = 'pastry';
+                            } else {
+                                $menuCategory = 'kopi';
+                            }
+                            $visualClass = ($menuCategory === 'pastry') ? 'croissant' : (($menuCategory === 'teh') ? 'rose-latte' : 'signature-latte');
                             ?>
                             <article class="menu-card">
                                 <div class="menu-card-visual <?php echo htmlspecialchars($visualClass); ?>"></div>
@@ -574,12 +582,11 @@ $selectedGuest = $_SESSION['cafe_order']['guest_name'] ?? $displayName;
                                         <span class="menu-card-price">IDR <?php echo number_format($menuPrice, 0, ',', '.'); ?></span>
                                     </div>
                                     <h3 class="menu-card-name"><?php echo htmlspecialchars($menuName); ?></h3>
-                                    <p class="menu-card-desc"><?php echo htmlspecialchars($description !== '' ? $description : 'Tambahkan menu ini ke keranjang sebelum lanjut ke pembayaran.'); ?></p>
+                                    <p class="menu-card-desc">Tambahkan menu ini ke keranjang sebelum lanjut ke pembayaran.</p>
                                     <form method="POST" action="index.php?page=cafe&action=addToCart" class="m-0">
                                         <input type="hidden" name="menu_id" value="<?php echo htmlspecialchars($menuId); ?>">
                                         <input type="hidden" name="menu_name" value="<?php echo htmlspecialchars($menuName); ?>">
                                         <input type="hidden" name="price" value="<?php echo htmlspecialchars((string) $menuPrice); ?>">
-                                        <input type="hidden" name="image" value="<?php echo htmlspecialchars($menuImage); ?>">
                                         <input type="hidden" name="category" value="<?php echo htmlspecialchars($menuCategory); ?>">
                                         <button type="submit" class="add-menu-btn">Tambah ke Keranjang</button>
                                     </form>
@@ -593,11 +600,21 @@ $selectedGuest = $_SESSION['cafe_order']['guest_name'] ?? $displayName;
 
                 <?php if (!empty($cartItems)): ?>
                     <?php foreach ($cartItems as $item): ?>
+                        <?php
+                        // Infer category from item name for visual class (cart session has no category/image)
+                        $itemCat = 'kopi';
+                        $nl = strtolower($item['name'] ?? '');
+                        if (str_contains($nl, 'croissant') || str_contains($nl, 'pastry') || str_contains($nl, 'cake') || str_contains($nl, 'roti')) {
+                            $itemCat = 'pastry';
+                        } elseif (str_contains($nl, 'teh') || str_contains($nl, 'tea') || str_contains($nl, 'matcha')) {
+                            $itemCat = 'teh';
+                        }
+                        ?>
                         <div class="cart-item">
-                            <div class="thumb <?php echo htmlspecialchars($item['image'] ?: ($item['category'] === 'pastry' ? 'croissant' : 'signature-latte')); ?>"></div>
+                            <div class="thumb <?php echo htmlspecialchars($itemCat === 'pastry' ? 'croissant' : ($itemCat === 'teh' ? 'rose-latte' : 'signature-latte')); ?>"></div>
                             <div>
                                 <div class="item-name"><?php echo htmlspecialchars($item['name']); ?></div>
-                                <div class="item-sub"><?php echo $item['category'] === 'pastry' ? 'Warmed' : 'Oat Milk, Less Sugar'; ?></div>
+                                <div class="item-sub"><?php echo $itemCat === 'pastry' ? 'Warmed' : 'Oat Milk, Less Sugar'; ?></div>
                                 <div class="item-price">IDR <?php echo number_format($item['price'], 0, ',', '.'); ?></div>
                             </div>
                             <div class="qty-box">

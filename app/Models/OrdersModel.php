@@ -14,86 +14,97 @@ class OrdersModel
         $this->db = Database::getConnection();
     }
 
-    public function findAll(): array
-    {
-        $stmt = $this->db->query(
-            'SELECT o.*, m.menu_name, m.price as menu_price
-             FROM orders o
-             JOIN menus m ON o.menu_id = m.menu_id
-             ORDER BY o.order_id DESC'
-        );
-        return $stmt->fetchAll();
-    }
 
     public function findById(int $id): array|false
     {
         $stmt = $this->db->prepare(
-            'SELECT o.*, m.menu_name, m.price as menu_price
-             FROM orders o
-             JOIN menus m ON o.menu_id = m.menu_id
+            'SELECT o.*
+             FROM db_merish_cafe.orders o
              WHERE o.order_id = :id'
         );
         $stmt->execute([':id' => $id]);
         return $stmt->fetch();
     }
 
-    public function findByReservationId(int $reservationId): array
+    public function getOrderDetails(int $orderId): array
     {
         $stmt = $this->db->prepare(
-            'SELECT o.*, m.menu_name, m.price as menu_price
-             FROM orders o
-             JOIN menus m ON o.menu_id = m.menu_id
-             WHERE o.res_id = :res_id
-             ORDER BY o.order_id DESC'
+            'SELECT od.*, m.menu_name, m.price
+             FROM db_merish_cafe.order_details od
+             JOIN db_merish_cafe.menus m ON od.menu_id = m.menu_id
+             WHERE od.order_id = :order_id'
         );
-        $stmt->execute([':res_id' => $reservationId]);
-        return $stmt->fetchAll();
-    }
-
-    public function findByStatus(string $status): array
-    {
-        $stmt = $this->db->prepare(
-            'SELECT o.*, m.menu_name, m.price as menu_price, r.res_id
-             FROM orders o
-             JOIN menus m ON o.menu_id = m.menu_id
-             LEFT JOIN reservations r ON o.res_id = r.res_id
-             WHERE o.STATUS = :status
-             ORDER BY o.order_id DESC'
-        );
-        $stmt->execute([':status' => $status]);
+        $stmt->execute([':order_id' => $orderId]);
         return $stmt->fetchAll();
     }
 
     public function findPendingOrInProgress(): array
     {
         $stmt = $this->db->query(
-            'SELECT o.*, m.menu_name, m.price as menu_price, r.res_id
-             FROM orders o
-             JOIN menus m ON o.menu_id = m.menu_id
-             LEFT JOIN reservations r ON o.res_id = r.res_id
-             WHERE o.STATUS IN ("New", "Pending", "In Progress", "Selesai")
+            'SELECT o.*, od.menu_id, od.qty, m.menu_name, m.price
+             FROM db_merish_cafe.orders o
+             JOIN db_merish_cafe.order_details od ON o.order_id = od.order_id
+             JOIN db_merish_cafe.menus m ON od.menu_id = m.menu_id
+             WHERE o.STATUS IN ("New", "In Progress", "Ready", "Pending")
              ORDER BY o.order_id DESC'
         );
         return $stmt->fetchAll();
     }
 
-    public function create(array $data): bool
+    public function findAll(): array
+    {
+        $stmt = $this->db->query(
+            'SELECT o.*, od.menu_id, od.qty, m.menu_name, m.price
+             FROM db_merish_cafe.orders o
+             JOIN db_merish_cafe.order_details od ON o.order_id = od.order_id
+             JOIN db_merish_cafe.menus m ON od.menu_id = m.menu_id
+             ORDER BY o.order_id DESC'
+        );
+        return $stmt->fetchAll();
+    }
+
+    public function create(array $data): int|false
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO orders (res_id, menu_id, qty, STATUS)
-             VALUES (:res_id, :menu_id, :qty, :status)'
+            'INSERT INTO db_merish_cafe.orders (guest_name, seat_id, total_amount, payment_method, payment_status, STATUS, order_date)
+             VALUES (:guest_name, :seat_id, :total_amount, :payment_method, :payment_status, :status, NOW())'
         );
 
-        return $stmt->execute([
-            ':res_id' => $data['res_id'] ?? $data['reservation_id'] ?? null,
-            ':menu_id' => $data['menu_id'],
-            ':qty' => $data['qty'] ?? $data['quantity'] ?? 1,
+        $success = $stmt->execute([
+            ':guest_name' => $data['guest_name'],
+            ':seat_id' => $data['seat_id'] ?? null,
+            ':total_amount' => $data['total_amount'] ?? 0,
+            ':payment_method' => $data['payment_method'] ?? 'Cash',
+            ':payment_status' => $data['payment_status'] ?? 'Unpaid',
             ':status' => $data['status'] ?? 'New',
+        ]);
+
+        if ($success) {
+            $stmt = $this->db->query('SELECT LAST_INSERT_ID() as id');
+            $row = $stmt->fetch();
+            return (int)($row['id'] ?? 0);
+        }
+        return false;
+    }
+
+    public function createDetail(array $data): bool
+    {
+        $stmt = $this->db->prepare(
+            'INSERT INTO db_merish_cafe.order_details (order_id, menu_id, qty, subtotal)
+             VALUES (:order_id, :menu_id, :qty, :subtotal)'
+        );
+        return $stmt->execute([
+            ':order_id' => $data['order_id'],
+            ':menu_id' => $data['menu_id'],
+            ':qty' => $data['qty'],
+            ':subtotal' => $data['subtotal'] ?? 0,
         ]);
     }
 
     public function update(int $id, array $data): bool
     {
+        if (empty($data)) return true;
+        
         $fields = [];
         $values = [':id' => $id];
 
@@ -103,7 +114,7 @@ class OrdersModel
         }
 
         $stmt = $this->db->prepare(
-            'UPDATE orders SET ' . implode(', ', $fields) . ' WHERE order_id = :id'
+            'UPDATE db_merish_cafe.orders SET ' . implode(', ', $fields) . ' WHERE order_id = :id'
         );
 
         return $stmt->execute($values);
@@ -111,7 +122,7 @@ class OrdersModel
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db->prepare('DELETE FROM orders WHERE order_id = :id');
+        $stmt = $this->db->prepare('DELETE FROM db_merish_cafe.orders WHERE order_id = :id');
         return $stmt->execute([':id' => $id]);
     }
 }

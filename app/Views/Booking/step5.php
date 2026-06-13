@@ -18,7 +18,7 @@ $reservationTime = $details['time'] ?? 'Select your time';
 $subtotal = (int) ($pricing['base_price'] ?? 0) + (int) ($pricing['addons_price'] ?? 0);
 $discount = (int) ($pricing['promo_discount'] ?? 0);
 $total = (int) ($pricing['total_price'] ?? 0);
-$requiredDp = max(0, (int) ceil($total * 0.5));
+$requiredDp = 50000;
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -592,7 +592,7 @@ $requiredDp = max(0, (int) ceil($total * 0.5));
                             <div class="dp-box">
                                 <div>
                                     <div class="small fw-semibold text-uppercase">Required DP</div>
-                                    <div class="small">50% to secure booking</div>
+                                    <div class="small">Fixed DP to secure booking</div>
                                 </div>
                                 <div class="big">Rp<?php echo number_format($requiredDp, 0, ',', '.'); ?></div>
                             </div>

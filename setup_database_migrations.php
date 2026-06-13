@@ -21,7 +21,7 @@ try {
     echo "✓ Database connection established\n\n";
 
     // Read migration file
-    $migrationFile = __DIR__ . '/migration_qr_and_bills.sql';
+    $migrationFile = __DIR__ . '/migration_tier1_booking_flow.sql';
     
     if (!file_exists($migrationFile)) {
         echo "✗ Migration file not found: $migrationFile\n";

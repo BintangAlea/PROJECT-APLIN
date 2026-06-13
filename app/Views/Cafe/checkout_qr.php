@@ -8,20 +8,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checkout Pesanan</title>
+    <title>Checkout Pesanan - MERISH</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f4eded;
             min-height: 100vh;
             padding: 20px 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Montserrat', sans-serif;
         }
-        
+
+        .topbar {
+            background: #fffafa;
+            border-bottom: 1px solid #d9ccd0;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 500px;
+            margin: 0 auto 0;
+        }
+
+        .topbar-brand {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #8d616f;
+            text-decoration: none;
+            letter-spacing: 2px;
+        }
+
+        .topbar-back {
+            color: #7a6e73;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .topbar-back:hover {
+            color: #8d616f;
+        }
+
         .checkout-container {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            background: #fffafa;
+            border-radius: 4px;
+            border: 1px solid #d9ccd0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
             max-width: 500px;
             margin: 20px auto;
             padding: 30px;
@@ -33,7 +66,8 @@
         }
 
         .header h1 {
-            color: #667eea;
+            font-family: 'Playfair Display', serif;
+            color: #8d616f;
             font-size: 28px;
             margin-bottom: 5px;
         }
@@ -41,19 +75,20 @@
         .header .scenario-badge {
             display: inline-block;
             padding: 5px 15px;
-            border-radius: 20px;
+            border-radius: 4px;
             font-size: 12px;
-            font-weight: bold;
+            font-weight: 600;
         }
 
         .scenario-badge.customer {
-            background: #e3f2fd;
-            color: #1976d2;
+            background: #ead2db;
+            color: #724e5a;
         }
 
         .scenario-badge.guest {
-            background: #fff3e0;
-            color: #f57c00;
+            background: #fdf8f8;
+            color: #8d616f;
+            border: 1px solid #d9ccd0;
         }
 
         .section {
@@ -61,11 +96,12 @@
         }
 
         .section-title {
+            font-family: 'Playfair Display', serif;
             font-weight: 600;
-            color: #333;
+            color: #4f4248;
             margin-bottom: 15px;
             padding-bottom: 10px;
-            border-bottom: 2px solid #f0f0f0;
+            border-bottom: 1px solid #d9ccd0;
         }
 
         .order-item {
@@ -73,15 +109,16 @@
             justify-content: space-between;
             align-items: center;
             padding: 10px 0;
-            border-bottom: 1px solid #f5f5f5;
+            border-bottom: 1px solid #ead2db;
         }
 
         .item-name {
             flex: 1;
+            color: #4f4248;
         }
 
         .item-qty {
-            color: #999;
+            color: #7a6e73;
             margin: 0 10px;
             min-width: 40px;
             text-align: right;
@@ -89,7 +126,7 @@
 
         .item-price {
             font-weight: 600;
-            color: #667eea;
+            color: #8d616f;
         }
 
         .summary-line {
@@ -97,39 +134,41 @@
             justify-content: space-between;
             padding: 8px 0;
             font-size: 14px;
+            color: #4f4248;
         }
 
         .summary-line.total {
-            border-top: 2px solid #f0f0f0;
+            border-top: 1px solid #d9ccd0;
             padding-top: 15px;
             font-size: 18px;
             font-weight: 700;
-            color: #667eea;
+            color: #8d616f;
         }
 
         .message-box {
             padding: 15px;
-            border-radius: 8px;
+            border-radius: 4px;
             margin-bottom: 20px;
             font-size: 14px;
         }
 
         .message-box.info {
-            background: #e3f2fd;
-            color: #1565c0;
-            border-left: 4px solid #1976d2;
+            background: #ead2db;
+            color: #724e5a;
+            border-left: 4px solid #8d616f;
         }
 
         .message-box.warning {
-            background: #fff3e0;
-            color: #e65100;
-            border-left: 4px solid #f57c00;
+            background: #fdf8f8;
+            color: #8d616f;
+            border-left: 4px solid #8d616f;
         }
 
         .payment-section {
-            background: #f9f9f9;
+            background: #fdf8f8;
             padding: 20px;
-            border-radius: 10px;
+            border-radius: 4px;
+            border: 1px solid #d9ccd0;
             margin: 20px 0;
         }
 
@@ -144,6 +183,7 @@
         .payment-method label {
             margin-bottom: 0;
             cursor: pointer;
+            color: #4f4248;
         }
 
         .actions {
@@ -156,7 +196,7 @@
             flex: 1;
             padding: 12px;
             border: none;
-            border-radius: 8px;
+            border-radius: 4px;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
@@ -164,22 +204,23 @@
         }
 
         .btn-back {
-            background: #e0e0e0;
-            color: #333;
+            background: #ead2db;
+            color: #4f4248;
         }
 
         .btn-back:hover {
-            background: #d0d0d0;
+            background: #d9ccd0;
         }
 
         .btn-confirm {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #8d616f;
             color: white;
         }
 
         .btn-confirm:hover:not(:disabled) {
+            background: #724e5a;
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 5px 20px rgba(141, 97, 111, 0.3);
         }
 
         .btn-confirm:disabled {
@@ -194,8 +235,8 @@
         }
 
         .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
+            border: 3px solid #ead2db;
+            border-top: 3px solid #8d616f;
             border-radius: 50%;
             width: 30px;
             height: 30px;
@@ -209,16 +250,22 @@
         }
 
         .error-message {
-            background: #ffebee;
-            color: #c62828;
+            background: #fdf8f8;
+            color: #724e5a;
             padding: 12px;
-            border-radius: 8px;
+            border-radius: 4px;
+            border-left: 4px solid #8d616f;
             margin-bottom: 15px;
             display: none;
         }
     </style>
 </head>
 <body>
+    <div class="topbar">
+        <a href="/?page=home" class="topbar-back">&larr; Kembali</a>
+        <a href="/?page=home" class="topbar-brand">MERISH</a>
+    </div>
+
     <div class="checkout-container">
         <div class="header">
             <h1>Ringkasan Pesanan</h1>

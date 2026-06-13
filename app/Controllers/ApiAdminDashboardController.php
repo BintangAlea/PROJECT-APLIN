@@ -59,7 +59,7 @@ class ApiAdminDashboardController
         // Total orders (today)
         $orders = $this->db->query(
             "SELECT COUNT(*) as total FROM orders 
-             WHERE DATE(payment_date) = CURDATE()"
+             WHERE DATE(order_date) = CURDATE()"
         );
         $totalOrders = $orders->fetch()['total'] ?? 0;
 
@@ -216,12 +216,13 @@ class ApiAdminDashboardController
 
         $top = $this->db->query(
             "SELECT m.menu_id, m.menu_name, m.price,
-                    SUM(o.qty) as total_qty,
+                    SUM(od.qty) as total_qty,
                     COUNT(o.order_id) as order_count,
-                    SUM(o.qty * m.price) as total_revenue
+                    SUM(od.subtotal) as total_revenue
              FROM orders o
-             JOIN menus m ON o.menu_id = m.menu_id
-             GROUP BY m.menu_id
+             JOIN order_details od ON o.order_id = od.order_id
+             JOIN menus m ON od.menu_id = m.menu_id
+             GROUP BY m.menu_id, m.menu_name, m.price
              ORDER BY total_qty DESC
              LIMIT {$limit}"
         );
@@ -310,19 +311,20 @@ class ApiAdminDashboardController
         $date = $_GET['date'] ?? date('Y-m-d');
         $status = $_GET['status'] ?? null;
 
-        $where = "DATE(schedule_time) = :date";
+        $where = "DATE(r.schedule_time) = :date";
         $params = [':date' => $date];
 
         if ($status) {
-            $where .= " AND STATUS = :status";
+            $where .= " AND r.STATUS = :status";
             $params[':status'] = $status;
         }
 
         $bookings = $this->db->prepare(
-            "SELECT res_id, guest_name, STATUS, schedule_time, dp_amount, is_dp_paid
-             FROM reservations
+            "SELECT r.res_id, COALESCE(u.NAME, 'Guest') AS customer_name, r.STATUS, r.schedule_time, r.dp_amount, r.is_dp_paid
+             FROM reservations r
+             LEFT JOIN users u ON r.user_id = u.user_id
              WHERE {$where}
-             ORDER BY schedule_time ASC"
+             ORDER BY r.schedule_time ASC"
         );
         $bookings->execute($params);
         $bookingData = $bookings->fetchAll();

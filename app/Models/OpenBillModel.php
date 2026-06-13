@@ -189,9 +189,10 @@ class OpenBillModel
         // Get cafe charges from orders
         $cafeCharges = [];
         $cafeStmt = $this->db->prepare(
-            'SELECT m.menu_name, m.price, o.qty, (m.price * o.qty) as amount
-             FROM orders o
-             JOIN menus m ON o.menu_id = m.menu_id
+            'SELECT m.menu_name, m.price, od.qty, od.subtotal as amount
+             FROM db_merish_cafe.orders o
+             JOIN db_merish_cafe.order_details od ON o.order_id = od.order_id
+             JOIN db_merish_cafe.menus m ON od.menu_id = m.menu_id
              WHERE o.seat_id = :seat_id
              AND o.STATUS IN ("In Progress", "Ready", "Completed")'
         );

@@ -30,7 +30,7 @@ class LoyaltyModel
     // Tier benefits
     private const BOOKING_WINDOW = [
         self::TIER_REGULAR => 1,     // H-1 (1 day)
-        self::TIER_LOYAL => 7,       // H-7 (1 week)
+        self::TIER_LOYAL => 1,       // H-1 (1 day)
         self::TIER_VIP => 14         // H-14 (2 weeks)
     ];
 
@@ -250,7 +250,7 @@ class LoyaltyModel
                 'max_spent' => self::THRESHOLD_VIP,
                 'booking_window' => self::BOOKING_WINDOW[self::TIER_LOYAL],
                 'points_multiplier' => self::POINTS_MULTIPLIER[self::TIER_LOYAL],
-                'perks' => ['Booking hingga 7 hari ke depan', 'Poin reward 1.5x', 'Akses reward eksklusif']
+                'perks' => ['Booking besok (H-1)', 'Poin reward 1.5x', 'Akses reward eksklusif']
             ],
             [
                 'stage' => self::TIER_VIP,

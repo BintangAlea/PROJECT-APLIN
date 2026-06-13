@@ -3,22 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pesanan Berhasil</title>
+    <title>Pesanan Berhasil - MERISH</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f4eded;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .topbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #fffafa;
+            border-bottom: 1px solid #d9ccd0;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .topbar-brand {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #8d616f;
+            text-decoration: none;
+            letter-spacing: 2px;
+        }
+
+        .topbar-back {
+            color: #7a6e73;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .topbar-back:hover {
+            color: #8d616f;
         }
 
         .success-container {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            background: #fffafa;
+            border-radius: 4px;
+            border: 1px solid #d9ccd0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             padding: 60px 40px;
             text-align: center;
             max-width: 500px;
@@ -45,7 +81,7 @@
             width: 120px;
             height: 120px;
             border-radius: 50%;
-            background: #4caf50;
+            background: #8d616f;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -65,22 +101,24 @@
         }
 
         h1 {
-            color: #333;
+            font-family: 'Playfair Display', serif;
+            color: #4f4248;
             font-size: 32px;
             margin-bottom: 15px;
         }
 
         .message {
-            color: #666;
+            color: #7a6e73;
             font-size: 16px;
             margin-bottom: 10px;
             line-height: 1.6;
         }
 
         .details {
-            background: #f5f5f5;
+            background: #fdf8f8;
             padding: 20px;
-            border-radius: 8px;
+            border-radius: 4px;
+            border: 1px solid #d9ccd0;
             margin: 30px 0;
             text-align: left;
         }
@@ -89,7 +127,7 @@
             display: flex;
             justify-content: space-between;
             padding: 10px 0;
-            border-bottom: 1px solid #e0e0e0;
+            border-bottom: 1px solid #ead2db;
         }
 
         .detail-item:last-child {
@@ -97,12 +135,12 @@
         }
 
         .detail-label {
-            color: #999;
+            color: #7a6e73;
             font-weight: 500;
         }
 
         .detail-value {
-            color: #333;
+            color: #4f4248;
             font-weight: 600;
         }
 
@@ -116,7 +154,7 @@
             flex: 1;
             padding: 12px 24px;
             border: none;
-            border-radius: 8px;
+            border-radius: 4px;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
@@ -126,30 +164,31 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #8d616f;
             color: white;
         }
 
         .btn-primary:hover {
+            background: #724e5a;
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 5px 20px rgba(141, 97, 111, 0.3);
             text-decoration: none;
             color: white;
         }
 
         .btn-secondary {
-            background: #e0e0e0;
-            color: #333;
+            background: #ead2db;
+            color: #4f4248;
         }
 
         .btn-secondary:hover {
-            background: #d0d0d0;
+            background: #d9ccd0;
             text-decoration: none;
-            color: #333;
+            color: #4f4248;
         }
 
         .timer {
-            color: #999;
+            color: #7a6e73;
             font-size: 12px;
             margin-top: 20px;
         }
@@ -166,6 +205,11 @@
     </style>
 </head>
 <body>
+    <div class="topbar">
+        <a href="/?page=home" class="topbar-back">&larr; Kembali</a>
+        <a href="/?page=home" class="topbar-brand">MERISH</a>
+    </div>
+
     <div class="success-container">
         <div class="emoji-success">🎉</div>
         <div class="check-circle">✓</div>

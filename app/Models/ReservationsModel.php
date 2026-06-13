@@ -162,13 +162,14 @@ class ReservationsModel
             $scheduleTime = date('Y-m-d H:i:s', strtotime($reservationDate . ' ' . $reservationTime));
             
             $stmt = $this->db->prepare('
-                INSERT INTO reservations (user_id, seat_id, STATUS, schedule_time, is_dp_paid, dp_amount, payment_proof_url)
-                VALUES (:user_id, :seat_id, :status, :schedule_time, :is_dp_paid, :dp_amount, :payment_proof_url)
+                INSERT INTO reservations (user_id, seat_id, promo_id, STATUS, schedule_time, is_dp_paid, dp_amount, payment_proof_url)
+                VALUES (:user_id, :seat_id, :promo_id, :status, :schedule_time, :is_dp_paid, :dp_amount, :payment_proof_url)
             ');
-            
+
             $params = [
                 ':user_id' => $customerId,
                 ':seat_id' => $seatId,
+                ':promo_id' => $data['promo_id'] ?? null,
                 ':status' => $data['status'] ?? 'Pending',
                 ':schedule_time' => $scheduleTime,
                 ':is_dp_paid' => $data['is_dp_paid'] ?? 0,
@@ -191,26 +192,40 @@ class ReservationsModel
             
             error_log('ReservationsModel.create() - LAST_INSERT_ID: ' . $resId);
 
-            // Insert into reservation_details (service_id and beautician_id)
-            if (!empty($serviceId)) {
-                error_log('ReservationsModel.create() - Inserting detail: resId=' . $resId . ', serviceId=' . $serviceId);
-                $stmtDetail = $this->db->prepare('
-                    INSERT INTO reservation_details (res_id, service_id, beautician_id)
-                    VALUES (:res_id, :service_id, :beautician_id)
-                ');
-                
-                $detailSuccess = $stmtDetail->execute([
-                    ':res_id' => $resId,
-                    ':service_id' => $serviceId,
-                    ':beautician_id' => $beauticianId,
-                ]);
-                
-                if (!$detailSuccess) {
-                    $error = $stmtDetail->errorInfo();
-                    error_log('ReservationsModel.create() - Insert detail FAILED: ' . print_r($error, true));
-                    // Don't return false - detail insert failure should not fail the whole appointment
-                } else {
-                    error_log('ReservationsModel.create() - Detail insert SUCCESS');
+            // Insert into reservation_details (service_ids and beautician_id)
+            $serviceIds = $data['service_ids'] ?? [];
+            if (!empty($serviceId) && !in_array($serviceId, $serviceIds)) {
+                $serviceIds[] = $serviceId;
+            }
+
+            if (!empty($serviceIds)) {
+                foreach ($serviceIds as $srvId) {
+                    error_log('ReservationsModel.create() - Inserting detail: resId=' . $resId . ', serviceId=' . $srvId);
+                    $stmtDetail = $this->db->prepare('
+                        INSERT INTO reservation_details (res_id, service_id, beautician_id, qty, subtotal)
+                        VALUES (:res_id, :service_id, :beautician_id, :qty, :subtotal)
+                    ');
+
+                    // Get service price for subtotal
+                    $priceStmt = $this->db->prepare('SELECT base_tariff FROM services WHERE service_id = :sid');
+                    $priceStmt->execute([':sid' => $srvId]);
+                    $priceRow = $priceStmt->fetch();
+                    $unitPrice = $priceRow['base_tariff'] ?? 0;
+
+                    $detailSuccess = $stmtDetail->execute([
+                        ':res_id' => $resId,
+                        ':service_id' => $srvId,
+                        ':beautician_id' => $beauticianId,
+                        ':qty' => 1,
+                        ':subtotal' => $unitPrice,
+                    ]);
+                    
+                    if (!$detailSuccess) {
+                        $error = $stmtDetail->errorInfo();
+                        error_log('ReservationsModel.create() - Insert detail FAILED: ' . print_r($error, true));
+                    } else {
+                        error_log('ReservationsModel.create() - Detail insert SUCCESS for serviceId=' . $srvId);
+                    }
                 }
             }
 

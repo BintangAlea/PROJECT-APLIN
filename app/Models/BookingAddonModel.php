@@ -55,7 +55,7 @@ class BookingAddonModel
     /**
      * Get add-on by ID
      */
-    public function getAddonById(int $addonId): array|false
+    public function getAddonById(string|int $addonId): array|false
     {
         try {
             $stmt = $this->db->prepare(

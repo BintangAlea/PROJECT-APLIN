@@ -428,7 +428,8 @@ foreach ($services as $item) {
                                 <?php
                                 $serviceId = (string)($service['service_id'] ?? '');
                                 $serviceCategory = $normalizeCategory($service['category'] ?? '');
-                                $checked = $serviceId === $selectedServiceId ? 'checked' : '';
+                                $selectedServiceIds = $_SESSION['booking']['service_ids'] ?? [];
+                                $checked = in_array($serviceId, $selectedServiceIds) || $serviceId === $selectedServiceId ? 'checked' : '';
                                 $isActive = $checked !== '' ? 'is-active' : '';
                                 $price = (float)($service['base_tariff'] ?? 0);
                                 $duration = (int)($service['est_duration'] ?? 0);
@@ -436,7 +437,7 @@ foreach ($services as $item) {
                                 <label class="service-option <?php echo $isActive; ?>" data-service-category="<?php echo $serviceCategory; ?>">
                                     <div class="row g-2 align-items-start">
                                         <div class="col-1 d-flex justify-content-center pt-1">
-                                            <input type="radio" class="form-check-input" name="service_id" value="<?php echo htmlspecialchars($serviceId); ?>" <?php echo $checked; ?> required>
+                                            <input type="checkbox" class="form-check-input service-checkbox" name="service_ids[]" value="<?php echo htmlspecialchars($serviceId); ?>" <?php echo $checked; ?>>
                                         </div>
                                         <div class="col-8 col-md-9">
                                             <p class="service-name">
@@ -471,7 +472,7 @@ foreach ($services as $item) {
     const categoryCards = document.querySelectorAll('.category-card');
     const serviceRows = document.querySelectorAll('[data-service-category]');
     const categoryTitle = document.getElementById('serviceCategoryTitle');
-    const radios = document.querySelectorAll('input[name="service_id"]');
+    const checkboxes = document.querySelectorAll('input[name="service_ids[]"]');
     const categoryLabels = {
         hair: 'Hair Services',
         nails: 'Nails Services',
@@ -481,10 +482,9 @@ foreach ($services as $item) {
 
     function updateActiveOptionStyle() {
         document.querySelectorAll('.service-option').forEach((row) => row.classList.remove('is-active'));
-        const checked = document.querySelector('input[name="service_id"]:checked');
-        if (checked) {
+        document.querySelectorAll('input[name="service_ids[]"]:checked').forEach(checked => {
             checked.closest('.service-option')?.classList.add('is-active');
-        }
+        });
     }
 
     function filterServices(category) {
@@ -493,10 +493,7 @@ foreach ($services as $item) {
             row.style.display = row.dataset.serviceCategory === category ? '' : 'none';
         });
 
-        const checked = document.querySelector('input[name="service_id"]:checked');
-        if (checked && checked.closest('.service-option')?.dataset.serviceCategory !== category) {
-            checked.checked = false;
-        }
+        // Don't uncheck when changing categories so users can select across categories
         updateActiveOptionStyle();
     }
 
@@ -508,8 +505,8 @@ foreach ($services as $item) {
         });
     });
 
-    radios.forEach((radio) => {
-        radio.addEventListener('change', updateActiveOptionStyle);
+    checkboxes.forEach((cb) => {
+        cb.addEventListener('change', updateActiveOptionStyle);
     });
 
     filterServices('<?php echo $activeCategory; ?>');

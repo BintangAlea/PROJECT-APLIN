@@ -6,15 +6,16 @@
     <title><?php echo $pageTitle ?? 'MERISH - Salon & Cafe'; ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --merish-primary: #8B6F47;
-            --merish-secondary: #D4A574;
-            --merish-accent: #F5E6D3;
-            --merish-dark: #3E3E3E;
+            --merish-primary: #8d616f;
+            --merish-secondary: #724e5a;
+            --merish-accent: #ead2db;
+            --merish-dark: #4f4248;
         }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Montserrat', sans-serif;
             color: var(--merish-dark);
         }
         .navbar {
@@ -22,6 +23,7 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         .navbar-brand {
+            font-family: 'Playfair Display', serif;
             font-weight: 700;
             font-size: 1.5rem;
             color: var(--merish-primary) !important;
@@ -40,7 +42,7 @@
             background: var(--merish-primary);
             color: white;
             border: none;
-            border-radius: 25px;
+            border-radius: 4px;
             padding: 8px 24px;
             font-weight: 600;
             transition: all 0.3s;
@@ -57,6 +59,7 @@
             text-align: center;
         }
         .hero-section h1 {
+            font-family: 'Playfair Display', serif;
             font-size: 3rem;
             font-weight: 700;
             margin-bottom: 20px;
@@ -69,7 +72,7 @@
         }
         .card-service {
             border: none;
-            border-radius: 15px;
+            border-radius: 4px;
             overflow: hidden;
             transition: all 0.3s;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
@@ -81,13 +84,14 @@
         }
         .badge-promo {
             background: var(--merish-secondary);
-            color: var(--merish-dark);
+            color: white;
             font-weight: 600;
             padding: 5px 12px;
-            border-radius: 20px;
+            border-radius: 4px;
             font-size: 0.8rem;
         }
         .section-title {
+            font-family: 'Playfair Display', serif;
             color: var(--merish-primary);
             font-weight: 700;
             font-size: 2.5rem;
@@ -104,14 +108,14 @@
             background: var(--merish-accent);
             color: var(--merish-dark);
             padding: 6px 12px;
-            border-radius: 20px;
+            border-radius: 4px;
             font-size: 0.85rem;
             font-weight: 600;
         }
         .progress-loyalty {
             height: 10px;
-            background: #e0e0e0;
-            border-radius: 10px;
+            background: #ead2db;
+            border-radius: 4px;
             overflow: hidden;
         }
         .progress-loyalty .progress-bar {
@@ -139,9 +143,6 @@
                         <a class="nav-link" href="index.php?page=services">Services</a>
                     </li>
                     <?php if (isset($_SESSION['user_id'])): ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="index.php?page=home">Home</a>
-                        </li>
                         <li class="nav-item">
                             <span class="user-badge">Hi, <?php echo htmlspecialchars(substr($_SESSION['full_name'] ?? 'User', 0, 20)); ?>!</span>
                         </li>

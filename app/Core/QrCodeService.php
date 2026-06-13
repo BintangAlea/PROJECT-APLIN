@@ -76,13 +76,12 @@ class QrCodeService
     {
         // Format QR data sebagai URL/data yang bisa dipindai
         $qrData = http_build_query([
-            'booking_id' => $bookingData['booking_confirmation_id'],
-            'customer_id' => $bookingData['user_id'],
-            'date' => $bookingData['reservation_date'],
-            'time' => $bookingData['reservation_time'],
+            'res_id' => $bookingData['res_id'] ?? ($bookingData['booking_confirmation_id'] ?? ''),
+            'customer_id' => $bookingData['user_id'] ?? '',
+            'date' => $bookingData['reservation_date'] ?? '',
+            'time' => $bookingData['reservation_time'] ?? '',
             'beautician' => $bookingData['beautician_name'] ?? '',
             'service' => $bookingData['service_name'] ?? '',
-            'total' => $bookingData['total_price']
         ]);
 
         // Return URL encoded format yang bisa dipindai manual
@@ -94,13 +93,12 @@ class QrCodeService
      */
     private function buildQrCodeData(array $bookingData): string
     {
-        // Format: APP_NAMESPACE|BOOKING_ID|CUSTOMER_ID|RESERVATION_DATE|TOTAL_PRICE|CHECKSUM
+        // Format: APP_NAMESPACE|RES_ID|CUSTOMER_ID|RESERVATION_DATE|CHECKSUM
         $baseData = implode('|', [
             'MERISH-BEAUTY',
-            $bookingData['booking_confirmation_id'],
-            $bookingData['user_id'],
-            date('Y-m-d', strtotime($bookingData['reservation_date'])),
-            number_format($bookingData['total_price'], 2, '.', '')
+            $bookingData['res_id'] ?? ($bookingData['booking_confirmation_id'] ?? ''),
+            $bookingData['user_id'] ?? '',
+            date('Y-m-d', strtotime($bookingData['reservation_date'] ?? 'now'))
         ]);
 
         // Add checksum
@@ -114,14 +112,14 @@ class QrCodeService
     public function verifyQrCodeData(string $data): array|false
     {
         $parts = explode('|', $data);
-        if (count($parts) !== 6) {
+        if (count($parts) !== 5) {
             return false;
         }
 
-        list($app, $bookingId, $userId, $date, $amount, $checksum) = $parts;
+        list($app, $resId, $userId, $date, $checksum) = $parts;
 
         // Verify checksum
-        $verifyData = implode('|', [$app, $bookingId, $userId, $date, $amount]);
+        $verifyData = implode('|', [$app, $resId, $userId, $date]);
         $verifyChecksum = substr(md5($verifyData), 0, 8);
 
         if ($checksum !== $verifyChecksum) {
@@ -130,48 +128,59 @@ class QrCodeService
 
         return [
             'app' => $app,
-            'booking_id' => $bookingId,
+            'res_id' => $resId,
             'user_id' => $userId,
             'date' => $date,
-            'amount' => (float)$amount,
             'valid' => true
         ];
     }
 
     /**
-     * Save QR code URL to reservation
+     * Save QR code data - stores in session instead of DB
+     * (original schema doesn't have QR-related columns on reservations)
      */
     public function saveQrCodeToReservation(int $resId, string $confirmationId, string $qrCodeUrl): bool
     {
-        $stmt = $this->db->prepare(
-            'UPDATE reservations 
-             SET booking_confirmation_id = :confirmation_id,
-                 booking_qr_code_url = :qr_url,
-                 confirmation_date = NOW(),
-                 updated_at = NOW()
-             WHERE res_id = :res_id'
-        );
-
-        return $stmt->execute([
-            ':confirmation_id' => $confirmationId,
-            ':qr_url' => $qrCodeUrl,
-            ':res_id' => $resId
-        ]);
+        // Store QR data in session since reservations table doesn't have QR columns
+        $_SESSION['booking_qr'] = [
+            'res_id' => $resId,
+            'confirmation_id' => $confirmationId,
+            'qr_url' => $qrCodeUrl,
+            'generated_at' => date('Y-m-d H:i:s')
+        ];
+        return true;
     }
 
     /**
-     * Get reservation dengan QR code
+     * Get reservation data for QR display
      */
     public function getReservationWithQr(int $resId): array|false
     {
         $stmt = $this->db->prepare(
-            'SELECT res_id, booking_confirmation_id, booking_qr_code_url, 
-                    confirmation_date, user_id, reservation_date, reservation_time, 
-                    total_price
-             FROM reservations 
-             WHERE res_id = :res_id'
+            'SELECT r.res_id, r.user_id,
+                    DATE(r.schedule_time) AS reservation_date,
+                    TIME(r.schedule_time) AS reservation_time,
+                    r.STATUS,
+                    u.NAME AS customer_name,
+                    s.seat_name,
+                    se.service_name
+             FROM reservations r
+             LEFT JOIN users u ON r.user_id = u.user_id
+             LEFT JOIN seats s ON r.seat_id = s.seat_id
+             LEFT JOIN reservation_details rd ON r.res_id = rd.res_id
+             LEFT JOIN services se ON rd.service_id = se.service_id
+             WHERE r.res_id = :res_id
+             LIMIT 1'
         );
         $stmt->execute([':res_id' => $resId]);
-        return $stmt->fetch(\PDO::FETCH_ASSOC);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        // Merge QR session data if available
+        if ($row && isset($_SESSION['booking_qr']) && $_SESSION['booking_qr']['res_id'] == $resId) {
+            $row['booking_confirmation_id'] = $_SESSION['booking_qr']['confirmation_id'];
+            $row['booking_qr_code_url'] = $_SESSION['booking_qr']['qr_url'];
+        }
+
+        return $row;
     }
 }

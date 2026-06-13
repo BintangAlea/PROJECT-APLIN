@@ -85,7 +85,7 @@ class SeatModel
         return $stmt->execute([
             ':seat_id' => $data['seat_id'] ?? '',
             ':seat_name' => $data['seat_name'] ?? '',
-            ':zone_type' => $data['zone_type'] ?? 'Active Area',
+            ':zone_type' => $data['zone_type'] ?? 'Kursi Salon',
             ':qr_code_url' => $data['qr_code_url'] ?? ''
         ]);
     }
@@ -128,11 +128,12 @@ class SeatModel
     public function getSeatWithCurrentReservation(string $seatId): array|false
     {
         $stmt = $this->db->prepare(
-            'SELECT s.*, r.res_id, r.user_id, r.guest_name, r.STATUS, r.schedule_time
+            'SELECT s.*, r.res_id, r.user_id, u.name AS guest_name, r.STATUS, r.schedule_time
              FROM seats s
              LEFT JOIN reservations r ON s.seat_id = r.seat_id 
                AND r.STATUS IN ("Confirmed", "In-Service", "Waiting")
                AND r.schedule_time > NOW()
+             LEFT JOIN users u ON r.user_id = u.user_id
              WHERE s.seat_id = :seat_id'
         );
         $stmt->execute([':seat_id' => $seatId]);
@@ -146,13 +147,14 @@ class SeatModel
     {
         $stmt = $this->db->prepare(
             'SELECT s.seat_id, s.seat_name, s.zone_type,
-                    r.res_id, r.user_id, r.guest_name, r.STATUS, r.schedule_time,
+                    r.res_id, r.user_id, u.name AS guest_name, r.STATUS, r.schedule_time,
                     COUNT(o.order_id) as cafe_order_count
              FROM seats s
              LEFT JOIN reservations r ON s.seat_id = r.seat_id 
                AND r.STATUS IN ("Confirmed", "In-Service", "Waiting")
                AND r.schedule_time > NOW()
-             LEFT JOIN orders o ON o.seat_id = s.seat_id AND o.STATUS = "In Progress"
+             LEFT JOIN users u ON r.user_id = u.user_id
+             LEFT JOIN db_merish_cafe.orders o ON o.seat_id = s.seat_id AND o.STATUS = "In Progress"
              GROUP BY s.seat_id
              ORDER BY s.zone_type, s.seat_id'
         );

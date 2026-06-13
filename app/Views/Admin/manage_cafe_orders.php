@@ -365,21 +365,19 @@ $availableReservations = $reservations ?? [];
                                             $status = (string) ($order['status'] ?? 'New');
                                             $statusClass = match ($status) {
                                                 'In Progress' => 'badge-progress',
-                                                'Selesai' => 'badge-ready',
+                                                'Ready', 'Completed' => 'badge-ready',
                                                 default => 'badge-new',
                                             };
-                                            $lineTotal = ((float) ($order['price'] ?? 0)) * ((int) ($order['qty'] ?? 0));
                                         ?>
                                         <tr>
-                                            <td><?php echo htmlspecialchars($order['coordinate']); ?></td>
+                                            <td><?php echo htmlspecialchars($order['seat_id'] ?? 'Walk-in'); ?></td>
                                             <td>
-                                                <div class="fw-semibold"><?php echo htmlspecialchars($order['customer_name']); ?></div>
-                                                <div class="text-muted small"><?php echo htmlspecialchars((string) ($order['order_type'] ?? 'Dine-In')); ?></div>
+                                                <div class="fw-semibold"><?php echo htmlspecialchars($order['guest_name']); ?></div>
+                                                <div class="text-muted small"><?php echo htmlspecialchars($order['payment_method'] ?? 'Cash'); ?></div>
                                             </td>
-                                            <td><?php echo htmlspecialchars($order['menu_name']); ?></td>
-                                            <td><?php echo (int) $order['qty']; ?></td>
+                                            <td><?php echo htmlspecialchars($order['order_items'] ?? '-'); ?></td>
                                             <td><span class="badge-soft <?php echo $statusClass; ?>"><?php echo htmlspecialchars($status); ?></span></td>
-                                            <td><?php echo 'Rp ' . number_format($lineTotal, 0, ',', '.'); ?></td>
+                                            <td><?php echo 'Rp ' . number_format((float) ($order['total_amount'] ?? 0), 0, ',', '.'); ?></td>
                                             <td class="text-end">
                                                 <a class="small-link me-3" href="index.php?page=admin&action=manageCafeOrders&edit=<?php echo (int) $order['order_id']; ?>">Edit Order</a>
                                                 <form method="POST" action="index.php?page=admin&action=forceCompleteOrder" class="d-inline me-2">
@@ -425,30 +423,8 @@ $availableReservations = $reservations ?? [];
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Reservation Reference</label>
-                            <select name="res_id" class="form-select">
-                                <option value="">Walk-in / no reservation</option>
-                                <?php foreach ($availableReservations as $reservation): ?>
-                                    <option value="<?php echo (int) $reservation['res_id']; ?>" <?php echo (($editOrder['res_id'] ?? '') == $reservation['res_id']) ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($reservation['label'] . ' - ' . $reservation['customer_name']); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-
-                        <div class="row g-3 mb-3">
-                            <div class="col-6">
-                                <label class="form-label">Seat / Table</label>
-                                <input type="text" name="seat_id" class="form-control" value="<?php echo htmlspecialchars($editOrder['seat_id'] ?? ''); ?>" placeholder="S01 / C01">
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">Order Type</label>
-                                <select name="order_type" class="form-select">
-                                    <?php foreach (['Dine-In', 'Takeaway'] as $type): ?>
-                                        <option value="<?php echo $type; ?>" <?php echo (($editOrder['order_type'] ?? 'Dine-In') === $type) ? 'selected' : ''; ?>><?php echo $type; ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
+                            <label class="form-label">Seat / Table</label>
+                            <input type="text" name="seat_id" class="form-control" value="<?php echo htmlspecialchars($editOrder['seat_id'] ?? ''); ?>" placeholder="S01 / C01">
                         </div>
 
                         <div class="mb-3">
@@ -481,7 +457,7 @@ $availableReservations = $reservations ?? [];
                         <div class="mb-4">
                             <label class="form-label">Status</label>
                             <select name="status" class="form-select">
-                                <?php foreach (['New', 'In Progress', 'Selesai'] as $state): ?>
+                                <?php foreach (['New', 'In Progress', 'Ready', 'Completed'] as $state): ?>
                                     <option value="<?php echo $state; ?>" <?php echo (($editOrder['status'] ?? 'New') === $state) ? 'selected' : ''; ?>><?php echo $state; ?></option>
                                 <?php endforeach; ?>
                             </select>

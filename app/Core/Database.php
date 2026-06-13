@@ -17,7 +17,7 @@ class Database
 
         // Simple flexible ports: try 3307 first, then 3306.
         $host = 'localhost';
-        $dbName = 'db_merish';
+        $dbName = 'db_merish_salon';
         $user = 'root';
         $pass = '';
 

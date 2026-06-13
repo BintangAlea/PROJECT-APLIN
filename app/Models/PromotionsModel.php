@@ -22,8 +22,8 @@ class PromotionsModel
 
     public function findByServiceId(string $serviceId): array
     {
-        $stmt = $this->db->prepare('SELECT * FROM promotions WHERE service_id_req = :svc');
-        $stmt->execute([':svc' => $serviceId]);
+        $stmt = $this->db->prepare('SELECT * FROM promotions');
+        $stmt->execute();
         return $stmt->fetchAll();
     }
 }

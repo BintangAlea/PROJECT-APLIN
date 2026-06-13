@@ -85,27 +85,37 @@ class ApiOrderController
         }
 
         try {
-            // Insert order
+            // Calculate total
+            $totalPrice = $menuData['price'] * $input['qty'];
+
+            // Insert order header
             $insertOrder = $this->db->prepare(
-                'INSERT INTO orders (res_id, guest_name, order_type, seat_id, menu_id, qty, payment_status, STATUS)
-                 VALUES (:res_id, :guest_name, :order_type, :seat_id, :menu_id, :qty, :payment_status, :status)'
+                'INSERT INTO orders (guest_name, seat_id, total_amount, payment_status, STATUS, order_date)
+                 VALUES (:guest_name, :seat_id, :total_amount, :payment_status, :status, NOW())'
             );
 
             $insertOrder->execute([
-                ':res_id' => null,
                 ':guest_name' => $input['guest_name'] ?? null,
-                ':order_type' => $input['order_type'],
                 ':seat_id' => $input['seat_id'] ?? null,
-                ':menu_id' => $input['menu_id'],
-                ':qty' => $input['qty'],
+                ':total_amount' => $totalPrice,
                 ':payment_status' => 'Unpaid',
                 ':status' => 'New'
             ]);
 
             $orderId = $this->db->lastInsertId();
 
-            // Calculate total
-            $totalPrice = $menuData['price'] * $input['qty'];
+            // Insert order detail
+            $insertDetail = $this->db->prepare(
+                'INSERT INTO order_details (order_id, menu_id, qty, subtotal)
+                 VALUES (:order_id, :menu_id, :qty, :subtotal)'
+            );
+
+            $insertDetail->execute([
+                ':order_id' => $orderId,
+                ':menu_id' => $input['menu_id'],
+                ':qty' => $input['qty'],
+                ':subtotal' => $totalPrice
+            ]);
 
             echo ApiResponse::success([
                 'order_id' => $orderId,
@@ -114,7 +124,6 @@ class ApiOrderController
                 'qty' => $input['qty'],
                 'unit_price' => $menuData['price'],
                 'total_price' => $totalPrice,
-                'order_type' => $input['order_type'],
                 'seat_id' => $input['seat_id'] ?? null,
                 'guest_name' => $input['guest_name'] ?? null,
                 'status' => 'New',
@@ -137,9 +146,12 @@ class ApiOrderController
         }
 
         $stmt = $this->db->prepare(
-            'SELECT o.*, m.menu_name, m.price 
-             FROM orders o 
-             JOIN menus m ON o.menu_id = m.menu_id 
+            'SELECT o.order_id, o.guest_name, o.seat_id, o.total_amount, o.payment_method,
+                    o.payment_status, o.STATUS, o.order_date,
+                    od.menu_id, m.menu_name, m.price, od.qty, od.subtotal
+             FROM orders o
+             JOIN order_details od ON o.order_id = od.order_id
+             JOIN menus m ON od.menu_id = m.menu_id
              WHERE o.order_id = :order_id'
         );
         $stmt->execute([':order_id' => $orderId]);
@@ -176,7 +188,7 @@ class ApiOrderController
             return;
         }
 
-        $validStatuses = ['New', 'In Progress', 'Selesai'];
+        $validStatuses = ['New', 'In Progress', 'Ready', 'Completed'];
         if (!in_array($input['status'], $validStatuses)) {
             echo ApiResponse::error('Invalid status. Must be one of: ' . implode(', ', $validStatuses), 400);
             return;
@@ -201,7 +213,6 @@ class ApiOrderController
      * 
      * Query params:
      * - status: New, In Progress, Selesai
-     * - order_type: Dine-In, Takeaway
      * - page: pagination
      * - limit: items per page
      */
@@ -213,7 +224,6 @@ class ApiOrderController
         }
 
         $status = $_GET['status'] ?? null;
-        $orderType = $_GET['order_type'] ?? null;
         $page = $_GET['page'] ?? 1;
         $limit = $_GET['limit'] ?? 10;
         $offset = ($page - 1) * $limit;
@@ -227,11 +237,6 @@ class ApiOrderController
             $params[':status'] = $status;
         }
 
-        if ($orderType) {
-            $where[] = 'o.order_type = :order_type';
-            $params[':order_type'] = $orderType;
-        }
-
         $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
 
         // Count total
@@ -241,9 +246,12 @@ class ApiOrderController
 
         // Get orders
         $stmt = $this->db->prepare(
-            "SELECT o.*, m.menu_name, m.price 
-             FROM orders o 
-             JOIN menus m ON o.menu_id = m.menu_id 
+            "SELECT o.order_id, o.guest_name, o.seat_id, o.total_amount, o.payment_method,
+                    o.payment_status, o.STATUS, o.order_date,
+                    od.menu_id, m.menu_name, m.price, od.qty, od.subtotal
+             FROM orders o
+             LEFT JOIN order_details od ON o.order_id = od.order_id
+             LEFT JOIN menus m ON od.menu_id = m.menu_id
              {$whereClause}
              ORDER BY o.order_id DESC
              LIMIT :limit OFFSET :offset"

@@ -37,7 +37,7 @@ class ServiceBundleModel
     /**
      * Get bundle by ID
      */
-    public function getBundleById(int $bundleId): array|false
+    public function getBundleById(string|int $bundleId): array|false
     {
         try {
             $stmt = $this->db->prepare(
@@ -53,7 +53,7 @@ class ServiceBundleModel
     /**
      * Get services dalam bundle
      */
-    public function getBundleServices(int $bundleId): array
+    public function getBundleServices(string|int $bundleId): array
     {
         try {
             $stmt = $this->db->prepare(
@@ -73,7 +73,7 @@ class ServiceBundleModel
     /**
      * Get bundle dengan pricing detail
      */
-    public function getBundleWithPrice(int $bundleId): array|false
+    public function getBundleWithPrice(string|int $bundleId): array|false
     {
         $bundle = $this->getBundleById($bundleId);
         if (!$bundle) return false;

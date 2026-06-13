@@ -17,7 +17,8 @@ $customerName = $_SESSION['cafe_customer_name'] ?? 'Guest';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menu Kafe - Pesan</title>
+    <title>Menu Kafe - MERISH</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -26,13 +27,42 @@ $customerName = $_SESSION['cafe_customer_name'] ?? 'Guest';
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f5f5;
+            font-family: 'Montserrat', sans-serif;
+            background: #f4eded;
             min-height: 100vh;
         }
 
+        .topbar {
+            background: #fffafa;
+            border-bottom: 1px solid #d9ccd0;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .topbar-brand {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #8d616f;
+            text-decoration: none;
+            letter-spacing: 2px;
+        }
+
+        .topbar-back {
+            color: #7a6e73;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .topbar-back:hover {
+            color: #8d616f;
+        }
+
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #8d616f 0%, #724e5a 100%);
             color: white;
             padding: 20px;
             position: sticky;
@@ -41,6 +71,7 @@ $customerName = $_SESSION['cafe_customer_name'] ?? 'Guest';
         }
 
         .header h1 {
+            font-family: 'Playfair Display', serif;
             font-size: 24px;
             margin-bottom: 5px;
         }
@@ -64,22 +95,23 @@ $customerName = $_SESSION['cafe_customer_name'] ?? 'Guest';
         }
 
         .menu-card {
-            background: white;
-            border-radius: 10px;
+            background: #fffafa;
+            border-radius: 4px;
             overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid #d9ccd0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
             transition: transform 0.3s, box-shadow 0.3s;
         }
 
         .menu-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 5px 20px rgba(141, 97, 111, 0.15);
         }
 
         .menu-image {
             width: 100%;
             height: 200px;
-            background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%);
+            background: linear-gradient(135deg, #ead2db 0%, #fdf8f8 100%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -91,15 +123,16 @@ $customerName = $_SESSION['cafe_customer_name'] ?? 'Guest';
         }
 
         .menu-name {
+            font-family: 'Playfair Display', serif;
             font-size: 16px;
-            font-weight: bold;
+            font-weight: 600;
             margin-bottom: 5px;
-            color: #333;
+            color: #4f4248;
         }
 
         .menu-description {
             font-size: 12px;
-            color: #666;
+            color: #7a6e73;
             margin-bottom: 10px;
             line-height: 1.4;
         }
@@ -107,7 +140,7 @@ $customerName = $_SESSION['cafe_customer_name'] ?? 'Guest';
         .menu-price {
             font-size: 18px;
             font-weight: bold;
-            color: #667eea;
+            color: #8d616f;
             margin-bottom: 10px;
         }
 
@@ -121,39 +154,41 @@ $customerName = $_SESSION['cafe_customer_name'] ?? 'Guest';
         .qty-selector button {
             width: 30px;
             height: 30px;
-            border: 1px solid #ddd;
-            background: white;
+            border: 1px solid #d9ccd0;
+            background: #fffafa;
             cursor: pointer;
             font-size: 14px;
             border-radius: 4px;
         }
 
         .qty-selector button:hover {
-            background: #f0f0f0;
+            background: #ead2db;
         }
 
         .qty-selector input {
             width: 50px;
             text-align: center;
-            border: 1px solid #ddd;
+            border: 1px solid #d9ccd0;
             padding: 5px;
             font-size: 14px;
+            background: #fdf8f8;
         }
 
         .add-to-cart {
             width: 100%;
             padding: 10px;
-            background: #667eea;
+            background: #8d616f;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 4px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 600;
             font-size: 14px;
+            transition: background 0.3s;
         }
 
         .add-to-cart:hover {
-            background: #5568d3;
+            background: #724e5a;
         }
 
         .cart-summary {
@@ -161,9 +196,10 @@ $customerName = $_SESSION['cafe_customer_name'] ?? 'Guest';
             bottom: 0;
             left: 0;
             right: 0;
-            background: white;
+            background: #fffafa;
             padding: 15px 20px;
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
+            border-top: 1px solid #d9ccd0;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -183,11 +219,11 @@ $customerName = $_SESSION['cafe_customer_name'] ?? 'Guest';
 
         .cart-item label {
             font-size: 12px;
-            color: #666;
+            color: #7a6e73;
         }
 
         .cart-item strong {
-            color: #333;
+            color: #4f4248;
         }
 
         .cart-actions {
@@ -198,34 +234,34 @@ $customerName = $_SESSION['cafe_customer_name'] ?? 'Guest';
         .cart-actions button {
             padding: 10px 20px;
             border: none;
-            border-radius: 5px;
+            border-radius: 4px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 600;
             font-size: 14px;
         }
 
         .btn-continue {
-            background: #667eea;
+            background: #8d616f;
             color: white;
         }
 
         .btn-continue:hover {
-            background: #5568d3;
+            background: #724e5a;
         }
 
         .btn-checkout {
-            background: #28a745;
+            background: #724e5a;
             color: white;
         }
 
         .btn-checkout:hover {
-            background: #218838;
+            background: #5e3f4a;
         }
 
         .loading {
             text-align: center;
             padding: 40px 20px;
-            color: #666;
+            color: #7a6e73;
         }
 
         .loading::after {
@@ -234,8 +270,8 @@ $customerName = $_SESSION['cafe_customer_name'] ?? 'Guest';
             width: 20px;
             height: 20px;
             margin-left: 10px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
+            border: 3px solid #ead2db;
+            border-top: 3px solid #8d616f;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -248,7 +284,7 @@ $customerName = $_SESSION['cafe_customer_name'] ?? 'Guest';
         .empty-state {
             text-align: center;
             padding: 40px 20px;
-            color: #999;
+            color: #7a6e73;
         }
 
         .modal {
@@ -258,7 +294,7 @@ $customerName = $_SESSION['cafe_customer_name'] ?? 'Guest';
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(79, 66, 72, 0.5);
             z-index: 1000;
             align-items: center;
             justify-content: center;
@@ -269,20 +305,22 @@ $customerName = $_SESSION['cafe_customer_name'] ?? 'Guest';
         }
 
         .modal-content {
-            background: white;
+            background: #fffafa;
             padding: 30px;
-            border-radius: 10px;
+            border-radius: 4px;
             max-width: 400px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            border: 1px solid #d9ccd0;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
         }
 
         .modal-content h2 {
+            font-family: 'Playfair Display', serif;
             margin-bottom: 20px;
-            color: #333;
+            color: #4f4248;
         }
 
         .modal-content p {
-            color: #666;
+            color: #7a6e73;
             margin-bottom: 20px;
             line-height: 1.6;
         }
@@ -296,13 +334,13 @@ $customerName = $_SESSION['cafe_customer_name'] ?? 'Guest';
             align-items: center;
             padding: 10px;
             margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            border: 1px solid #d9ccd0;
+            border-radius: 4px;
             cursor: pointer;
         }
 
         .delivery-options label:hover {
-            background: #f5f5f5;
+            background: #f4eded;
         }
 
         .delivery-options input[type="radio"] {
@@ -319,23 +357,28 @@ $customerName = $_SESSION['cafe_customer_name'] ?? 'Guest';
             flex: 1;
             padding: 10px;
             border: none;
-            border-radius: 5px;
+            border-radius: 4px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 600;
         }
 
         .btn-cancel {
-            background: #e9ecef;
-            color: #333;
+            background: #ead2db;
+            color: #4f4248;
         }
 
         .btn-confirm {
-            background: #667eea;
+            background: #8d616f;
             color: white;
         }
     </style>
 </head>
 <body>
+    <div class="topbar">
+        <a href="/?page=home" class="topbar-back">&larr; Kembali</a>
+        <a href="/?page=home" class="topbar-brand">MERISH</a>
+    </div>
+
     <div class="header">
         <h1>☕ Menu Kafe</h1>
         <div class="subtitle">Pilih menu favorit Anda</div>
