@@ -51,8 +51,8 @@ function runSqlFile($db, $file) {
     echo "Done $file\n";
 }
 
-$db->exec("CREATE DATABASE IF NOT EXISTS kafe_merish_db");
-$db->exec("CREATE DATABASE IF NOT EXISTS salon_merish_db");
+$db->exec("CREATE DATABASE IF NOT EXISTS db_merish_cafe");
+$db->exec("CREATE DATABASE IF NOT EXISTS db_merish_salon");
 
 runSqlFile($db, 'salon_merish_db.sql');
 runSqlFile($db, 'salon_dummy_merish.sql');

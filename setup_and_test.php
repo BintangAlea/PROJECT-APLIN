@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * MERISH Database Setup & Test Script
  * Creates database, loads schema and dummy data, tests appointment wizard
@@ -62,6 +62,7 @@ try {
 }
 
 // Step 3: Insert dummy data simplified
+try {
     $pdo->exec(file_get_contents($dummyFile));
     echo "[✓] Dummy data inserted successfully\n\n";
 } catch (Exception $e) {

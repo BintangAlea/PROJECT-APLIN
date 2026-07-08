@@ -13,8 +13,10 @@ $pdo = Database::getConnection();
 
 // Load SQL schema + dummy data
 $sqlFiles = [
-    __DIR__ . '/../db_merish_fix.sql',
-    __DIR__ . '/../dummy_merish (1).sql'
+    __DIR__ . '/../salon_merish_db.sql',
+    __DIR__ . '/../salon_dummy_merish.sql',
+    __DIR__ . '/../kafe_merish_db.sql',
+    __DIR__ . '/../kafe_dummy_merish.sql'
 ];
 
 foreach ($sqlFiles as $file) {
@@ -33,8 +35,10 @@ foreach ($sqlFiles as $file) {
     }
 }
 
+$pdo->exec('USE db_merish_salon');
+
 // Sanity checks
-$tables = ['users','services','promotions','seats','menus'];
+$tables = ['users','services','promotions','seats'];
 foreach ($tables as $t) {
     $count = $pdo->query("SELECT COUNT(*) as c FROM $t")->fetch()['c'] ?? 0;
     echo "Table $t rows: $count\n";
@@ -43,9 +47,9 @@ foreach ($tables as $t) {
 // Prepare test reservation using ReservationsModel
 $reservations = new ReservationsModel();
 
-// Use existing customer 'Alina Customer' (email alina.customer@gmail.com)
+// Use existing customer 'Alina Customer' (email alina@gmail.com)
 $stmt = $pdo->prepare('SELECT user_id FROM users WHERE email = :e LIMIT 1');
-$stmt->execute([':e' => 'alina.customer@gmail.com']);
+$stmt->execute([':e' => 'alina@gmail.com']);
 $userRow = $stmt->fetch();
 if (!$userRow) { echo "Test user not found\n"; exit(1); }
 $customerId = (int)$userRow['user_id'];
