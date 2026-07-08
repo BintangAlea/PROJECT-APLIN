@@ -28,23 +28,46 @@ class PricingService
      * @return array Pricing breakdown
      */
     public function calculateTotal(
-        string|int|null $serviceId = null,
+        array|string|int|null $services = null,
         array $addonIds = [],
         ?int $promoId = null
     ): array {
         $basePrice = 0;
         $description = '';
+        $servicesDetail = [];
 
-        // Get base price dari service
-        if ($serviceId) {
-            $stmt = $this->db->prepare(
-                'SELECT service_name, base_tariff FROM services WHERE service_id = :id'
-            );
-            $stmt->execute([':id' => $serviceId]);
-            $service = $stmt->fetch();
-            if ($service) {
-                $basePrice = (float) $service['base_tariff'];
-                $description = "Service: {$service['service_name']}";
+        // Normalize services to array
+        $serviceIds = [];
+        if (!empty($services)) {
+            if (is_array($services)) {
+                $serviceIds = $services;
+            } else {
+                $serviceIds = [$services];
+            }
+        }
+
+        // Get base price dari service(s)
+        if (!empty($serviceIds)) {
+            $descNames = [];
+            foreach ($serviceIds as $sid) {
+                $stmt = $this->db->prepare(
+                    'SELECT service_name, base_tariff FROM services WHERE service_id = :id'
+                );
+                $stmt->execute([':id' => $sid]);
+                $service = $stmt->fetch();
+                if ($service) {
+                    $price = (float) $service['base_tariff'];
+                    $basePrice += $price;
+                    $descNames[] = $service['service_name'];
+                    $servicesDetail[] = [
+                        'service_id' => $sid,
+                        'service_name' => $service['service_name'],
+                        'price' => $price
+                    ];
+                }
+            }
+            if (!empty($descNames)) {
+                $description = "Services: " . implode(', ', $descNames);
             }
         }
 
@@ -97,6 +120,7 @@ class PricingService
 
         return [
             'base_price' => $basePrice,
+            'services_detail' => $servicesDetail,
             'addons_price' => (float) $addonsPrice,
             'addons_detail' => $addonsDetail,
             'subtotal' => (float) $subtotal,

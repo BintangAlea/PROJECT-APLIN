@@ -129,7 +129,7 @@ class ReservationsModel
             $serviceId = $data['service_id'] ?? null;
             $beauticianId = $data['beautician_id'] ?? null;
 
-            if (!$customerId || !$reservationDate || !$reservationTime) {
+            if (!$reservationDate || !$reservationTime) {
                 error_log('ReservationsModel.create() - Validation failed: missing required fields');
                 return false;
             }

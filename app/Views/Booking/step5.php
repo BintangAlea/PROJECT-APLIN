@@ -540,13 +540,25 @@ $requiredDp = 50000;
                         <section class="panel-card receipt-card">
                             <div class="receipt-header">MERISH STUDIO RECEIPT</div>
 
-                            <div class="receipt-item">
-                                <div class="left">
-                                    <div class="title"><?php echo htmlspecialchars($serviceName); ?></div>
-                                    <div class="desc"><?php echo htmlspecialchars($beauticianRole); ?> - <?php echo htmlspecialchars($beauticianName); ?></div>
+                            <?php if (!empty($pricing['services_detail'])): ?>
+                                <?php foreach ($pricing['services_detail'] as $sd): ?>
+                                    <div class="receipt-item">
+                                        <div class="left">
+                                            <div class="title"><?php echo htmlspecialchars($sd['service_name']); ?></div>
+                                            <div class="desc"><?php echo htmlspecialchars($beauticianRole); ?> - <?php echo htmlspecialchars($beauticianName); ?></div>
+                                        </div>
+                                        <div class="amount">Rp<?php echo number_format((int) ($sd['price'] ?? 0), 0, ',', '.'); ?></div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <div class="receipt-item">
+                                    <div class="left">
+                                        <div class="title"><?php echo htmlspecialchars($serviceName); ?></div>
+                                        <div class="desc"><?php echo htmlspecialchars($beauticianRole); ?> - <?php echo htmlspecialchars($beauticianName); ?></div>
+                                    </div>
+                                    <div class="amount">Rp<?php echo number_format((int) ($pricing['base_price'] ?? 0), 0, ',', '.'); ?></div>
                                 </div>
-                                <div class="amount">Rp<?php echo number_format((int) ($pricing['base_price'] ?? 0), 0, ',', '.'); ?></div>
-                            </div>
+                            <?php endif; ?>
 
                             <?php if (!empty($serviceItems)): ?>
                                 <?php foreach ($serviceItems as $service): ?>

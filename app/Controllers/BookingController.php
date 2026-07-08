@@ -268,11 +268,6 @@ class BookingController
             $_SESSION['booking'] = $_SESSION['booking'] ?? [];
             $_SESSION['booking']['beautician_id'] = $beauticianId;
 
-            if (!isset($_SESSION['user_id'])) {
-                header('Location: /index.php?page=booking&step=4.1');
-                exit;
-            }
-
             header('Location: /index.php?page=booking&step=5');
             exit;
         }
@@ -371,20 +366,15 @@ class BookingController
     {
         $booking = $_SESSION['booking'] ?? [];
 
-        if (!isset($_SESSION['user_id'])) {
-            $_SESSION['booking_error'] = 'Silakan daftar terlebih dahulu untuk melanjutkan checkout';
-            header('Location: /index.php?page=booking&step=4.1');
-            exit;
-        }
-
         if (empty($booking)) {
             $_SESSION['booking_error'] = 'Pilih layanan, jadwal, dan stylist terlebih dahulu. Checkout tetap bisa dibuka setelah draft booking tersimpan.';
         }
 
         // Calculate pricing
         $pricingService = new \App\Core\PricingService();
+        $serviceIdsParam = !empty($booking['service_ids']) ? $booking['service_ids'] : ($booking['service_id'] ?? null);
         $pricing = $pricingService->calculateTotal(
-            $booking['service_id'] ?? null,
+            $serviceIdsParam,
             $booking['addon_ids'] ?? [],
             $booking['promo_id'] ?? null
         );
@@ -438,18 +428,28 @@ class BookingController
                  LEFT JOIN services s ON s.service_id = rd.service_id
                  LEFT JOIN users u ON u.user_id = rd.beautician_id
                  LEFT JOIN staff_profiles sp ON sp.user_id = rd.beautician_id
-                 WHERE r.res_id = :res_id
-                 LIMIT 1'
+                 WHERE r.res_id = :res_id'
             );
             $stmt->execute([':res_id' => $resId]);
-            $reservationDetails = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+            $reservationDetailsRows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+            
+            $serviceNames = [];
+            $reservationDetails = null;
+            foreach ($reservationDetailsRows as $row) {
+                if ($row['service_name']) {
+                    $serviceNames[] = $row['service_name'];
+                }
+                if (!$reservationDetails) {
+                    $reservationDetails = $row;
+                }
+            }
 
             $scheduleTime = $reservation['reservation_date'] ?? null;
             if (empty($scheduleTime) && !empty($reservation['schedule_time'])) {
                 $scheduleTime = $reservation['schedule_time'];
             }
 
-            $reservation['service_name'] = $reservationDetails['service_name'] ?? 'Signature Look';
+            $reservation['service_name'] = !empty($serviceNames) ? implode(', ', $serviceNames) : 'Signature Look';
             $reservation['beautician_name'] = $reservationDetails['beautician_name'] ?? 'Any Available Staff';
             $reservation['specialization'] = $reservationDetails['specialization'] ?? 'Stylist';
             $reservation['reservation_date'] = $reservation['reservation_date'] ?? (!empty($scheduleTime) ? date('Y-m-d', strtotime($scheduleTime)) : null);
@@ -491,19 +491,14 @@ class BookingController
             // Create reservation
             $reservationsModel = new ReservationsModel();
             
-            // Get current user ID or use from POST
+            // Get current user ID or use from POST (can be null for guest checkout)
             $userId = $_SESSION['user_id'] ?? $_POST['user_id'] ?? null;
-
-            if (!$userId) {
-                $_SESSION['booking_error'] = 'Silakan daftar terlebih dahulu untuk melanjutkan checkout';
-                header('Location: /index.php?page=booking&step=4.1');
-                exit;
-            }
 
             // Calculate pricing
             $pricingService = new \App\Core\PricingService();
+            $serviceIdsParam = !empty($booking['service_ids']) ? $booking['service_ids'] : ($booking['service_id'] ?? null);
             $pricing = $pricingService->calculateTotal(
-                $booking['service_id'] ?? null,
+                $serviceIdsParam,
                 $booking['addon_ids'] ?? [],
                 $booking['promo_id'] ?? null
             );
@@ -528,7 +523,7 @@ class BookingController
             // Create reservation (only columns from original schema)
             $resId = $reservationsModel->create([
                 'user_id' => $userId,
-                'service_id' => $booking['service_id'],
+                'service_id' => $booking['service_id'] ?? null,
                 'reservation_date' => $booking['reservation_date'],
                 'reservation_time' => $booking['reservation_time'],
                 'promo_id' => $pricing['promo_id'],
@@ -537,7 +532,7 @@ class BookingController
                 'dp_amount' => 50000,
                 'status' => 'Pending',
                 'service_ids' => array_merge(
-                    [$booking['service_id']],
+                    $booking['service_ids'] ?? [$booking['service_id'] ?? null],
                     $booking['addon_ids'] ?? []
                 ),
                 'beautician_id' => $booking['beautician_id'] ?? null,
@@ -546,6 +541,47 @@ class BookingController
 
             if (!$resId) {
                 throw new \Exception('Gagal membuat reservasi');
+            }
+
+            // Create Cafe Order if bundle includes FB item
+            if (!empty($pricing['promo_detail']['included_fb_item'])) {
+                $fbItem = $pricing['promo_detail']['included_fb_item'];
+                
+                // Try to find the closest menu_id in Kafe DB.
+                $stmtMenu = $this->db->prepare("SELECT menu_id, menu_name, price FROM db_merish_cafe.menus WHERE :fb_item LIKE CONCAT('%', menu_name, '%') LIMIT 1");
+                $stmtMenu->execute([':fb_item' => $fbItem]);
+                $menu = $stmtMenu->fetch();
+
+                if ($menu) {
+                    $ordersModel = new \App\Models\OrdersModel();
+                    
+                    // Guest name: Use logged-in user's name or a generic name.
+                    $guestName = $_SESSION['full_name'] ?? 'Guest Salon (Bundling)';
+                    
+                    // Get the actual seat_id used for the reservation
+                    $stmtRes = $this->db->prepare('SELECT seat_id FROM reservations WHERE res_id = :id');
+                    $stmtRes->execute([':id' => $resId]);
+                    $resRow = $stmtRes->fetch();
+                    $assignedSeatId = $resRow['seat_id'] ?? null;
+                    
+                    $orderId = $ordersModel->create([
+                        'guest_name' => $guestName,
+                        'seat_id' => $assignedSeatId,
+                        'total_amount' => 0, // Bundle price is handled in salon bill
+                        'payment_method' => 'Salon Bill',
+                        'payment_status' => 'Paid',
+                        'status' => 'Pending'
+                    ]);
+
+                    if ($orderId) {
+                        $ordersModel->createDetail([
+                            'order_id' => $orderId,
+                            'menu_id' => $menu['menu_id'],
+                            'qty' => 1,
+                            'subtotal' => 0
+                        ]);
+                    }
+                }
             }
 
             // Generate QR code
@@ -584,10 +620,19 @@ class BookingController
         $details = [];
 
         // Get service details
-        if (!empty($booking['service_id'])) {
+        if (!empty($booking['service_ids']) || !empty($booking['service_id'])) {
             $servicesModel = new ServicesModel();
-            $service = $servicesModel->findById($booking['service_id']);
-            $details['service'] = $service;
+            $serviceIds = !empty($booking['service_ids']) ? $booking['service_ids'] : [$booking['service_id']];
+            $servicesList = [];
+            foreach ($serviceIds as $sid) {
+                $service = $servicesModel->findById($sid);
+                if ($service) {
+                    $servicesList[] = $service;
+                }
+            }
+            $details['services'] = $servicesList;
+            // Kept for backward compatibility if needed by old views
+            $details['service'] = $servicesList[0] ?? null;
         }
 
         // Get bundle/promo details
