@@ -6,7 +6,8 @@ $guestName = $order['guest_name'] ?? ($_SESSION['full_name'] ?? 'Kak');
 $orderType = $order['order_type'] ?? 'Dine-In';
 $orderNumber = '#MRSH-' . strtoupper(substr(md5((string) microtime(true)), 0, 3)) . rand(10, 99);
 $createdAt = date('h:i A');
-$deliveryText = $orderType === 'Dine-In' ? 'Pesanan akan diantar ke Kursi Salon 2.' : 'Pesanan siap diambil sendiri.';
+$tableName = $order['table_name'] ?? 'Pick Up';
+$deliveryText = ($tableName !== 'Pick Up') ? 'Pesanan akan diantar ke ' . $tableName . '.' : 'Pesanan siap diambil sendiri.';
 
 $summaryItems = [];
 $totalPrice = 0;
@@ -401,8 +402,8 @@ $finalTotal = $totalPrice + $tax;
                 <div class="delivery-box">
                     <div class="delivery-icon">☕</div>
                     <div>
-                        <div class="delivery-title">Lokasi Pengantaran</div>
-                        <div class="delivery-text"><?php echo htmlspecialchars($deliveryText); ?></div>
+                        <div class="delivery-title">Status Pembuatan</div>
+                        <div class="delivery-text">Barista is still making your drinks. Please wait...</div>
                     </div>
                 </div>
             </div>

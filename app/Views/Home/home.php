@@ -236,7 +236,8 @@ $displayName = $_SESSION['full_name'] ?? 'Guest';
                 <div class="d-flex align-items-center gap-2">
                     <?php if ($isLoggedIn): ?>
                         <span class="nav-link mb-0">Hi, <?php echo htmlspecialchars(substr($displayName, 0, 14)); ?></span>
-                        <form method="POST" action="index.php?page=login&action=logout">
+                        <a href="#" class="nav-link mb-0 text-decoration-underline" data-bs-toggle="modal" data-bs-target="#historyModal" style="cursor: pointer; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; font-size: 0.72rem;">History</a>
+                        <form method="POST" action="index.php?page=login&action=logout" class="m-0">
                             <button class="btn btn-book py-2 px-3" type="submit">Logout</button>
                         </form>
                     <?php else: ?>
@@ -307,6 +308,212 @@ $displayName = $_SESSION['full_name'] ?? 'Guest';
             </div>
         </div>
     </footer>
+
+    <?php if ($isLoggedIn): ?>
+    <!-- History Modal -->
+    <div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content" style="border-radius: 0; border: 1px solid #e1d8d8; background-color: #fffaf9;">
+                <div class="modal-header" style="border-bottom: 1px solid #eadedf; background-color: #f7ecea;">
+                    <h5 class="modal-title" id="historyModalLabel" style="font-family: 'Playfair Display', serif; color: var(--accent); font-weight: 600;">Riwayat Pembelian</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="color: var(--ink);">
+                    <ul class="nav nav-pills mb-3 d-flex justify-content-center gap-2" id="historyTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active px-4 py-2" id="salon-tab" data-bs-toggle="pill" data-bs-target="#salon-history" type="button" role="tab" aria-controls="salon-history" aria-selected="true" style="font-weight: 600; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; border-radius: 0; border: 1px solid #7b4e61;">Salon History</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link px-4 py-2" id="cafe-tab" data-bs-toggle="pill" data-bs-target="#cafe-history" type="button" role="tab" aria-controls="cafe-history" aria-selected="false" style="font-weight: 600; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; border-radius: 0; border: 1px solid #7b4e61;">Cafe History</button>
+                        </li>
+                    </ul>
+                    
+                    <style>
+                        #historyModal .nav-pills .nav-link {
+                            color: #7b4e61;
+                            background: transparent;
+                        }
+                        #historyModal .nav-pills .nav-link.active {
+                            color: #fff;
+                            background-color: #7b4e61;
+                        }
+                        .history-card-item {
+                            background: #fff;
+                            border: 1px solid #eadedf;
+                            margin-bottom: 1rem;
+                            padding: 1.25rem;
+                            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+                        }
+                        .history-badge {
+                            font-size: 0.7rem;
+                            font-weight: 700;
+                            text-transform: uppercase;
+                            letter-spacing: 0.8px;
+                            padding: 0.3rem 0.6rem;
+                            border-radius: 2px;
+                        }
+                        .badge-pending { background: #fdf5e6; color: #b8860b; }
+                        .badge-confirmed { background: #e6f2ff; color: #0066cc; }
+                        .badge-inservice { background: #eafaf1; color: #2e7d32; }
+                        .badge-selesai { background: #eafaf1; color: #2e7d32; }
+                        .badge-completed { background: #eafaf1; color: #2e7d32; }
+                        .badge-ready { background: #eafaf1; color: #2e7d32; }
+                        .badge-canceled { background: #ffebee; color: #c62828; }
+                        .badge-new { background: #f3e5f5; color: #7b1fa2; }
+                        .badge-inprogress { background: #e8f5e9; color: #2e7d32; }
+                    </style>
+
+                    <div class="tab-content" id="historyTabContent">
+                        <!-- Salon History Sector -->
+                        <div class="tab-pane fade show active" id="salon-history" role="tabpanel" aria-labelledby="salon-tab">
+                            <?php if (empty($salonHistory)): ?>
+                                <div class="text-center py-4 text-muted">Belum ada riwayat pemesanan salon.</div>
+                            <?php else: ?>
+                                <?php foreach ($salonHistory as $res): ?>
+                                    <?php
+                                    $resId = (int)$res['res_id'];
+                                    $statusLower = strtolower($res['status']);
+                                    $badgeClass = match($statusLower) {
+                                        'pending' => 'badge-pending',
+                                        'confirmed' => 'badge-confirmed',
+                                        'in-service' => 'badge-inservice',
+                                        'selesai' => 'badge-selesai',
+                                        'canceled' => 'badge-canceled',
+                                        default => 'badge-pending'
+                                    };
+                                    
+                                    // Calculate total
+                                    $subtotal = 0;
+                                    foreach ($res['details'] as $det) {
+                                        $subtotal += (float)$det['subtotal'];
+                                    }
+                                    
+                                    $discount = 0;
+                                    if (!empty($res['discount_value'])) {
+                                        $discount = (float)$res['discount_value'];
+                                    }
+                                    $finalTotal = max(0, $subtotal - $discount);
+                                    $remainingDue = max(0, $finalTotal - (float)$res['dp_amount']);
+                                    ?>
+                                    <div class="history-card-item">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div>
+                                                <h6 class="mb-0" style="font-weight: 600; font-family: 'Playfair Display', serif;">Appointment #SR-<?php echo $resId; ?></h6>
+                                                <small class="text-muted"><?php echo date('d M Y, H:i', strtotime($res['schedule_time'])); ?> | Seat: <?php echo htmlspecialchars($res['seat_name'] ?? '-'); ?></small>
+                                            </div>
+                                            <span class="history-badge <?php echo $badgeClass; ?>"><?php echo htmlspecialchars($res['status']); ?></span>
+                                        </div>
+                                        <div class="border-top border-bottom py-2 my-2">
+                                            <div class="small fw-semibold text-muted mb-1">Layanan / Services:</div>
+                                            <?php foreach ($res['details'] as $det): ?>
+                                                <div class="d-flex justify-content-between small">
+                                                    <span><?php echo htmlspecialchars($det['service_name']); ?></span>
+                                                    <span>Rp <?php echo number_format($det['base_tariff'], 0, ',', '.'); ?></span>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                        
+                                        <!-- Accordion for Invoice Details -->
+                                        <div class="accordion accordion-flush" id="invoiceAccordion-<?php echo $resId; ?>">
+                                            <div class="accordion-item" style="border: 0; background: transparent;">
+                                                <h2 class="accordion-header" id="invoiceHead-<?php echo $resId; ?>">
+                                                    <button class="accordion-button collapsed p-0 py-2 small fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#invoiceCollapse-<?php echo $resId; ?>" aria-expanded="false" aria-controls="invoiceCollapse-<?php echo $resId; ?>" style="background: transparent; color: var(--accent); box-shadow: none; font-size: 0.8rem;">
+                                                        Lihat Invoice / Detail Biaya
+                                                    </button>
+                                                </h2>
+                                                <div id="invoiceCollapse-<?php echo $resId; ?>" class="accordion-collapse collapse" aria-labelledby="invoiceHead-<?php echo $resId; ?>" data-bs-parent="#invoiceAccordion-<?php echo $resId; ?>">
+                                                    <div class="accordion-body p-0 pt-2 small">
+                                                        <div class="d-flex justify-content-between text-muted mb-1">
+                                                            <span>Subtotal Layanan:</span>
+                                                            <span>Rp <?php echo number_format($subtotal, 0, ',', '.'); ?></span>
+                                                        </div>
+                                                        <?php if ($discount > 0): ?>
+                                                            <div class="d-flex justify-content-between text-success mb-1">
+                                                                <span>Promo (<?php echo htmlspecialchars($res['promo_name']); ?>):</span>
+                                                                <span>-Rp <?php echo number_format($discount, 0, ',', '.'); ?></span>
+                                                            </div>
+                                                        <?php endif; ?>
+                                                        <div class="d-flex justify-content-between fw-semibold border-top pt-1 mb-1">
+                                                            <span>Total Tagihan:</span>
+                                                            <span>Rp <?php echo number_format($finalTotal, 0, ',', '.'); ?></span>
+                                                        </div>
+                                                        <div class="d-flex justify-content-between text-muted mb-1">
+                                                            <span>DP Telah Dibayar (<?php echo $res['is_dp_paid'] ? 'Lunas' : 'Belum Lunas'; ?>):</span>
+                                                            <span>Rp <?php echo number_format($res['dp_amount'], 0, ',', '.'); ?></span>
+                                                        </div>
+                                                        <div class="d-flex justify-content-between border-top fw-bold pt-1 text-danger">
+                                                            <span>Sisa Harus Dibayar di Salon:</span>
+                                                            <span>Rp <?php echo number_format($remainingDue, 0, ',', '.'); ?></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- Cafe History Sector -->
+                        <div class="tab-pane fade" id="cafe-history" role="tabpanel" aria-labelledby="cafe-tab">
+                            <?php if (empty($cafeHistory)): ?>
+                                <div class="text-center py-4 text-muted">Belum ada riwayat pesanan cafe.</div>
+                            <?php else: ?>
+                                <?php foreach ($cafeHistory as $order): ?>
+                                    <?php
+                                    $orderId = (int)$order['order_id'];
+                                    $statusLower = strtolower($order['status']);
+                                    $badgeClass = match($statusLower) {
+                                        'new' => 'badge-new',
+                                        'in progress' => 'badge-inprogress',
+                                        'ready' => 'badge-ready',
+                                        'completed' => 'badge-completed',
+                                        default => 'badge-new'
+                                    };
+                                    
+                                    // Determine waiting / processing message
+                                    $isProcessing = in_array($order['status'], ['New', 'In Progress']);
+                                    $processText = $isProcessing ? 'Barista is still making your drinks (Sedang Diproses)' : 'Pesanan Selesai / Siap Diambil';
+                                    $processColor = $isProcessing ? 'text-warning fw-semibold' : 'text-success fw-semibold';
+                                    ?>
+                                    <div class="history-card-item">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div>
+                                                <h6 class="mb-0" style="font-weight: 600; font-family: 'Playfair Display', serif;">Order #CF-<?php echo $orderId; ?></h6>
+                                                <small class="text-muted"><?php echo date('d M Y, H:i', strtotime($order['order_date'])); ?> | Seat/Table: <?php echo htmlspecialchars($order['seat_id'] ?? 'Pick Up'); ?></small>
+                                            </div>
+                                            <span class="history-badge <?php echo $badgeClass; ?>"><?php echo htmlspecialchars($order['status']); ?></span>
+                                        </div>
+                                        <div class="border-top border-bottom py-2 my-2">
+                                            <div class="small fw-semibold text-muted mb-1">F&B Items:</div>
+                                            <?php foreach ($order['details'] as $det): ?>
+                                                <div class="d-flex justify-content-between small">
+                                                    <span><?php echo htmlspecialchars($det['menu_name']); ?> x<?php echo (int)$det['qty']; ?></span>
+                                                    <span>Rp <?php echo number_format($det['subtotal'], 0, ',', '.'); ?></span>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                        <div class="d-flex justify-content-between small mb-2">
+                                            <span class="text-muted">Total Pembayaran:</span>
+                                            <span class="fw-bold">Rp <?php echo number_format($order['total_amount'], 0, ',', '.'); ?> (<?php echo htmlspecialchars($order['payment_status']); ?>)</span>
+                                        </div>
+                                        <div class="border-top pt-2 small">
+                                            <span class="text-muted">Status Proses:</span>
+                                            <span class="<?php echo $processColor; ?> d-block mt-1"><?php echo $processText; ?></span>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid #eadedf;">
+                    <button type="button" class="btn btn-secondary px-4 py-2" data-bs-dismiss="modal" style="border-radius: 0; background: #8a7c80; border-color: #8a7c80; text-transform: uppercase; font-size: 0.75rem; font-weight: 600; letter-spacing: 1px;">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

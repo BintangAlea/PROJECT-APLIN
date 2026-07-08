@@ -294,7 +294,7 @@
                         </form>
 
                         <div class="text-center mt-4 small-note">
-                            Don't have an account yet? <a href="index.php?page=register" class="back-link">Create an account</a>
+                            Don't have an account yet? <a href="index.php?page=register&context=checkout" class="back-link">Create an account</a>
                         </div>
                     </section>
                 </div>

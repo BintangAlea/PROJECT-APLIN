@@ -50,8 +50,8 @@ class UsersModel
 
         $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
         $stmt = $this->db->prepare(
-            'INSERT INTO users (NAME, email, PASSWORD, ROLE, loyalty_stage, total_spent, reward_points) 
-             VALUES (:name, :email, :password, :role, :loyalty_stage, :total_spent, :reward_points)'
+            'INSERT INTO users (NAME, email, PASSWORD, ROLE) 
+             VALUES (:name, :email, :password, :role)'
         );
 
         return $stmt->execute([
@@ -59,9 +59,6 @@ class UsersModel
             ':email' => $email,
             ':password' => $hashedPassword,
             ':role' => $role,
-            ':loyalty_stage' => 1,
-            ':total_spent' => 0,
-            ':reward_points' => 0,
         ]);
     }
 
@@ -117,5 +114,65 @@ class UsersModel
         $stmt->execute([':role' => $role]);
         $result = $stmt->fetch();
         return $result['count'] ?? 0;
+    }
+
+    public function getSalonHistory(int $userId): array
+    {
+        $salonHistory = [];
+        try {
+            $salonStmt = $this->db->prepare("
+                SELECT r.res_id, r.schedule_time, r.STATUS AS status, r.is_dp_paid, r.dp_amount, r.payment_proof_url, s.seat_name, p.promo_name, p.discount_value
+                FROM db_merish_salon.reservations r
+                LEFT JOIN db_merish_salon.seats s ON r.seat_id = s.seat_id
+                LEFT JOIN db_merish_salon.promotions p ON r.promo_id = p.promo_id
+                WHERE r.user_id = :user_id
+                ORDER BY r.schedule_time DESC
+            ");
+            $salonStmt->execute([':user_id' => $userId]);
+            $salonHistory = $salonStmt->fetchAll();
+
+            foreach ($salonHistory as &$res) {
+                $detailsStmt = $this->db->prepare("
+                    SELECT rd.qty, rd.subtotal, s.service_name, s.base_tariff
+                    FROM db_merish_salon.reservation_details rd
+                    JOIN db_merish_salon.services s ON rd.service_id = s.service_id
+                    WHERE rd.res_id = :res_id
+                ");
+                $detailsStmt->execute([':res_id' => $res['res_id']]);
+                $res['details'] = $detailsStmt->fetchAll();
+            }
+        } catch (\Exception $e) {
+            error_log("UsersModel.getSalonHistory() failed: " . $e->getMessage());
+        }
+        return $salonHistory;
+    }
+
+    public function getCafeHistory(string $fullName): array
+    {
+        $cafeHistory = [];
+        try {
+            $cafeStmt = $this->db->prepare("
+                SELECT o.order_id, o.seat_id, o.total_amount, o.payment_method, o.payment_status, o.STATUS AS status, o.order_date
+                FROM db_merish_cafe.orders o
+                WHERE o.guest_name = :guest_name
+                ORDER BY o.order_date DESC
+            ");
+            $cafeStmt->execute([':guest_name' => $fullName]);
+            $cafeHistory = $cafeStmt->fetchAll();
+
+            foreach ($cafeHistory as &$order) {
+                $detailsStmt = $this->db->prepare("
+                    SELECT od.qty, od.subtotal, m.menu_name, m.price
+                    FROM db_merish_cafe.order_details od
+                    JOIN db_merish_cafe.menus m ON od.menu_id = m.menu_id
+                    WHERE od.order_id = :order_id
+                ");
+                $detailsStmt->execute([':order_id' => $order['order_id']]);
+                $order['details'] = $detailsStmt->fetchAll();
+            }
+        } catch (\Exception $e) {
+            error_log("UsersModel.getCafeHistory() failed: " . $e->getMessage());
+        }
+        return $cafeHistory;
     }
 }

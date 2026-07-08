@@ -532,7 +532,7 @@ $requiredDp = 50000;
                     <div class="alert alert-danger mb-4"><?php echo htmlspecialchars($_SESSION['booking_error']); unset($_SESSION['booking_error']); ?></div>
                 <?php endif; ?>
 
-                <form method="POST" action="/index.php?page=booking&action=submit" enctype="multipart/form-data" id="checkoutForm">
+                <form method="POST" action="index.php?page=booking&action=submit" enctype="multipart/form-data" id="checkoutForm">
                     <input type="hidden" name="payment_method" value="qris">
                     <input type="hidden" name="promo_code" value="">
 
@@ -639,7 +639,7 @@ $requiredDp = 50000;
                                     <span>I agree to the <a href="#">Cancellation Policy</a> and confirm that the details provided are correct.</span>
                                 </label>
 
-                                <input type="file" id="payment_proof" name="payment_proof" class="proof-toggle" accept="image/*,application/pdf">
+                                <input type="file" id="payment_proof" name="payment_proof" class="proof-toggle" accept="image/*,application/pdf" required>
                                 <label for="payment_proof" class="proof-button">Upload Bukti Bayar</label>
                                 <div id="chosenFile" class="chosen-file">No file chosen</div>
 
@@ -674,15 +674,22 @@ $requiredDp = 50000;
     const confirmBtn = document.getElementById('confirmBtn');
     const agreement = document.getElementById('payment_proof_agree');
 
+    function validateForm() {
+        const hasFile = paymentProof.files && paymentProof.files.length > 0;
+        confirmBtn.disabled = !(agreement.checked && hasFile);
+    }
+
     paymentProof.addEventListener('change', function () {
         chosenFile.textContent = this.files && this.files.length ? this.files[0].name : 'No file chosen';
+        validateForm();
     });
 
     agreement.addEventListener('change', function () {
-        confirmBtn.disabled = !this.checked;
+        validateForm();
     });
 
-    confirmBtn.disabled = true;
+    // Initial state check
+    validateForm();
 </script>
 </body>
 </html>

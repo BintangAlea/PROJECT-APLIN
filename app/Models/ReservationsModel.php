@@ -134,7 +134,9 @@ class ReservationsModel
                 return false;
             }
 
-            if (!empty($beauticianId)) {
+            if (empty($beauticianId) || $beauticianId === '') {
+                $beauticianId = null;
+            } else {
                 $beauticianStmt = $this->db->prepare('SELECT user_id FROM staff_profiles WHERE profile_id = :profile_id OR user_id = :user_id LIMIT 1');
                 $beauticianStmt->execute([
                     ':profile_id' => $beauticianId,
@@ -143,6 +145,8 @@ class ReservationsModel
                 $beauticianRow = $beauticianStmt->fetch();
                 if ($beauticianRow && !empty($beauticianRow['user_id'])) {
                     $beauticianId = (int) $beauticianRow['user_id'];
+                } else {
+                    $beauticianId = null;
                 }
             }
 

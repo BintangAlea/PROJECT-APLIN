@@ -27,6 +27,30 @@ $tax = (int) round($totalPrice * 0.1);
 $finalTotal = $totalPrice + $tax;
 $orderType = $_SESSION['cafe_order']['order_type'] ?? 'Dine-In';
 $selectedGuest = $_SESSION['cafe_order']['guest_name'] ?? $displayName;
+$seatId = $_GET['seat'] ?? $_GET['seat_id'] ?? $_GET['table'] ?? $_SESSION['qr_order']['seat_id'] ?? $_SESSION['seat_id'] ?? null;
+
+// If user is a logged-in customer and no seat is explicitly scanned/passed,
+// automatically find their active salon reservation seat for today
+if (!$seatId && $isLoggedIn) {
+    try {
+        $db = \App\Core\Database::getConnection();
+        $stmt = $db->prepare("
+            SELECT r.seat_id 
+            FROM reservations r
+            WHERE r.user_id = :user_id 
+              AND r.STATUS IN ('Confirmed', 'In-Service')
+            ORDER BY r.schedule_time DESC
+            LIMIT 1
+        ");
+        $stmt->execute([':user_id' => $_SESSION['user_id']]);
+        $row = $stmt->fetch();
+        if ($row && !empty($row['seat_id'])) {
+            $seatId = $row['seat_id'];
+        }
+    } catch (\Exception $e) {
+        // Safe fallback
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -545,10 +569,7 @@ $selectedGuest = $_SESSION['cafe_order']['guest_name'] ?? $displayName;
     <main class="container py-3 py-md-4">
         <div class="hero">
             <h1 class="title">Halo, Kak <?php echo htmlspecialchars($displayName); ?>!</h1>
-            <div class="chips">
-                <span class="chip">★ Gold Member</span>
-                <span class="chip secondary">⌖ Kursi Salon 2</span>
-            </div>
+
         </div>
 
         <div class="layout">
@@ -588,6 +609,9 @@ $selectedGuest = $_SESSION['cafe_order']['guest_name'] ?? $displayName;
                                         <input type="hidden" name="menu_name" value="<?php echo htmlspecialchars($menuName); ?>">
                                         <input type="hidden" name="price" value="<?php echo htmlspecialchars((string) $menuPrice); ?>">
                                         <input type="hidden" name="category" value="<?php echo htmlspecialchars($menuCategory); ?>">
+                                        <?php if ($seatId): ?>
+                                            <input type="hidden" name="seat" value="<?php echo htmlspecialchars($seatId); ?>">
+                                        <?php endif; ?>
                                         <button type="submit" class="add-menu-btn">Tambah ke Keranjang</button>
                                     </form>
                                 </div>
@@ -620,11 +644,17 @@ $selectedGuest = $_SESSION['cafe_order']['guest_name'] ?? $displayName;
                             <div class="qty-box">
                                 <form method="POST" action="index.php?page=cafe&action=updateCart" class="m-0 d-inline">
                                     <input type="hidden" name="menu_id" value="<?php echo htmlspecialchars($item['menu_id']); ?>">
+                                    <?php if ($seatId): ?>
+                                        <input type="hidden" name="seat" value="<?php echo htmlspecialchars($seatId); ?>">
+                                    <?php endif; ?>
                                     <button type="submit" name="qty" value="<?php echo max(0, $item['qty'] - 1); ?>">−</button>
                                 </form>
                                 <span class="value"><?php echo (int) $item['qty']; ?></span>
                                 <form method="POST" action="index.php?page=cafe&action=updateCart" class="m-0 d-inline">
                                     <input type="hidden" name="menu_id" value="<?php echo htmlspecialchars($item['menu_id']); ?>">
+                                    <?php if ($seatId): ?>
+                                        <input type="hidden" name="seat" value="<?php echo htmlspecialchars($seatId); ?>">
+                                    <?php endif; ?>
                                     <button type="submit" name="qty" value="<?php echo $item['qty'] + 1; ?>">+</button>
                                 </form>
                             </div>
@@ -634,23 +664,7 @@ $selectedGuest = $_SESSION['cafe_order']['guest_name'] ?? $displayName;
                     <div class="empty-state">Keranjang masih kosong. Silakan pilih menu di atas dulu sebelum checkout.</div>
                 <?php endif; ?>
 
-                <h2 class="delivery-title">Delivery Method</h2>
-                <div class="delivery-grid">
-                    <label class="delivery-card <?php echo $orderType === 'Dine-In' ? 'active' : ''; ?>">
-                        <span class="delivery-icon check">✓</span>
-                        <input type="radio" class="d-none delivery-choice" name="delivery_choice" value="Dine-In" <?php echo $orderType === 'Dine-In' ? 'checked' : ''; ?>>
-                        <div class="delivery-icon">⌖</div>
-                        <div class="delivery-name">Antar ke Tempat Saya</div>
-                        <div class="delivery-sub">Kursi Salon 2</div>
-                    </label>
-                    <label class="delivery-card <?php echo $orderType !== 'Dine-In' ? 'active' : ''; ?>">
-                        <span class="delivery-icon check">✓</span>
-                        <input type="radio" class="d-none delivery-choice" name="delivery_choice" value="Takeaway" <?php echo $orderType !== 'Dine-In' ? 'checked' : ''; ?>>
-                        <div class="delivery-icon">👜</div>
-                        <div class="delivery-name">Ambil Sendiri</div>
-                        <div class="delivery-sub">Takeaway</div>
-                    </label>
-                </div>
+
             </section>
 
             <aside>
@@ -689,7 +703,9 @@ $selectedGuest = $_SESSION['cafe_order']['guest_name'] ?? $displayName;
                     <form method="GET" action="index.php">
                         <input type="hidden" name="page" value="cafe">
                         <input type="hidden" name="action" value="checkout">
-                        <input type="hidden" name="order_type" id="order_type_field" value="<?php echo htmlspecialchars($orderType); ?>">
+                        <?php if ($seatId): ?>
+                            <input type="hidden" name="seat" value="<?php echo htmlspecialchars($seatId); ?>">
+                        <?php endif; ?>
                         <input type="hidden" name="guest_name" value="<?php echo htmlspecialchars($selectedGuest); ?>">
                         <button type="submit" class="checkout-btn">Lanjut ke Pembayaran →</button>
                     </form>
@@ -722,23 +738,6 @@ $selectedGuest = $_SESSION['cafe_order']['guest_name'] ?? $displayName;
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-const deliveryCards = document.querySelectorAll('.delivery-card');
-const orderTypeField = document.getElementById('order_type_field');
 
-deliveryCards.forEach((card) => {
-    card.addEventListener('click', () => {
-        deliveryCards.forEach((item) => item.classList.remove('active'));
-        card.classList.add('active');
-        const input = card.querySelector('input.delivery-choice');
-        if (input) {
-            input.checked = true;
-            if (orderTypeField) {
-                orderTypeField.value = input.value;
-            }
-        }
-    });
-});
-</script>
 </body>
 </html>

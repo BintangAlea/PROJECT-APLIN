@@ -11,9 +11,22 @@ class CafeController
      */
     public function index()
     {
+        $isLoggedIn = isset($_SESSION['user_id']);
+        $salonHistory = [];
+        $cafeHistory = [];
+
+        if ($isLoggedIn) {
+            $userModel = new \App\Models\UsersModel();
+            $salonHistory = $userModel->getSalonHistory((int)$_SESSION['user_id']);
+            $cafeHistory = $userModel->getCafeHistory($_SESSION['full_name'] ?? '');
+        }
+
         return [
             'view' => 'Cafe.index',
-            'data' => []
+            'data' => [
+                'salonHistory' => $salonHistory,
+                'cafeHistory' => $cafeHistory
+            ]
         ];
     }
 
@@ -27,8 +40,14 @@ class CafeController
 
     public function addToCart()
     {
+        $seat = $_POST['seat'] ?? $_GET['seat'] ?? '';
+        $redirectUrl = 'index.php?page=cafe&action=cart';
+        if ($seat !== '') {
+            $redirectUrl .= '&seat=' . urlencode($seat);
+        }
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: index.php?page=cafe&action=cart');
+            header('Location: ' . $redirectUrl);
             exit;
         }
 
@@ -39,7 +58,7 @@ class CafeController
         $category = trim($_POST['category'] ?? 'kopi');
 
         if ($menuId === '' || $price <= 0) {
-            header('Location: index.php?page=cafe&action=cart');
+            header('Location: ' . $redirectUrl);
             exit;
         }
 
@@ -58,14 +77,20 @@ class CafeController
 
         $_SESSION['cart'][$menuId]['qty'] = (int) ($_SESSION['cart'][$menuId]['qty'] ?? 0) + 1;
 
-        header('Location: index.php?page=cafe&action=cart');
+        header('Location: ' . $redirectUrl);
         exit;
     }
 
     public function updateCart()
     {
+        $seat = $_POST['seat'] ?? $_GET['seat'] ?? '';
+        $redirectUrl = 'index.php?page=cafe&action=cart';
+        if ($seat !== '') {
+            $redirectUrl .= '&seat=' . urlencode($seat);
+        }
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: index.php?page=cafe&action=cart');
+            header('Location: ' . $redirectUrl);
             exit;
         }
 
@@ -73,7 +98,7 @@ class CafeController
         $qty = max(0, (int) ($_POST['qty'] ?? 0));
 
         if ($menuId === '' || !isset($_SESSION['cart'][$menuId])) {
-            header('Location: index.php?page=cafe&action=cart');
+            header('Location: ' . $redirectUrl);
             exit;
         }
 
@@ -83,7 +108,7 @@ class CafeController
             $_SESSION['cart'][$menuId]['qty'] = $qty;
         }
 
-        header('Location: index.php?page=cafe&action=cart');
+        header('Location: ' . $redirectUrl);
         exit;
     }
 
@@ -117,6 +142,7 @@ class CafeController
         $_SESSION['cafe_order'] = [
             'order_type' => $_POST['order_type'] ?? 'Takeaway',
             'guest_name' => $_POST['guest_name'] ?? ($_SESSION['full_name'] ?? 'Guest'),
+            'table_name' => $_POST['table_name'] ?? 'Pick Up',
             'items' => $_SESSION['cart'] ?? [],
             'total_price' => array_reduce($_SESSION['cart'] ?? [], function ($carry, $item) {
                 return $carry + ((int)($item['price'] ?? 0) * (int)($item['qty'] ?? 1));

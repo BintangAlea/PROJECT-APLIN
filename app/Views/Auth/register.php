@@ -1,4 +1,7 @@
-﻿<!DOCTYPE html>
+<?php
+$context = $_GET['context'] ?? $_POST['context'] ?? '';
+?>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -279,9 +282,15 @@
             <div class="row g-0 align-items-stretch">
                 <div class="col-lg-5">
                     <section class="hero-panel h-100">
-                        <span class="hero-kicker">VIP Booking Access</span>
-                        <h1 class="hero-title">Create Your Account</h1>
-                        <p class="hero-copy">Join Merish for exclusive VIP benefits, faster checkout, and a smoother booking experience.</p>
+                        <?php if ($context === 'checkout'): ?>
+                            <span class="hero-kicker">Pendaftaran Booking</span>
+                            <h1 class="hero-title">Selesaikan Booking</h1>
+                            <p class="hero-copy">Daftar sekarang untuk menyimpan data pesanan Anda dan melanjutkan ke pembayaran.</p>
+                        <?php else: ?>
+                            <span class="hero-kicker">VIP Booking Access</span>
+                            <h1 class="hero-title">Create Your Account</h1>
+                            <p class="hero-copy">Join Merish for exclusive VIP benefits, faster checkout, and a smoother booking experience.</p>
+                        <?php endif; ?>
                         <ul class="benefit-list">
                             <li><span class="benefit-dot">✓</span><span>Continue booking from checkout without losing your draft.</span></li>
                             <li><span class="benefit-dot">✓</span><span>Get faster access to schedule, stylist, and payment flow.</span></li>
@@ -292,8 +301,8 @@
                 <div class="col-lg-7">
                     <section class="form-panel h-100">
                         <div class="mb-3">
-                            <h2 class="form-title">Create Your Account</h2>
-                            <p class="form-subtitle">Make a new account to unlock the booking experience.</p>
+                            <h2 class="form-title"><?php echo ($context === 'checkout') ? 'Daftar Akun Baru' : 'Create Your Account'; ?></h2>
+                            <p class="form-subtitle"><?php echo ($context === 'checkout') ? 'Daftar akun baru untuk melanjutkan ke halaman checkout.' : 'Make a new account to unlock the booking experience.'; ?></p>
                         </div>
 
                         <?php if (isset($_SESSION['booking_error']) && $_SESSION['booking_error']): ?>
@@ -308,6 +317,9 @@
 
                         <form method="POST" action="index.php?page=register&action=register">
                             <input type="hidden" name="role" value="customer">
+                            <?php if ($context !== ''): ?>
+                                <input type="hidden" name="context" value="<?php echo htmlspecialchars($context); ?>">
+                            <?php endif; ?>
                             <div class="row g-3">
                                 <div class="col-12">
                                     <label class="form-label" for="full_name">Full Name</label>
@@ -336,7 +348,7 @@
                         </form>
 
                         <div class="text-center mt-3 small-note">
-                            Already have an account? <a href="index.php?page=login" class="back-link">Login now</a>
+                            Already have an account? <a href="index.php?page=login<?php echo $context !== '' ? '&context=' . urlencode($context) : ''; ?>" class="back-link">Login now</a>
                         </div>
                         <div class="text-center mt-2">
                             <a href="index.php" class="back-link">Back to home</a>

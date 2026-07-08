@@ -74,9 +74,9 @@ class ApiLoginController
             'name' => $user['NAME'],
             'role' => $user['ROLE'],
             'token' => $token,
-            'loyalty_stage' => $user['loyalty_stage'],
-            'total_spent' => $user['total_spent'],
-            'reward_points' => $user['reward_points']
+            'loyalty_stage' => $user['loyalty_stage'] ?? 1,
+            'total_spent' => $user['total_spent'] ?? 0.00,
+            'reward_points' => $user['reward_points'] ?? 0
         ], 'Login successful', 200);
     }
 
@@ -117,9 +117,9 @@ class ApiLoginController
             'email' => $user['email'],
             'name' => $user['NAME'],
             'role' => $user['ROLE'],
-            'loyalty_stage' => $user['loyalty_stage'],
-            'total_spent' => $user['total_spent'],
-            'reward_points' => $user['reward_points']
+            'loyalty_stage' => $user['loyalty_stage'] ?? 1,
+            'total_spent' => $user['total_spent'] ?? 0.00,
+            'reward_points' => $user['reward_points'] ?? 0
         ], 'Current user info', 200);
     }
 

@@ -9,9 +9,22 @@ class ServicesController
      */
     public function index()
     {
+        $isLoggedIn = isset($_SESSION['user_id']);
+        $salonHistory = [];
+        $cafeHistory = [];
+
+        if ($isLoggedIn) {
+            $userModel = new \App\Models\UsersModel();
+            $salonHistory = $userModel->getSalonHistory((int)$_SESSION['user_id']);
+            $cafeHistory = $userModel->getCafeHistory($_SESSION['full_name'] ?? '');
+        }
+
         return [
             'view' => 'Services.index',
-            'data' => []
+            'data' => [
+                'salonHistory' => $salonHistory,
+                'cafeHistory' => $cafeHistory
+            ]
         ];
     }
 }

@@ -22,6 +22,49 @@ foreach ($cart as $item) {
 $tax = (int) round($totalPrice * 0.1);
 $finalTotal = $totalPrice + $tax;
 $serviceName = 'Merish Cafe';
+
+// Check for seat/table scanned
+$seatId = $_GET['seat'] ?? $_GET['seat_id'] ?? $_GET['table'] ?? $_SESSION['qr_order']['seat_id'] ?? $_SESSION['seat_id'] ?? null;
+
+// If user is a logged-in customer and no seat is explicitly scanned/passed,
+// automatically find their active salon reservation seat for today
+if (!$seatId && $isLoggedIn) {
+    try {
+        $db = \App\Core\Database::getConnection();
+        $stmt = $db->prepare("
+            SELECT r.seat_id 
+            FROM reservations r
+            WHERE r.user_id = :user_id 
+              AND r.STATUS IN ('Confirmed', 'In-Service')
+            ORDER BY r.schedule_time DESC
+            LIMIT 1
+        ");
+        $stmt->execute([':user_id' => $_SESSION['user_id']]);
+        $row = $stmt->fetch();
+        if ($row && !empty($row['seat_id'])) {
+            $seatId = $row['seat_id'];
+        }
+    } catch (\Exception $e) {
+        // Safe fallback
+    }
+}
+
+$seatName = 'Pick Up';
+if ($seatId) {
+    try {
+        $db = \App\Core\Database::getConnection();
+        $stmt = $db->prepare("SELECT seat_name FROM seats WHERE seat_id = :id OR seat_name = :id LIMIT 1");
+        $stmt->execute([':id' => $seatId]);
+        $row = $stmt->fetch();
+        if ($row) {
+            $seatName = $row['seat_name'];
+        } else {
+            $seatName = $seatId;
+        }
+    } catch (\Exception $e) {
+        $seatName = $seatId;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -422,38 +465,21 @@ $serviceName = 'Merish Cafe';
         <div class="page-grid">
             <section>
                 <h1 class="page-title">Checkout</h1>
-                <p class="page-subtitle">Select your preferred payment method.</p>
-
-                <div class="method-block">
-                    <div class="method-head">♢ Salon Customer</div>
-                    <div class="method-copy">Pesanan ini akan otomatis ditambahkan ke tagihan salon Anda.</div>
-
-                    <div class="appointment-card">
-                        <div class="appointment-pill">
-                            <div class="icon">👤</div>
-                            <div class="texts">
-                                <div class="eyebrow">Active Appointment</div>
-                                <div class="detail">Hair Coloring · 14:00</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <form method="POST" action="index.php?page=cafe&action=checkout">
-                        <input type="hidden" name="order_type" value="Dine-In">
-                        <button type="submit" class="btn-accent">Masukkan ke Tagihan Salon</button>
-                    </form>
-                </div>
-
-                <div class="divider-or"><span>or</span></div>
+                <p class="page-subtitle">Selesaikan pembayaran untuk pesanan kafe Anda.</p>
 
                 <div class="guest-card">
-                    <div class="head">☕ Guest Checkout</div>
+                    <div class="head">☕ Rincian Pesanan Kafe</div>
                     <form method="POST" action="index.php?page=cafe&action=checkout">
-                        <input type="hidden" name="order_type" value="Takeaway">
+                        <input type="hidden" name="order_type" value="<?php echo ($seatName !== 'Pick Up') ? 'Dine-In' : 'Takeaway'; ?>">
 
                         <div class="mb-3">
                             <div class="field-label">Nama Panggilan</div>
-                            <input type="text" name="guest_name" class="form-control" placeholder="e.g. Jane" value="<?php echo htmlspecialchars($displayName !== 'Guest' ? $displayName : ''); ?>">
+                            <input type="text" name="guest_name" class="form-control" placeholder="e.g. Jane" value="<?php echo htmlspecialchars($displayName !== 'Guest' ? $displayName : ''); ?>" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="field-label">Meja / Table</div>
+                            <input type="text" name="table_name" class="form-control" value="<?php echo htmlspecialchars($seatName); ?>" readonly style="background-color: #f1e9e8; cursor: not-allowed;">
                         </div>
 
                         <div class="mb-2">

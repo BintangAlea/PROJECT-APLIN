@@ -75,6 +75,11 @@ class AuthController
                 exit;
             }
 
+            if ($context === 'checkout') {
+                header('Location: index.php?page=booking&step=5');
+                exit;
+            }
+
             $role = strtolower(trim((string) $user['ROLE']));
             if ($role === 'admin') {
                 header('Location: index.php?page=admin');
@@ -102,29 +107,35 @@ class AuthController
         $confirmPassword = $_POST['confirm_password'] ?? '';
         $fullName = $_POST['full_name'] ?? '';
         $role = $_POST['role'] ?? 'customer';
+        $context = $_POST['context'] ?? $_GET['context'] ?? '';
+
+        $registerRedirect = 'index.php?page=register';
+        if ($context !== '') {
+            $registerRedirect .= '&context=' . urlencode($context);
+        }
 
         if (!$email || !$password || !$fullName) {
             $_SESSION['error'] = 'Email, password, dan nama lengkap harus diisi';
-            header('Location: index.php?page=register');
+            header('Location: ' . $registerRedirect);
             exit;
         }
 
         if ($password !== $confirmPassword) {
             $_SESSION['error'] = 'Password tidak sesuai';
-            header('Location: index.php?page=register');
+            header('Location: ' . $registerRedirect);
             exit;
         }
 
         if (strlen($password) < 6) {
             $_SESSION['error'] = 'Password minimal 6 karakter';
-            header('Location: index.php?page=register');
+            header('Location: ' . $registerRedirect);
             exit;
         }
 
         $result = $this->usersModel->register($email, $password, $fullName, '', $role);
         if (!$result) {
             $_SESSION['error'] = 'Email sudah terdaftar atau terjadi kesalahan';
-            header('Location: index.php?page=register');
+            header('Location: ' . $registerRedirect);
             exit;
         }
 
@@ -143,7 +154,12 @@ class AuthController
         }
 
         $_SESSION['success'] = 'Registrasi berhasil! Silakan login dengan akun Anda.';
-        header('Location: index.php?page=login');
+        
+        if ($context === 'checkout') {
+            header('Location: index.php?page=login&context=checkout');
+        } else {
+            header('Location: index.php?page=login');
+        }
         exit;
     }
 }

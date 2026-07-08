@@ -268,7 +268,14 @@ class BookingController
             $_SESSION['booking'] = $_SESSION['booking'] ?? [];
             $_SESSION['booking']['beautician_id'] = $beauticianId;
 
-            header('Location: /index.php?page=booking&step=5');
+            // Check if logged in before proceeding to checkout
+            if (!isset($_SESSION['user_id'])) {
+                $_SESSION['post_login_redirect'] = 'index.php?page=booking&step=5';
+                header('Location: index.php?page=register&context=checkout');
+                exit;
+            }
+
+            header('Location: index.php?page=booking&step=5');
             exit;
         }
     }
@@ -364,6 +371,13 @@ class BookingController
      */
     public function step5()
     {
+        // Check if logged in before viewing checkout
+        if (!isset($_SESSION['user_id'])) {
+            $_SESSION['post_login_redirect'] = 'index.php?page=booking&step=5';
+            header('Location: index.php?page=register&context=checkout');
+            exit;
+        }
+
         $booking = $_SESSION['booking'] ?? [];
 
         if (empty($booking)) {
@@ -404,7 +418,7 @@ class BookingController
             $resId = $_GET['res_id'] ?? null;
 
             if (!$resId) {
-                header('Location: /index.php?page=booking&step=1');
+                header('Location: index.php?page=booking&step=1');
                 exit;
             }
 
@@ -413,7 +427,7 @@ class BookingController
 
             if (!$reservation) {
                 $_SESSION['booking_error'] = 'Reservation tidak ditemukan';
-                header('Location: /index.php?page=booking&step=1');
+                header('Location: index.php?page=booking&step=1');
                 exit;
             }
 
@@ -603,11 +617,11 @@ class BookingController
             unset($_SESSION['booking']);
 
             // Redirect to confirmation
-            header('Location: /index.php?page=booking&step=6&res_id=' . $resId);
+            header('Location: index.php?page=booking&step=6&res_id=' . $resId);
             exit;
         } catch (\Exception $e) {
             $_SESSION['booking_error'] = 'Error: ' . $e->getMessage();
-            header('Location: /index.php?page=booking&step=5');
+            header('Location: index.php?page=booking&step=5');
             exit;
         }
     }
