@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿ï»¿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -120,20 +120,20 @@
                     <div class="brand-subtitle mt-2">Online</div>
                 </div>
                 <a class="sidebar-link active" href="index.php?page=barista">
-                    <span>☕</span>
+                    <span>â˜•</span>
                     <span>KDS Board</span>
                 </a>
                 <a class="sidebar-link" href="index.php?page=barista&action=menuAvailability">
-                    <span>☰</span>
+                    <span>â˜°</span>
                     <span>Menu Availability</span>
                 </a>
             </div>
             <div class="mt-auto p-4 sidebar-footer">
-                <a class="sidebar-link" href="index.php?page=login&action=logout">
-                    <span>⚙</span>
+                <a class="sidebar-link" href="<?= LOGOUT_URL ?>">
+                    <span>âš™</span>
                     <span>Settings</span>
                 </a>
-                <a class="sidebar-link" href="index.php?page=login&action=logout">
+                <a class="sidebar-link" href="<?= LOGOUT_URL ?>">
                     <span>?</span>
                     <span>Support</span>
                 </a>
@@ -247,7 +247,7 @@
                                                 </div>
                                             </div>
                                             <hr class="my-3">
-                                            <div class="small order-muted">Qty <?= htmlspecialchars((string)($order['qty'] ?? 1)) ?> • Reservation <?= htmlspecialchars((string)($order['res_id'] ?? '-')) ?></div>
+                                            <div class="small order-muted">Qty <?= htmlspecialchars((string)($order['qty'] ?? 1)) ?> â€¢ Reservation <?= htmlspecialchars((string)($order['res_id'] ?? '-')) ?></div>
                                         </div>
                                     <?php endif; ?>
                                 <?php endforeach; ?>
@@ -288,5 +288,6 @@ function updateOrderStatus(orderId, newStatus) {
 </script>
 </body>
 </html>
+
 
 

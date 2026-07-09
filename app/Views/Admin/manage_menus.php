@@ -1,4 +1,4 @@
-﻿<?php
+﻿ï»¿<?php
 $pageTitle = 'Master Data & Stock Management - Merish Admin';
 $inventories = $inventories ?? [];
 $services = $services ?? [];
@@ -465,21 +465,21 @@ $catalogAnchor = '#catalog-form';
 
             <div class="sidebar-footer d-grid gap-1">
                 <a class="nav-link" href="index.php?page=admin&action=settings">System Settings</a>
-                <a class="nav-link" href="index.php?page=login&action=logout">Logout</a>
+                <a class="nav-link" href="<?= LOGOUT_URL ?>">Logout</a>
             </div>
         </aside>
 
         <main class="main">
             <div class="topbar">
                 <div class="search-box rounded-0">
-                    <span>⌕</span>
+                    <span>âŒ•</span>
                     <input type="text" placeholder="Search services, menus, stock...">
                 </div>
                 <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
                     <div class="d-none d-md-block text-uppercase small text-muted fw-semibold">Admin Overview</div>
-                    <button type="button" class="icon-btn">🔔</button>
-                    <button type="button" class="icon-btn">↻</button>
-                    <button type="button" class="icon-btn">◌</button>
+                    <button type="button" class="icon-btn">ðŸ””</button>
+                    <button type="button" class="icon-btn">â†»</button>
+                    <button type="button" class="icon-btn">â—Œ</button>
                     <a class="action-btn ms-2" href="<?php echo $catalogAnchor; ?>">Add New Service/Menu</a>
                 </div>
             </div>
@@ -851,5 +851,6 @@ $catalogAnchor = '#catalog-form';
     </div>
 </body>
 </html>
+
 
 

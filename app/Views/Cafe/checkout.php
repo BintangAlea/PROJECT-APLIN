@@ -490,8 +490,8 @@ if ($seatId) {
                                     QRIS
                                 </label>
                                 <label class="payment-choice">
-                                    <input type="radio" class="d-none" name="payment_method" value="LinkAja">
-                                    LinkAja
+                                    <input type="radio" class="d-none" name="payment_method" value="Cash">
+                                    Cash
                                 </label>
                             </div>
                         </div>

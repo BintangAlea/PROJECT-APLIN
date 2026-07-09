@@ -5,7 +5,7 @@
  */
 
 // Get menu data from session
-$billId = (int) (($_SESSION['cafe_bill_id'] ?? sessionStorage.getItem('cafe_bill_id')) ?: 0);
+$billId = (int) ($_SESSION['cafe_bill_id'] ?? 0);
 $scenario = $_SESSION['cafe_scenario'] ?? 'unknown';
 $customerName = $_SESSION['cafe_customer_name'] ?? 'Guest';
 
@@ -579,7 +579,7 @@ $customerName = $_SESSION['cafe_customer_name'] ?? 'Guest';
             sessionStorage.setItem('cafe_delivery_method', deliveryMethod);
 
             // Redirect to checkout
-            window.location.href = '/?page=cafe&action=checkout';
+            window.location.href = 'index.php?page=cafe&action=checkout';
         }
 
         function formatPrice(price) {

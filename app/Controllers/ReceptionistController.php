@@ -388,13 +388,19 @@ class ReceptionistController
             );
             $updateReservation->execute([':res_id' => $reservationId]);
 
-            // Mark all orders as paid
-            $markOrdersPaid = $this->db->prepare(
-                "UPDATE orders
-                 SET payment_status = 'Paid'
-                 WHERE res_id = :res_id"
-            );
-            $markOrdersPaid->execute([':res_id' => $reservationId]);
+            $seatStmt = $this->db->prepare('SELECT seat_id FROM reservations WHERE res_id = :res_id');
+            $seatStmt->execute([':res_id' => $reservationId]);
+            $seatRow = $seatStmt->fetch();
+            $seatId = $seatRow['seat_id'] ?? null;
+
+            if (!empty($seatId)) {
+                $markOrdersPaid = $this->db->prepare(
+                    "UPDATE db_merish_cafe.orders
+                     SET payment_status = 'Paid'
+                     WHERE seat_id = :seat_id"
+                );
+                $markOrdersPaid->execute([':seat_id' => $seatId]);
+            }
 
             $this->db->commit();
             $_SESSION['success'] = 'Pembayaran berhasil diterima dan setruk siap dicetak.';

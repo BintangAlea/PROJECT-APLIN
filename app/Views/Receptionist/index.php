@@ -1,4 +1,4 @@
-﻿<?php
+﻿ï»¿<?php
 $activeAreaSeats = $activeAreaSeats ?? [];
 $loungeSeats = $loungeSeats ?? [];
 $seatOccupancy = $seatOccupancy ?? [];
@@ -393,13 +393,13 @@ $statusClass = static function (string $status): string {
                 <h1 class="title">Merish</h1>
                 <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
                     <div class="search-box rounded-0">
-                        <span>⌕</span>
+                        <span>âŒ•</span>
                         <input type="text" placeholder="Search customer...">
                     </div>
                     <button type="button" class="action-btn" data-bs-toggle="modal" data-bs-target="#walkInModal">Walk-In Check-In</button>
-                    <button class="icon-btn" type="button">🔔</button>
+                    <button class="icon-btn" type="button">ðŸ””</button>
                     <button class="icon-btn" type="button">?</button>
-                    <a class="icon-btn text-decoration-none" href="index.php?page=login&action=logout">⎋</a>
+                    <a class="icon-btn text-decoration-none" href="<?= LOGOUT_URL ?>">âŽ‹</a>
                 </div>
             </header>
 
@@ -414,7 +414,7 @@ $statusClass = static function (string $status): string {
                 <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-2">
                     <div>
                         <h2 class="page-title">Live Seat Map</h2>
-                        <p class="subtitle">Pusat Zonasi · Real-time occupancy status</p>
+                        <p class="subtitle">Pusat Zonasi Â· Real-time occupancy status</p>
                     </div>
                     <div class="legend">
                         <span><i class="dot dot-empty"></i> Empty</span>
@@ -595,5 +595,6 @@ $statusClass = static function (string $status): string {
     </script>
 </body>
 </html>
+
 
 

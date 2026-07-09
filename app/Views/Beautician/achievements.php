@@ -57,7 +57,7 @@
                 <a class="sidebar-link active" href="index.php?page=beautician&action=achievements"><span>⌁</span><span>Achievements</span></a>
             </div>
             <div class="mt-auto p-4 sidebar-footer">
-                <a class="sidebar-link" href="index.php?page=login&action=logout"><span>⚙</span><span>Settings</span></a>
+                <a class="sidebar-link" href="index.php?page=beautician&action=settings"><span>⚙</span><span>Settings</span></a>
             </div>
         </aside>
         <section class="col-lg-10 d-flex flex-column">
@@ -66,7 +66,7 @@
                     <h1 class="page-title"><?= htmlspecialchars($pageTitle ?? 'Achievements') ?></h1>
                     <p class="page-subtitle">A curated overview of your professional impact and client satisfaction metrics.</p>
                 </div>
-                <button class="quick-btn">View All Reviews</button>
+                <a class="quick-btn" href="#reviews-section" style="text-decoration:none; display:inline-flex; align-items:center;">View All Reviews</a>
             </div>
             <div class="p-4 p-lg-5 flex-grow-1">
                 <div class="panel p-4 p-lg-5">
@@ -99,7 +99,7 @@
                             </div>
                         </div>
                         <div class="col-lg-5">
-                            <div class="card-title-hero mb-3">Recent Client Praise</div>
+                            <div class="card-title-hero mb-3" id="reviews-section">Recent Client Praise</div>
                             <div class="d-grid gap-3">
                                 <?php foreach (($reviews ?? []) as $review): ?>
                                     <div class="review-card p-4">

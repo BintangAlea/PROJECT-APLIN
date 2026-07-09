@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Models\OrdersModel;
 use App\Models\MenusModel;
 
 class CafeController
@@ -139,15 +140,67 @@ class CafeController
             exit;
         }
 
+        $cart = $_SESSION['cart'] ?? [];
+        if (empty($cart)) {
+            $_SESSION['cafe_error'] = 'Keranjang masih kosong. Silakan pilih menu terlebih dahulu.';
+            header('Location: index.php?page=cafe&action=cart');
+            exit;
+        }
+
+        $guestName = trim($_POST['guest_name'] ?? ($_SESSION['full_name'] ?? 'Guest'));
+        if ($guestName === '') {
+            $guestName = 'Guest';
+        }
+
+        $paymentMethod = trim($_POST['payment_method'] ?? 'Cash');
+        if (!in_array($paymentMethod, ['Cash', 'QRIS'], true)) {
+            $paymentMethod = 'Cash';
+        }
+
+        $seatId = trim((string) ($_POST['seat_id'] ?? $_GET['seat'] ?? $_SESSION['qr_order']['seat_id'] ?? ''));
+        $tableName = trim($_POST['table_name'] ?? ($seatId !== '' ? $seatId : 'Pick Up'));
+        $orderType = ($tableName !== 'Pick Up' || $seatId !== '') ? 'Dine-In' : 'Takeaway';
+
+        $totalPrice = array_reduce($cart, static function (int $carry, array $item): int {
+            return $carry + ((int) ($item['price'] ?? 0) * (int) ($item['qty'] ?? 1));
+        }, 0);
+
+        $ordersModel = new OrdersModel();
+        $orderId = $ordersModel->create([
+            'guest_name' => $guestName,
+            'seat_id' => $seatId !== '' ? $seatId : null,
+            'total_amount' => $totalPrice,
+            'payment_method' => $paymentMethod,
+            'payment_status' => 'Unpaid',
+            'status' => 'New',
+        ]);
+
+        if (!$orderId) {
+            $_SESSION['cafe_error'] = 'Gagal membuat pesanan cafe.';
+            header('Location: index.php?page=cafe&action=cart');
+            exit;
+        }
+
+        foreach ($cart as $item) {
+            $ordersModel->createDetail([
+                'order_id' => $orderId,
+                'menu_id' => $item['menu_id'] ?? '',
+                'qty' => (int) ($item['qty'] ?? 1),
+                'subtotal' => ((int) ($item['price'] ?? 0)) * ((int) ($item['qty'] ?? 1)),
+            ]);
+        }
+
         $_SESSION['cafe_order'] = [
-            'order_type' => $_POST['order_type'] ?? 'Takeaway',
-            'guest_name' => $_POST['guest_name'] ?? ($_SESSION['full_name'] ?? 'Guest'),
-            'table_name' => $_POST['table_name'] ?? 'Pick Up',
-            'items' => $_SESSION['cart'] ?? [],
-            'total_price' => array_reduce($_SESSION['cart'] ?? [], function ($carry, $item) {
-                return $carry + ((int)($item['price'] ?? 0) * (int)($item['qty'] ?? 1));
-            }, 0),
+            'order_id' => $orderId,
+            'order_type' => $orderType,
+            'guest_name' => $guestName,
+            'table_name' => $tableName,
+            'payment_method' => $paymentMethod,
+            'items' => $cart,
+            'total_price' => $totalPrice,
         ];
+
+        unset($_SESSION['cart']);
 
         require __DIR__ . '/../Views/Cafe/confirm.php';
     }

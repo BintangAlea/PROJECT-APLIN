@@ -1,4 +1,4 @@
-<?php
+﻿ï»¿<?php
 $isLoggedIn = isset($_SESSION['user_id']);
 $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
 ?>
@@ -389,7 +389,7 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
                     <?php if ($isLoggedIn): ?>
                         <span class="me-3 mb-0" style="color: #5f5358; font-size: 0.8rem; letter-spacing: 1.2px; text-transform: uppercase; font-weight: 700;">Hi, <?php echo htmlspecialchars(substr($displayName, 0, 14)); ?></span>
                         <a href="#" class="nav-link-custom mb-0 text-decoration-underline" data-bs-toggle="modal" data-bs-target="#historyModal" style="cursor: pointer; font-weight: 600;">History</a>
-                        <form method="POST" action="index.php?page=login&action=logout" class="m-0">
+                        <form method="POST" action="<?= LOGOUT_URL ?>" class="m-0">
                             <button class="btn btn-book py-2 px-3" type="submit" style="background: var(--accent); border-color: var(--accent); color: #fff; border-radius: 0; text-transform: uppercase; letter-spacing: 1.4px; font-size: 0.72rem; font-weight: 600; padding: 0.5rem 1rem;">Logout</button>
                         </form>
                     <?php else: ?>
@@ -405,7 +405,7 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
             <h1 class="hero-heading">Our Signature Treatments</h1>
             <p class="hero-sub">Curated services designed to elevate your personal style with professional precision.</p>
             <div class="promo-pill">
-                <span>✧</span>
+                <span>Ã¢Å“Â§</span>
                 <span>Enjoy a 20% synergy discount on combined services</span>
             </div>
         </div>
@@ -473,7 +473,7 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
                         <div class="expert-photo expert-elena"></div>
                         <h3 class="expert-name">Elena R.</h3>
                         <p class="expert-role">Color Director</p>
-                        <div class="expert-stars">☆☆☆☆☆</div>
+                        <div class="expert-stars">Ã¢Ëœâ€ Ã¢Ëœâ€ Ã¢Ëœâ€ Ã¢Ëœâ€ Ã¢Ëœâ€ </div>
                         <p class="expert-copy">Master of dimensional color and balayage techniques with over a decade of high-fashion experience.</p>
                     </article>
                 </div>
@@ -483,7 +483,7 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
                         <div class="expert-photo expert-marcus"></div>
                         <h3 class="expert-name">Marcus T.</h3>
                         <p class="expert-role">Master Cutter</p>
-                        <div class="expert-stars">☆☆☆☆☆</div>
+                        <div class="expert-stars">Ã¢Ëœâ€ Ã¢Ëœâ€ Ã¢Ëœâ€ Ã¢Ëœâ€ Ã¢Ëœâ€ </div>
                         <p class="expert-copy">Precision cutting specialist known for creating effortless, structured silhouettes tailored to each individual.</p>
                     </article>
                 </div>
@@ -493,7 +493,7 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
                         <div class="expert-photo expert-chloe"></div>
                         <h3 class="expert-name">Chloe M.</h3>
                         <p class="expert-role">Senior Esthetician</p>
-                        <div class="expert-stars">☆☆☆☆☆</div>
+                        <div class="expert-stars">Ã¢Ëœâ€ Ã¢Ëœâ€ Ã¢Ëœâ€ Ã¢Ëœâ€ Ã¢Ëœâ€ </div>
                         <p class="expert-copy">Specializing in advanced skincare treatments and meticulous brow architecture to enhance natural beauty.</p>
                     </article>
                 </div>
@@ -759,3 +759,4 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
     </script>
 </body>
 </html>
+

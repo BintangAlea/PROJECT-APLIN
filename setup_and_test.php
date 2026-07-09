@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * MERISH Database Setup & Test Script
  * Creates database, loads schema and dummy data, tests appointment wizard
@@ -26,7 +26,7 @@ foreach ($ports as $port) {
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         ]);
-        echo "[âœ“] Connected to MySQL on port {$port}\n\n";
+        echo "[Ã¢Å“â€œ] Connected to MySQL on port {$port}\n\n";
         break;
     } catch (PDOException $e) {
         continue;
@@ -34,7 +34,7 @@ foreach ($ports as $port) {
 }
 
 if ($pdo === null) {
-    die("[âœ—] Could not connect to MySQL on ports 3306 or 3307\n");
+    die("[Ã¢Å“â€”] Could not connect to MySQL on ports 3306 or 3307\n");
 }
 
 // Step 1: Drop and create database
@@ -43,9 +43,9 @@ try {
     $pdo->exec("DROP DATABASE IF EXISTS {$dbName}");
     $pdo->exec("CREATE DATABASE {$dbName} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
     $pdo->exec("USE {$dbName}");
-    echo "[âœ“] Database created and selected\n\n";
+    echo "[Ã¢Å“â€œ] Database created and selected\n\n";
 } catch (PDOException $e) {
-    die("[âœ—] Failed to create database: " . $e->getMessage() . "\n");
+    die("[Ã¢Å“â€”] Failed to create database: " . $e->getMessage() . "\n");
 }
 
 // Step 2: Create tables from SQL file
@@ -56,17 +56,17 @@ try {
     
     // Parse SQL simplified
     $pdo->exec(file_get_contents($sqlFile));
-    echo "[✓] All tables created successfully\n\n";
+    echo "[âœ“] All tables created successfully\n\n";
 } catch (Exception $e) {
-    die("[âœ—] Failed to create tables: " . $e->getMessage() . "\n");
+    die("[Ã¢Å“â€”] Failed to create tables: " . $e->getMessage() . "\n");
 }
 
 // Step 3: Insert dummy data simplified
 try {
     $pdo->exec(file_get_contents($dummyFile));
-    echo "[✓] Dummy data inserted successfully\n\n";
+    echo "[âœ“] Dummy data inserted successfully\n\n";
 } catch (Exception $e) {
-    die("[âœ—] Failed to insert dummy data: " . $e->getMessage() . "\n");
+    die("[Ã¢Å“â€”] Failed to insert dummy data: " . $e->getMessage() . "\n");
 }
 
 // Step 4: Verify data
@@ -75,7 +75,7 @@ $tables = ['users', 'services', 'seats', 'staff_profiles', 'menus', 'promotions'
 foreach ($tables as $table) {
     $result = $pdo->query("SELECT COUNT(*) as cnt FROM {$table}");
     $count = $result->fetch()['cnt'];
-    echo "[âœ“] {$table}: {$count} rows\n";
+    echo "[Ã¢Å“â€œ] {$table}: {$count} rows\n";
 }
 
 // Step 5: Test appointment wizard flow
@@ -151,7 +151,7 @@ if ($customer && $service && $beauticians && $seat) {
         )->fetch();
         
         if ($verify) {
-            echo "\n[âœ“] APPOINTMENT CREATED SUCCESSFULLY!\n";
+            echo "\n[Ã¢Å“â€œ] APPOINTMENT CREATED SUCCESSFULLY!\n";
             echo "   - Reservation ID: {$verify['res_id']}\n";
             echo "   - Customer: {$verify['user_id']}\n";
             echo "   - Service: {$verify['service_name']}\n";
@@ -163,12 +163,12 @@ if ($customer && $service && $beauticians && $seat) {
         }
         
     } catch (Exception $e) {
-        echo "[âœ—] Appointment creation failed: " . $e->getMessage() . "\n";
+        echo "[Ã¢Å“â€”] Appointment creation failed: " . $e->getMessage() . "\n";
     }
 }
 
 echo "\n========== TEST COMPLETE ==========\n";
-echo "[âœ“] Database is ready for testing!\n";
+echo "[Ã¢Å“â€œ] Database is ready for testing!\n";
 echo "\nYou can now:\n";
 echo "1. Access the appointment booking at: http://localhost/projectaplin/index.php?page=customer&action=appointment\n";
 echo "2. Test the full 5-step wizard flow\n";

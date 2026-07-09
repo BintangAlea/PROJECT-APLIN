@@ -24,7 +24,7 @@ class BaristaController
 
     public function index()
     {
-        $orders = $this->ordersModel->findPendingOrInProgress();
+        $orders = $this->ordersModel->findAll();
         $pageTitle = 'Barista Dashboard';
         $activeMenu = 'kds';
         require __DIR__ . '/../Views/Barista/index.php';
@@ -43,8 +43,10 @@ class BaristaController
         $orderId = (int)($_POST['order_id'] ?? 0);
         $status = $_POST['status'] ?? '';
 
-        if ($orderId > 0 && !empty($status)) {
-            $this->ordersModel->update($orderId, ['status' => $status]);
+        $normalizedStatus = $this->normalizeOrderStatus($status);
+
+        if ($orderId > 0 && $normalizedStatus !== null) {
+            $this->ordersModel->update($orderId, ['STATUS' => $normalizedStatus]);
             $_SESSION['success'] = 'Order status updated';
             header('Location: index.php?page=barista');
         } else {
@@ -52,6 +54,19 @@ class BaristaController
             header('Location: index.php?page=barista');
         }
         exit;
+    }
+
+    private function normalizeOrderStatus(string $status): ?string
+    {
+        $normalized = strtolower(trim($status));
+
+        return match ($normalized) {
+            'new', 'pending' => 'New',
+            'in progress', 'making', 'processing' => 'In Progress',
+            'ready' => 'Ready',
+            'done', 'completed', 'selesai' => 'Completed',
+            default => null,
+        };
     }
 
     public function orderHistory()

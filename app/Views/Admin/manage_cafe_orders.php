@@ -1,4 +1,4 @@
-<?php
+﻿ï»¿<?php
 $pageTitle = 'Cafe Orders Live - Merish Admin';
 $editOrder = $orderForEdit ?? null;
 $availableMenu = $menus ?? [];
@@ -307,21 +307,21 @@ $availableReservations = $reservations ?? [];
 
         <div class="sidebar-footer">
             <a class="nav-link px-0" href="index.php?page=admin&action=settings">Settings</a>
-            <a class="nav-link px-0" href="index.php?page=login&action=logout">Logout</a>
+            <a class="nav-link px-0" href="<?= LOGOUT_URL ?>">Logout</a>
         </div>
     </aside>
 
     <main class="main">
         <div class="topbar">
             <div class="search-box rounded-0">
-                <span>⌕</span>
+                <span>Ã¢Å’â€¢</span>
                 <input type="text" placeholder="Search..." aria-label="Search">
             </div>
             <h1 class="page-title text-center flex-grow-1">Merish Admin</h1>
             <div class="d-flex align-items-center gap-2">
-                <button class="icon-btn" type="button" aria-label="Notifications">🔔</button>
-                <button class="icon-btn" type="button" aria-label="Refresh">↻</button>
-                <button class="icon-btn" type="button" aria-label="Profile">◌</button>
+                <button class="icon-btn" type="button" aria-label="Notifications">Ã°Å¸â€â€</button>
+                <button class="icon-btn" type="button" aria-label="Refresh">Ã¢â€ Â»</button>
+                <button class="icon-btn" type="button" aria-label="Profile">Ã¢â€”Å’</button>
             </div>
         </div>
 

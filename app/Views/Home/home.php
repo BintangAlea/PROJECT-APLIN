@@ -1,4 +1,4 @@
-<?php
+﻿ï»¿<?php
 $isLoggedIn = isset($_SESSION['user_id']);
 $displayName = $_SESSION['full_name'] ?? 'Guest';
 ?>
@@ -237,7 +237,7 @@ $displayName = $_SESSION['full_name'] ?? 'Guest';
                     <?php if ($isLoggedIn): ?>
                         <span class="nav-link mb-0">Hi, <?php echo htmlspecialchars(substr($displayName, 0, 14)); ?></span>
                         <a href="#" class="nav-link mb-0 text-decoration-underline" data-bs-toggle="modal" data-bs-target="#historyModal" style="cursor: pointer; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; font-size: 0.72rem;">History</a>
-                        <form method="POST" action="index.php?page=login&action=logout" class="m-0">
+                        <form method="POST" action="<?= LOGOUT_URL ?>" class="m-0">
                             <button class="btn btn-book py-2 px-3" type="submit">Logout</button>
                         </form>
                     <?php else: ?>
@@ -267,21 +267,21 @@ $displayName = $_SESSION['full_name'] ?? 'Guest';
             <div class="row g-4">
                 <div class="col-md-4">
                     <article class="cert-card h-100">
-                        <div class="cert-icon">✪</div>
+                        <div class="cert-icon">Ã¢Å“Âª</div>
                         <h3>Voted Best Salon</h3>
                         <p>Recognized for unparalleled service and editorial styling.</p>
                     </article>
                 </div>
                 <div class="col-md-4">
                     <article class="cert-card h-100">
-                        <div class="cert-icon">✿</div>
+                        <div class="cert-icon">Ã¢Å“Â¿</div>
                         <h3>Certified Master Colorists</h3>
                         <p>Our team holds advanced certifications in modern color techniques.</p>
                     </article>
                 </div>
                 <div class="col-md-4">
                     <article class="cert-card h-100">
-                        <div class="cert-icon">◌</div>
+                        <div class="cert-icon">Ã¢â€”Å’</div>
                         <h3>Organic & Sustainable</h3>
                         <p>Committed to using premium, eco-conscious products.</p>
                     </article>
@@ -518,3 +518,4 @@ $displayName = $_SESSION['full_name'] ?? 'Guest';
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+

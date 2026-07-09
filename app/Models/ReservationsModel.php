@@ -150,15 +150,27 @@ class ReservationsModel
                 }
             }
 
-            $seatId = $data['seat_id'] ?? null;
-            if (empty($seatId)) {
-                $seatStmt = $this->db->query('SELECT seat_id FROM seats ORDER BY seat_id ASC LIMIT 1');
-                $seatRow = $seatStmt ? $seatStmt->fetch() : false;
+            $seatId = trim((string) ($data['seat_id'] ?? ''));
+            if ($seatId !== '') {
+                $seatStmt = $this->db->prepare('SELECT seat_id FROM seats WHERE seat_id = :seat_id AND zone_type = :zone_type LIMIT 1');
+                $seatStmt->execute([
+                    ':seat_id' => $seatId,
+                    ':zone_type' => 'Kursi Salon',
+                ]);
+                $seatRow = $seatStmt->fetch();
+                if (!$seatRow) {
+                    error_log('ReservationsModel.create() - Invalid seat_id for salon reservation: ' . $seatId);
+                    return false;
+                }
+            } else {
+                $seatStmt = $this->db->prepare('SELECT seat_id FROM seats WHERE zone_type = :zone_type ORDER BY seat_id ASC LIMIT 1');
+                $seatStmt->execute([':zone_type' => 'Kursi Salon']);
+                $seatRow = $seatStmt->fetch();
                 $seatId = $seatRow['seat_id'] ?? null;
             }
 
             if (empty($seatId)) {
-                error_log('ReservationsModel.create() - No valid seat_id available');
+                error_log('ReservationsModel.create() - No salon seat available');
                 return false;
             }
 

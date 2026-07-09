@@ -1,4 +1,4 @@
-﻿<?php
+﻿ï»¿<?php
 $activeBills = $activeBills ?? [];
 $selectedBill = $selectedBill ?? null;
 $flashSuccess = $flashSuccess ?? null;
@@ -379,14 +379,14 @@ $formatCurrency = static fn ($value): string => 'Rp ' . number_format((float) $v
         <main class="main">
             <header class="topbar">
                 <div class="search-box rounded-0">
-                    <span>⌕</span>
+                    <span>âŒ•</span>
                     <input type="text" placeholder="Search orders, clients...">
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <button class="icon-btn" type="button">🔔</button>
+                    <button class="icon-btn" type="button">ðŸ””</button>
                     <button class="icon-btn" type="button">?</button>
                     <a class="walkin-btn" href="index.php?page=receptionist">Walk-In Check-In</a>
-                    <a class="icon-btn text-decoration-none" href="index.php?page=login&action=logout">⎋</a>
+                    <a class="icon-btn text-decoration-none" href="<?= LOGOUT_URL ?>">âŽ‹</a>
                 </div>
             </header>
 
@@ -419,7 +419,7 @@ $formatCurrency = static fn ($value): string => 'Rp ' . number_format((float) $v
                                             <span class="avatar"><?php echo $escape($initial); ?></span>
                                             <div>
                                                 <div class="fw-semibold"><?php echo $escape($bill['customer_name']); ?></div>
-                                                <div class="small text-muted">Order #<?php echo $escape((string) $bill['res_id']); ?> · <?php echo $escape(date('g:i A', strtotime((string) $bill['schedule_time']))); ?></div>
+                                                <div class="small text-muted">Order #<?php echo $escape((string) $bill['res_id']); ?> Â· <?php echo $escape(date('g:i A', strtotime((string) $bill['schedule_time']))); ?></div>
                                             </div>
                                         </div>
                                         <?php if ($isActive): ?><span class="pill">Active</span><?php endif; ?>
@@ -726,5 +726,6 @@ $formatCurrency = static fn ($value): string => 'Rp ' . number_format((float) $v
     </script>
 </body>
 </html>
+
 
 

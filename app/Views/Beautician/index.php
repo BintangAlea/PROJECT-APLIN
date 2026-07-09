@@ -37,6 +37,7 @@
         .section-title { font-family:'Playfair Display',serif; font-size:1.6rem; color:#483437; }
         .view-link { color:var(--muted); text-decoration:none; font-size:.85rem; }
         .view-link:hover { color:var(--ink); }
+        .quick-link { text-decoration:none; display:inline-flex; align-items:center; }
         @media (max-width:991.98px){ .sidebar{ min-height:auto; } }
     </style>
 </head>
@@ -60,7 +61,7 @@
                 <a class="sidebar-link" href="index.php?page=beautician&action=achievements"><span>⌁</span><span>Achievements</span></a>
             </div>
             <div class="mt-auto p-4 sidebar-footer">
-                <a class="sidebar-link" href="index.php?page=login&action=logout"><span>⚙</span><span>Settings</span></a>
+                <a class="sidebar-link" href="index.php?page=beautician&action=settings"><span>⚙</span><span>Settings</span></a>
             </div>
         </aside>
 
@@ -71,13 +72,14 @@
                     <p class="page-subtitle">Manage your appointments and daily flow.</p>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <button class="quick-btn">Today</button>
-                    <button class="quick-btn">Weekly</button>
-                    <button class="quick-btn">New Appointment</button>
+                    <a class="quick-btn quick-link" href="index.php?page=beautician&action=todaySchedule">Today</a>
+                    <a class="quick-btn quick-link" href="index.php?page=beautician&action=upcomingSchedule&days=14">Weekly</a>
+                    <a class="quick-btn quick-link" href="index.php?page=booking">New Appointment</a>
                 </div>
             </div>
 
             <div class="p-4 p-lg-5 flex-grow-1">
+                <?php $currentTask = $todaySchedule[0] ?? null; ?>
                 <div class="panel hero-card mb-4">
                     <div class="row g-0 h-100">
                         <div class="col-lg-4">
@@ -96,12 +98,20 @@
                                     </div>
                                 </div>
                                 <div class="small text-muted mb-2">Salon Seat 2</div>
-                                <div class="task-title"><?= htmlspecialchars($todaySchedule[0]['customer_name'] ?? $_SESSION['full_name'] ?? 'Victoria Sterling') ?></div>
-                                <div class="task-sub mt-3"><?= htmlspecialchars($todaySchedule[0]['service_name'] ?? 'Luminous Balayage & Olaplex Treatment') ?></div>
+                                <div class="task-title"><?= htmlspecialchars($currentTask['customer_name'] ?? $_SESSION['full_name'] ?? 'Victoria Sterling') ?></div>
+                                <div class="task-sub mt-3"><?= htmlspecialchars($currentTask['service_name'] ?? 'Luminous Balayage & Olaplex Treatment') ?></div>
                             </div>
                             <div class="d-flex gap-2 mt-4">
-                                <a href="index.php?page=beautician&action=schedule" class="btn btn-primary px-4" style="background:#8a6170;border-color:#8a6170;">Complete Service</a>
-                                <button class="btn btn-outline-secondary px-4">...</button>
+                                <?php if (!empty($currentTask['res_id'])): ?>
+                                    <form method="POST" action="index.php?page=beautician&action=updateReservationStatus" class="m-0 d-inline">
+                                        <input type="hidden" name="reservation_id" value="<?= (int) $currentTask['res_id'] ?>">
+                                        <input type="hidden" name="status" value="Selesai">
+                                        <button class="btn btn-primary px-4" type="submit" style="background:#8a6170;border-color:#8a6170;">Complete Service</button>
+                                    </form>
+                                <?php else: ?>
+                                    <a href="index.php?page=beautician&action=schedule" class="btn btn-primary px-4" style="background:#8a6170;border-color:#8a6170;">View Schedule</a>
+                                <?php endif; ?>
+                                <a href="index.php?page=beautician&action=settings" class="btn btn-outline-secondary px-4 text-decoration-none">Settings</a>
                             </div>
                         </div>
                     </div>

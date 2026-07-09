@@ -22,20 +22,49 @@ class BeauticianController
         $this->reservationsModel = new ReservationsModel();
     }
 
-    public function index()
+    private function getBeauticianId(): int
     {
-        $userId = $_SESSION['user_id'];
+        $userId = (int) ($_SESSION['user_id'] ?? 0);
         $beautician = $this->beauticiansModel->findByUserId($userId);
-        $beauticiansId = $beautician['user_id'] ?? $beautician['profile_id'] ?? null;
+        $beauticianId = (int) ($beautician['user_id'] ?? $beautician['profile_id'] ?? 0);
 
-        if (!$beauticiansId) {
+        if ($beauticianId <= 0) {
             $_SESSION['error'] = 'Beautician profile not found';
             header('Location: index.php?page=login');
             exit;
         }
 
-        $todaySchedule = $this->reservationsModel->getTodayScheduleByBeautician($beauticiansId);
-        $upcomingSchedule = $this->reservationsModel->getUpcomingByBeautician($beauticiansId);
+        return $beauticianId;
+    }
+
+    private function renderScheduleView(int $upcomingDays, string $pageTitle): void
+    {
+        $beauticianId = $this->getBeauticianId();
+        $todaySchedule = $this->reservationsModel->getTodayScheduleByBeautician($beauticianId);
+        $upcomingSchedule = $this->reservationsModel->getUpcomingByBeautician($beauticianId, $upcomingDays);
+        $scheduleHeading = $pageTitle;
+        $upcomingLabel = $upcomingDays <= 1 ? 'Next 24 Hours' : 'Next ' . $upcomingDays . ' Days';
+        $activeMenu = 'schedule';
+
+        require __DIR__ . '/../Views/Beautician/schedule.php';
+    }
+
+    private function normalizeReservationStatus(string $status): string
+    {
+        $normalized = trim($status);
+
+        if ($normalized === 'Completed') {
+            return 'Selesai';
+        }
+
+        return $normalized;
+    }
+
+    public function index()
+    {
+        $beauticianId = $this->getBeauticianId();
+        $todaySchedule = $this->reservationsModel->getTodayScheduleByBeautician($beauticianId);
+        $upcomingSchedule = $this->reservationsModel->getUpcomingByBeautician($beauticianId, 14);
         $pageTitle = 'Beautician Dashboard';
         $activeMenu = 'dashboard';
 
@@ -44,22 +73,19 @@ class BeauticianController
 
     public function schedule()
     {
-        $userId = $_SESSION['user_id'];
-        $beautician = $this->beauticiansModel->findByUserId($userId);
-        $beauticiansId = $beautician['user_id'] ?? $beautician['profile_id'] ?? null;
+        $this->renderScheduleView(14, 'Schedule');
+    }
 
-        if (!$beauticiansId) {
-            $_SESSION['error'] = 'Beautician profile not found';
-            header('Location: index.php?page=login');
-            exit;
-        }
+    public function settings()
+    {
+        $beauticianId = $this->getBeauticianId();
+        $beautician = $this->beauticiansModel->findByUserId((int) ($_SESSION['user_id'] ?? 0)) ?: [];
+        $todaySchedule = $this->reservationsModel->getTodayScheduleByBeautician($beauticianId);
+        $upcomingSchedule = $this->reservationsModel->getUpcomingByBeautician($beauticianId, 7);
+        $pageTitle = 'Settings';
+        $activeMenu = 'settings';
 
-        $todaySchedule = $this->reservationsModel->getTodayScheduleByBeautician($beauticiansId);
-        $upcomingSchedule = $this->reservationsModel->getUpcomingByBeautician($beauticiansId, 14);
-        $pageTitle = 'Schedule';
-        $activeMenu = 'schedule';
-
-        require __DIR__ . '/../Views/Beautician/schedule.php';
+        require __DIR__ . '/../Views/Beautician/settings.php';
     }
 
     public function treatments()
@@ -121,26 +147,28 @@ class BeauticianController
 
     public function todaySchedule()
     {
-        $this->schedule();
+        $this->renderScheduleView(1, "Today's Schedule");
     }
 
     public function upcomingSchedule()
     {
-        $this->schedule();
+        $days = max(2, (int) ($_GET['days'] ?? 14));
+        $this->renderScheduleView($days, 'Weekly Schedule');
     }
 
     public function updateReservationStatus()
     {
         $reservationId = (int)($_POST['reservation_id'] ?? 0);
-        $status = $_POST['status'] ?? '';
+        $status = $this->normalizeReservationStatus((string) ($_POST['status'] ?? ''));
 
-        if ($reservationId > 0 && !empty($status)) {
+        $allowedStatuses = ['Pending', 'Confirmed', 'In-Service', 'Selesai'];
+        if ($reservationId > 0 && in_array($status, $allowedStatuses, true)) {
             $this->reservationsModel->update($reservationId, ['status' => $status]);
             $_SESSION['success'] = 'Status updated';
-            header('Location: index.php?page=beautician');
+            header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? 'index.php?page=beautician'));
         } else {
             $_SESSION['error'] = 'Invalid data';
-            header('Location: index.php?page=beautician');
+            header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? 'index.php?page=beautician'));
         }
         exit;
     }

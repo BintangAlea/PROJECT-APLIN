@@ -423,7 +423,7 @@ $topSalon = array_slice($reportData['rows'] ?? [], 0, 3);
 
             <div class="sidebar-footer d-grid gap-1">
                 <a class="nav-link" href="index.php?page=admin&action=settings">System Settings</a>
-                <a class="nav-link" href="index.php?page=login&action=logout">Logout</a>
+                <a class="nav-link" href="<?= LOGOUT_URL ?>">Logout</a>
             </div>
         </aside>
 
@@ -630,5 +630,6 @@ $topSalon = array_slice($reportData['rows'] ?? [], 0, 3);
     </div>
 </body>
 </html>
+
 
 

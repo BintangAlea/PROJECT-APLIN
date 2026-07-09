@@ -49,12 +49,13 @@ class ApiInventarisController
         }
 
         // Count total
-        $countStmt = $this->db->query("SELECT COUNT(*) as count FROM inventories {$where}");
+        $countStmt = $this->db->query("SELECT COUNT(*) as count FROM db_merish_cafe.inventories {$where}");
         $total = $countStmt->fetch()['count'];
 
         // Get items
         $stmt = $this->db->query(
-            "SELECT * FROM inventories {$where}
+              "SELECT item_id, item_name, stock_qty, min_stock, unit, 0 AS extra_charge_per_unit
+               FROM db_merish_cafe.inventories {$where}
              ORDER BY item_name ASC
              LIMIT {$limit} OFFSET {$offset}"
         );
@@ -74,7 +75,7 @@ class ApiInventarisController
             return;
         }
 
-        $stmt = $this->db->prepare('SELECT * FROM inventories WHERE item_id = :item_id');
+        $stmt = $this->db->prepare('SELECT item_id, item_name, stock_qty, min_stock, unit, 0 AS extra_charge_per_unit FROM db_merish_cafe.inventories WHERE item_id = :item_id');
         $stmt->execute([':item_id' => $itemId]);
         $item = $stmt->fetch();
 
@@ -145,8 +146,8 @@ class ApiInventarisController
         // Get BOM items
         $bom = $this->db->prepare(
             'SELECT bd.*, i.item_name, i.stock_qty 
-             FROM bom_details bd
-             JOIN inventories i ON bd.item_id = i.item_id
+               FROM bom_details bd
+               JOIN db_merish_cafe.inventories i ON bd.item_id = i.item_id
              WHERE bd.bom_recipe_id = :bom_id'
         );
         $bom->execute([':bom_id' => $menuData['bom_recipe_id']]);
@@ -184,7 +185,7 @@ class ApiInventarisController
                 $requiredQty = $bomItem['quantity_required'] * $input['qty'];
                 
                 $updateStmt = $this->db->prepare(
-                    'UPDATE inventories SET stock_qty = stock_qty - :qty WHERE item_id = :item_id'
+                    'UPDATE db_merish_cafe.inventories SET stock_qty = stock_qty - :qty WHERE item_id = :item_id'
                 );
                 $updateStmt->execute([
                     ':qty' => $requiredQty,
@@ -240,7 +241,7 @@ class ApiInventarisController
         }
 
         // Check inventory
-        $inv = $this->db->prepare('SELECT * FROM inventories WHERE item_id = :item_id');
+        $inv = $this->db->prepare('SELECT item_id, item_name, stock_qty, min_stock, unit, 0 AS extra_charge_per_unit FROM db_merish_cafe.inventories WHERE item_id = :item_id');
         $inv->execute([':item_id' => $input['item_id']]);
         $inventory = $inv->fetch();
 
@@ -271,7 +272,7 @@ class ApiInventarisController
 
             // Deduct stock
             $deduct = $this->db->prepare(
-                'UPDATE inventories SET stock_qty = stock_qty - :qty WHERE item_id = :item_id'
+                    'UPDATE db_merish_cafe.inventories SET stock_qty = stock_qty - :qty WHERE item_id = :item_id'
             );
             $deduct->execute([
                 ':qty' => $input['qty_used'],
@@ -279,7 +280,7 @@ class ApiInventarisController
             ]);
 
             // Calculate charge
-            $chargeAmount = $inventory['extra_charge_per_unit'] * $input['qty_used'];
+            $chargeAmount = 0;
 
             echo ApiResponse::success([
                 'usage_id' => $this->db->lastInsertId(),
@@ -287,7 +288,7 @@ class ApiInventarisController
                 'item_id' => $input['item_id'],
                 'item_name' => $inventory['item_name'],
                 'qty_used' => $input['qty_used'],
-                'unit_price' => $inventory['extra_charge_per_unit'],
+                'unit_price' => 0,
                 'charge_amount' => $chargeAmount,
                 'remaining_stock' => $inventory['stock_qty'] - $input['qty_used']
             ], 'Extra material usage recorded', 201);
@@ -315,7 +316,7 @@ class ApiInventarisController
                         WHEN stock_qty <= min_stock * 1.5 THEN "Warning"
                         ELSE "Normal"
                     END as alert_level
-             FROM inventories
+               FROM db_merish_cafe.inventories
              WHERE stock_qty <= min_stock * 1.5
              ORDER BY alert_level DESC, shortage DESC'
         );

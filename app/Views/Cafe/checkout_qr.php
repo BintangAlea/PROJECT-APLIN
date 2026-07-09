@@ -443,7 +443,7 @@
 
         function backToMenu() {
             if (confirm('Kembali ke menu? Pesanan belum disimpan.')) {
-                window.location.href = '/?page=cafe&action=menu';
+                window.location.href = 'index.php?page=cafe&action=menu';
             }
         }
 
@@ -499,7 +499,7 @@
                         showSuccess('Pesanan ditambahkan ke bill Anda!');
                         clearCart();
                         setTimeout(() => {
-                            window.location.href = '/?page=cafe&action=menu';
+                            window.location.href = 'index.php?page=cafe&action=menu';
                         }, 1500);
                     }
                 })
@@ -542,7 +542,7 @@
                     showSuccess('Pembayaran berhasil! Pesanan dikirim ke dapur.');
                     clearCart();
                     setTimeout(() => {
-                        window.location.href = '/?page=cafe&action=menu';
+                        window.location.href = 'index.php?page=cafe&action=menu';
                     }, 1500);
                 } else {
                     throw new Error(data.message || 'Pembayaran gagal');

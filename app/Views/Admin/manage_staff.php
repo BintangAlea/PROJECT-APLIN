@@ -1,4 +1,4 @@
-﻿<?php
+﻿ï»¿<?php
 $pageTitle = 'Staff & Review - Merish Admin';
 $staff = $staff ?? [];
 $reviews = $reviews ?? [];
@@ -443,7 +443,7 @@ $roleLabel = static function (string $role): string {
 
             <div class="sidebar-footer d-grid gap-1">
                 <a class="nav-link" href="index.php?page=admin&action=settings">System Settings</a>
-                <a class="nav-link" href="index.php?page=login&action=logout">Logout</a>
+                <a class="nav-link" href="<?= LOGOUT_URL ?>">Logout</a>
             </div>
         </aside>
 
@@ -452,11 +452,11 @@ $roleLabel = static function (string $role): string {
                 <h1 class="top-title">Admin Overview</h1>
                 <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
                     <div class="search-box rounded-0">
-                        <span>⌕</span>
+                        <span>âŒ•</span>
                         <input type="text" placeholder="Search staff or reviews...">
                     </div>
-                    <button class="icon-btn" type="button">🔔</button>
-                    <button class="icon-btn" type="button">↺</button>
+                    <button class="icon-btn" type="button">ðŸ””</button>
+                    <button class="icon-btn" type="button">â†º</button>
                     <button class="icon-btn" type="button">?</button>
                     <a class="action-btn" href="index.php?page=admin&action=reports">Export Report</a>
                 </div>
@@ -523,7 +523,7 @@ $roleLabel = static function (string $role): string {
                                             <div class="avatar"><?php echo strtoupper(substr((string) ($person['NAME'] ?? 'S'), 0, 1)); ?></div>
                                             <div class="flex-grow-1">
                                                 <?php if ($topPerformer && (int) $topPerformer['user_id'] === (int) $person['user_id']): ?>
-                                                    <div class="top-performer">★ Top Performer</div>
+                                                    <div class="top-performer">â˜… Top Performer</div>
                                                 <?php endif; ?>
                                                 <h3 class="staff-name"><?php echo $escape($person['NAME']); ?></h3>
                                                 <p class="staff-role"><?php echo $escape($roleLabel((string) $person['ROLE'])); ?></p>
@@ -532,7 +532,7 @@ $roleLabel = static function (string $role): string {
                                         </div>
 
                                         <div class="rating-row">
-                                            <div><span class="star">★</span><?php echo $formatRating($person['avg_rating']); ?></div>
+                                            <div><span class="star">â˜…</span><?php echo $formatRating($person['avg_rating']); ?></div>
                                             <div><?php echo number_format((int) $person['total_reviews']); ?> reviews</div>
                                         </div>
                                     </article>
@@ -592,7 +592,7 @@ $roleLabel = static function (string $role): string {
                                 <?php foreach ($reviews as $review): ?>
                                     <article class="review-card">
                                         <h3 class="quote">"<?php echo $escape($review['subject_name']); ?>"</h3>
-                                        <div class="review-stars"><?php echo str_repeat('★', max(1, (int) $review['rating'])); ?></div>
+                                        <div class="review-stars"><?php echo str_repeat('â˜…', max(1, (int) $review['rating'])); ?></div>
                                         <p class="review-note"><?php echo $escape($review['review_comment'] ?: 'Customer tidak menulis komentar tambahan.'); ?></p>
                                         <div class="review-foot">
                                             <span>Service by <?php echo $escape($review['staff_name']); ?></span>
@@ -609,5 +609,6 @@ $roleLabel = static function (string $role): string {
     </div>
 </body>
 </html>
+
 
 

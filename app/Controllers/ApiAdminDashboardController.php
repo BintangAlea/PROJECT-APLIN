@@ -73,7 +73,7 @@ class ApiAdminDashboardController
 
         // Low stock alerts
         $alerts = $this->db->query(
-            'SELECT COUNT(*) as total FROM inventories 
+            'SELECT COUNT(*) as total FROM db_merish_cafe.inventories 
              WHERE stock_qty <= min_stock'
         );
         $lowStockCount = $alerts->fetch()['total'] ?? 0;
@@ -110,7 +110,7 @@ class ApiAdminDashboardController
                         WHEN stock_qty < min_stock THEN "Low Stock"
                         WHEN stock_qty <= min_stock * 1.5 THEN "Warning"
                     END as alert_type
-             FROM inventories
+               FROM db_merish_cafe.inventories
              WHERE stock_qty <= min_stock * 1.5
              ORDER BY stock_qty ASC'
         );
@@ -257,7 +257,7 @@ class ApiAdminDashboardController
             return;
         }
 
-        $item = $this->db->prepare('SELECT * FROM inventories WHERE item_id = :item_id');
+        $item = $this->db->prepare('SELECT item_id, item_name, stock_qty, min_stock, unit, 0 AS extra_charge_per_unit FROM db_merish_cafe.inventories WHERE item_id = :item_id');
         $item->execute([':item_id' => $input['item_id']]);
         $itemData = $item->fetch();
 

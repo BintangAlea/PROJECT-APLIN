@@ -1,4 +1,4 @@
-<?php
+﻿ï»¿<?php
 $isLoggedIn = isset($_SESSION['user_id']);
 $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
 ?>
@@ -347,7 +347,7 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
                     <?php if ($isLoggedIn): ?>
                         <span class="signin-link mb-0">Hi, <?php echo htmlspecialchars(substr($displayName, 0, 14)); ?></span>
                         <a href="#" class="signin-link mb-0 text-decoration-underline" data-bs-toggle="modal" data-bs-target="#historyModal" style="cursor: pointer; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; font-size: 0.72rem;">History</a>
-                        <form method="POST" action="index.php?page=login&action=logout" class="m-0">
+                        <form method="POST" action="<?= LOGOUT_URL ?>" class="m-0">
                             <button class="btn btn-book py-2 px-3" type="submit" style="background: var(--accent); border-color: var(--accent); color: #fff; border-radius: 0; text-transform: uppercase; letter-spacing: 1.4px; font-size: 0.72rem; font-weight: 600; padding: 0.5rem 1rem;">Logout</button>
                         </form>
                     <?php else: ?>
@@ -365,7 +365,7 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
                     <div class="col-lg-6">
                         <div class="greeting-box">
                             <div class="d-flex align-items-center">
-                                <span class="avatar-chip">👤</span>
+                                <span class="avatar-chip">Ã°Å¸â€˜Â¤</span>
                                 <p class="greet-line">Halo, <?php echo htmlspecialchars($displayName); ?>!</p>
                             </div>
                         </div>
@@ -445,7 +445,7 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
 
         <section class="order-wrap">
             <div class="container">
-                <button class="btn order-btn" type="button" id="orderNowBtn">Order Now <span class="ms-2">→</span></button>
+                <button class="btn order-btn" type="button" id="orderNowBtn">Order Now <span class="ms-2">Ã¢â€ â€™</span></button>
             </div>
         </section>
     </main>
@@ -496,6 +496,7 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
         document.getElementById('orderNowBtn').addEventListener('click', () => {
             window.location.href = 'index.php?page=cafe&action=cart';
         });
+    </script>
     <?php if ($isLoggedIn): ?>
     <!-- History Modal -->
     <div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
@@ -701,6 +702,6 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
         </div>
     </div>
     <?php endif; ?>
-    </script>
 </body>
 </html>
+

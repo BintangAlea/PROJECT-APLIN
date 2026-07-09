@@ -34,6 +34,7 @@
         .name { font-family:'Playfair Display',serif; font-size:1.45rem; color:#2d2325; }
         .note-box { background:#fdf8f8; border:1px solid #ecd8dd; border-radius:8px; color:#7d6268; font-size:.92rem; }
         .badge-soft { background:#f3e2e8; color:#7d5a62; letter-spacing:.08em; text-transform:uppercase; font-size:.7rem; }
+        .quick-link { text-decoration:none; display:inline-flex; align-items:center; }
         @media (max-width:991.98px){ .sidebar{ min-height:auto; } }
     </style>
 </head>
@@ -57,24 +58,24 @@
                 <a class="sidebar-link" href="index.php?page=beautician&action=achievements"><span>⌁</span><span>Achievements</span></a>
             </div>
             <div class="mt-auto p-4 sidebar-footer">
-                <a class="sidebar-link" href="index.php?page=login&action=logout"><span>⚙</span><span>Settings</span></a>
+                <a class="sidebar-link" href="index.php?page=beautician&action=settings"><span>⚙</span><span>Settings</span></a>
             </div>
         </aside>
         <section class="col-lg-10 d-flex flex-column">
             <div class="main-topbar px-4 px-lg-5 py-3 d-flex align-items-center justify-content-between">
                 <div>
-                    <h1 class="page-title"><?= htmlspecialchars($pageTitle ?? 'Schedule') ?></h1>
+                    <h1 class="page-title"><?= htmlspecialchars($scheduleHeading ?? $pageTitle ?? 'Schedule') ?></h1>
                     <p class="page-subtitle">Manage your appointments and daily flow.</p>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <button class="quick-btn">Today</button>
-                    <button class="quick-btn">Weekly</button>
-                    <button class="quick-btn">October 24, 2023</button>
+                    <a class="quick-btn quick-link" href="index.php?page=beautician&action=todaySchedule">Today</a>
+                    <a class="quick-btn quick-link" href="index.php?page=beautician&action=upcomingSchedule&days=14">Weekly</a>
+                    <a class="quick-btn quick-link" href="index.php?page=beautician&action=settings">Settings</a>
                 </div>
             </div>
             <div class="p-4 p-lg-5 flex-grow-1">
                 <div class="panel p-4 p-lg-5">
-                    <div class="section-title mb-4">Today's Schedule</div>
+                    <div class="section-title mb-4"><?= htmlspecialchars($scheduleHeading ?? "Today's Schedule") ?></div>
                     <div class="timeline">
                         <?php $items = $todaySchedule ?? []; ?>
                         <?php if (!empty($items)): ?>
@@ -94,7 +95,22 @@
                                                     <div class="mt-2 text-muted"><?= htmlspecialchars($item['service_name'] ?? 'Treatment') ?></div>
                                                     <div class="note-box mt-3 p-3">Seat: <?= htmlspecialchars($item['seat_name'] ?? 'N/A') ?> • Status: <?= htmlspecialchars($item['status'] ?? 'Pending') ?></div>
                                                 </div>
-                                                <button class="btn btn-outline-secondary px-4">Start Treatment</button>
+                                                <div class="d-flex flex-column gap-2">
+                                                    <?php if (!in_array((string) ($item['status'] ?? ''), ['Completed', 'Selesai'], true)): ?>
+                                                        <form method="POST" action="index.php?page=beautician&action=updateReservationStatus" class="m-0">
+                                                            <input type="hidden" name="reservation_id" value="<?= (int) ($item['res_id'] ?? 0) ?>">
+                                                            <input type="hidden" name="status" value="In-Service">
+                                                            <button class="btn btn-outline-secondary px-4 w-100" type="submit">Start Treatment</button>
+                                                        </form>
+                                                        <form method="POST" action="index.php?page=beautician&action=updateReservationStatus" class="m-0">
+                                                            <input type="hidden" name="reservation_id" value="<?= (int) ($item['res_id'] ?? 0) ?>">
+                                                            <input type="hidden" name="status" value="Selesai">
+                                                            <button class="btn btn-primary px-4 w-100" type="submit" style="background:#8a6170;border-color:#8a6170;">Complete Service</button>
+                                                        </form>
+                                                    <?php else: ?>
+                                                        <span class="badge badge-soft px-3 py-2">Completed</span>
+                                                    <?php endif; ?>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -107,7 +123,7 @@
 
                     <div class="d-flex justify-content-between align-items-center mt-5 mb-3">
                         <div class="section-title">Upcoming Appointments</div>
-                        <span class="badge badge-soft">Next 14 Days</span>
+                        <span class="badge badge-soft"><?= htmlspecialchars($upcomingLabel ?? 'Next 14 Days') ?></span>
                     </div>
                     <div class="row g-3">
                         <?php $upcoming = $upcomingSchedule ?? []; ?>

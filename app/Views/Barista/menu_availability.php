@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿ï»¿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -128,20 +128,20 @@
                     <div class="brand-subtitle mt-2">Online</div>
                 </div>
                 <a class="sidebar-link" href="index.php?page=barista">
-                    <span>☕</span>
+                    <span>Ã¢Ëœâ€¢</span>
                     <span>KDS Board</span>
                 </a>
                 <a class="sidebar-link active" href="index.php?page=barista&action=menuAvailability">
-                    <span>☰</span>
+                    <span>Ã¢ËœÂ°</span>
                     <span>Menu Availability</span>
                 </a>
             </div>
             <div class="mt-auto p-4 sidebar-footer">
-                <a class="sidebar-link" href="index.php?page=login&action=logout">
-                    <span>⚙</span>
+                <a class="sidebar-link" href="<?= LOGOUT_URL ?>">
+                    <span>Ã¢Å¡â„¢</span>
                     <span>Settings</span>
                 </a>
-                <a class="sidebar-link" href="index.php?page=login&action=logout">
+                <a class="sidebar-link" href="<?= LOGOUT_URL ?>">
                     <span>?</span>
                     <span>Support</span>
                 </a>
@@ -196,3 +196,4 @@
 </div>
 </body>
 </html>
+

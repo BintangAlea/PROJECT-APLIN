@@ -56,7 +56,7 @@
                 <a class="sidebar-link" href="index.php?page=beautician&action=achievements"><span>⌁</span><span>Achievements</span></a>
             </div>
             <div class="mt-auto p-4 sidebar-footer">
-                <a class="sidebar-link" href="index.php?page=login&action=logout"><span>⚙</span><span>Settings</span></a>
+                <a class="sidebar-link" href="index.php?page=beautician&action=settings"><span>⚙</span><span>Settings</span></a>
             </div>
         </aside>
         <section class="col-lg-10 d-flex flex-column">
@@ -65,7 +65,7 @@
                     <h1 class="page-title"><?= htmlspecialchars($pageTitle ?? 'Treatments') ?></h1>
                     <p class="page-subtitle">Review service details and material usage.</p>
                 </div>
-                <button class="quick-btn">Save Draft</button>
+                <a class="quick-btn" href="index.php?page=beautician&action=settings" style="text-decoration:none; display:inline-flex; align-items:center;">Save Draft</a>
             </div>
             <div class="p-4 p-lg-5 flex-grow-1">
                 <div class="panel p-4 p-lg-5">

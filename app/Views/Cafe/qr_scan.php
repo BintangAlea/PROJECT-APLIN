@@ -661,7 +661,7 @@ if (!isset($_GET['action']) || $_GET['action'] !== 'scan') {
                     sessionStorage.setItem('cafe_scan_response', JSON.stringify(data));
                     
                     // Redirect to menu
-                    window.location.href = '/?page=cafe&action=menu';
+                    window.location.href = 'index.php?page=cafe&action=menu';
                 } else {
                     showError(data.message || 'QR tidak valid');
                 }

@@ -6,9 +6,10 @@
     <title>Jadwal Hari Ini - Beautician</title>
 </head>
 <body>
+    <?php $schedule = $schedule ?? []; ?>
     <div style="max-width: 1000px; margin: 20px auto; padding: 20px;">
         <h1>Jadwal Hari Ini</h1>
-        <a href="index.php?page=beautician; ?>" style="padding: 10px 15px; background: #f0f0f0; text-decoration: none;">Kembali ke Dashboard</a>
+        <a href="index.php?page=beautician" style="padding: 10px 15px; background: #f0f0f0; text-decoration: none;">Kembali ke Dashboard</a>
 
         <?php if (count($schedule) > 0): ?>
             <table border="1" style="width: 100%; margin-top: 20px; border-collapse: collapse;">
@@ -46,7 +47,7 @@
         function updateStatus(resId, newStatus) {
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = 'index.php?page=beautician&action=updateReservationStatus; ?>';
+            form.action = 'index.php?page=beautician&action=updateReservationStatus';
             
             const idField = document.createElement('input');
             idField.type = 'hidden';

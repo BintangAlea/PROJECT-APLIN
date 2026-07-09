@@ -28,7 +28,7 @@
                     <span style="font-size: 14px; color: var(--text-light);">
                         Hi, <?php echo $_SESSION['full_name'] ?? 'User'; ?>
                     </span>
-                    <a href="index.php?page=login&action=logout" class="btn btn-login">Logout</a>
+                    <a href="<?= LOGOUT_URL ?>" class="btn btn-login">Logout</a>
                     <?php
                         $dashboardPage = match($_SESSION['role'] ?? '') {
                             'admin' => 'admin',
@@ -98,5 +98,6 @@
     <?php endif; ?>
 </body>
 </html>
+
 
 

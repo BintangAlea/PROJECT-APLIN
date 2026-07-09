@@ -1,4 +1,4 @@
-﻿<?php
+﻿ï»¿<?php
 $pageTitle = 'Admin Overview - Merish';
 $displayName = $_SESSION['full_name'] ?? 'Admin';
 $formatCurrency = static function ($value): string {
@@ -319,22 +319,22 @@ $formatCurrency = static function ($value): string {
 
         <div class="sidebar-footer">
             <span class="nav-link px-0 d-block" aria-disabled="true" style="cursor: default; opacity: 0.8;">System Settings</span>
-            <a class="nav-link px-0" href="index.php?page=login&action=logout">Logout</a>
+            <a class="nav-link px-0" href="<?= LOGOUT_URL ?>">Logout</a>
         </div>
     </aside>
 
     <main class="main">
         <div class="topbar">
             <div class="search-box rounded-0">
-                <span>⌕</span>
+                <span>âŒ•</span>
                 <input type="text" placeholder="Search..." aria-label="Search">
             </div>
 
             <h1 class="page-title text-center flex-grow-1">Admin Overview</h1>
 
             <div class="d-flex align-items-center gap-2">
-                <button class="icon-btn" type="button" aria-label="Notifications">🔔</button>
-                <button class="icon-btn" type="button" aria-label="Refresh">↻</button>
+                <button class="icon-btn" type="button" aria-label="Notifications">ðŸ””</button>
+                <button class="icon-btn" type="button" aria-label="Refresh">â†»</button>
                 <button class="icon-btn" type="button" aria-label="Help">?</button>
             </div>
         </div>
@@ -344,14 +344,14 @@ $formatCurrency = static function ($value): string {
                 <div class="stat-card">
                     <div class="stat-label">Total Pendapatan Hari Ini</div>
                     <div class="stat-value"><?php echo $formatCurrency($totalRevenueToday); ?></div>
-                    <div class="stat-note">↗ Sesuai transaksi yang sudah lunas</div>
+                    <div class="stat-note">â†— Sesuai transaksi yang sudah lunas</div>
                 </div>
             </div>
             <div class="col-lg-6">
                 <div class="stat-card">
                     <div class="stat-label">Reservasi Aktif</div>
                     <div class="stat-value"><?php echo number_format($activeReservations, 0, ',', '.'); ?> Sesi</div>
-                    <div class="stat-note">⏱ Next in 15 mins</div>
+                    <div class="stat-note">â± Next in 15 mins</div>
                 </div>
             </div>
         </div>
@@ -360,7 +360,7 @@ $formatCurrency = static function ($value): string {
             <h2 class="section-title">Integrated Queue</h2>
             <a href="#" class="text-decoration-none" style="color: var(--muted);">View All</a>
             <h2 class="section-title ms-auto me-3">Inventory Status</h2>
-            <span style="color: var(--muted);">⋯</span>
+            <span style="color: var(--muted);">â‹¯</span>
         </div>
 
         <div class="row g-3 align-items-start">
@@ -452,5 +452,6 @@ $formatCurrency = static function ($value): string {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html><?php // Admin view ?>
+
 
 

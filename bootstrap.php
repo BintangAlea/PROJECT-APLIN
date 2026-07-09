@@ -1,6 +1,8 @@
 <?php
 session_start();
 
+define('LOGOUT_URL', 'index.php?page=login&action=logout');
+
 $autoloadFile = __DIR__ . '/vendor/autoload.php';
 
 if (file_exists($autoloadFile)) {

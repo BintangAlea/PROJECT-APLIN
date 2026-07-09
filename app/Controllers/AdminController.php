@@ -94,7 +94,7 @@ class AdminController
         $lowStockStmt = $this->db->query(
             "SELECT item_name, stock_qty, min_stock, unit,
                     (min_stock - stock_qty) AS shortage
-             FROM inventories
+               FROM db_merish_cafe.inventories
              WHERE stock_qty <= min_stock
              ORDER BY stock_qty ASC, item_name ASC
              LIMIT 4"
@@ -103,7 +103,7 @@ class AdminController
 
         $lowStockCountStmt = $this->db->query(
             "SELECT COUNT(*) AS total
-             FROM inventories
+               FROM db_merish_cafe.inventories
              WHERE stock_qty <= min_stock"
         );
         $lowStockCount = (int) ($lowStockCountStmt->fetch()['total'] ?? 0);
@@ -184,7 +184,7 @@ class AdminController
 
         $services = $this->servicesModel->findAll();
         $beauticians = $this->usersModel->findByRole('Beautician');
-        $seatsStmt = $this->db->query('SELECT seat_id, seat_name, zone_type FROM seats ORDER BY seat_id ASC');
+        $seatsStmt = $this->db->query("SELECT seat_id, seat_name, zone_type FROM seats WHERE zone_type = 'Kursi Salon' ORDER BY seat_id ASC");
         $seats = $seatsStmt->fetchAll();
 
         require __DIR__ . '/../Views/Admin/manage_reservations.php';
@@ -208,6 +208,19 @@ class AdminController
 
         if ($guestName === '' || $seatId === '' || $reservationDate === '' || $reservationTime === '') {
             $_SESSION['error'] = 'Nama pelanggan, seat, tanggal, dan jam harus diisi.';
+            header('Location: index.php?page=admin&action=manageReservations' . ($reservationId > 0 ? '&edit=' . $reservationId : ''));
+            exit;
+        }
+
+        $seatStmt = $this->db->prepare(
+            'SELECT seat_id FROM seats WHERE seat_id = :seat_id AND zone_type = :zone_type LIMIT 1'
+        );
+        $seatStmt->execute([
+            ':seat_id' => $seatId,
+            ':zone_type' => 'Kursi Salon',
+        ]);
+        if (!$seatStmt->fetch()) {
+            $_SESSION['error'] = 'Seat yang dipilih harus kursi salon.';
             header('Location: index.php?page=admin&action=manageReservations' . ($reservationId > 0 ? '&edit=' . $reservationId : ''));
             exit;
         }
@@ -310,13 +323,13 @@ class AdminController
                     stock_qty,
                     min_stock,
                     unit,
-                    extra_charge_per_unit,
+                    0 AS extra_charge_per_unit,
                     CASE
                         WHEN stock_qty <= min_stock THEN 'Low Stock'
                         ELSE 'Healthy'
                     END AS stock_status,
                     (min_stock - stock_qty) AS shortage
-             FROM inventories
+             FROM db_merish_cafe.inventories
              ORDER BY stock_qty ASC, item_name ASC"
         );
         $inventories = $inventoriesStmt->fetchAll();
@@ -353,8 +366,8 @@ class AdminController
 
         $summaryStmt = $this->db->query(
             "SELECT
-                (SELECT COUNT(*) FROM inventories) AS total_inventory_items,
-                (SELECT COUNT(*) FROM inventories WHERE stock_qty <= min_stock) AS low_stock_items,
+                (SELECT COUNT(*) FROM db_merish_cafe.inventories) AS total_inventory_items,
+                (SELECT COUNT(*) FROM db_merish_cafe.inventories WHERE stock_qty <= min_stock) AS low_stock_items,
                 (SELECT COUNT(*) FROM services) AS total_services,
                 (SELECT COUNT(*) FROM menus) AS total_menus"
         );
@@ -396,7 +409,7 @@ class AdminController
 
         try {
             if ($itemId > 0) {
-                $existingStmt = $this->db->prepare('SELECT * FROM inventories WHERE item_id = :item_id LIMIT 1');
+                $existingStmt = $this->db->prepare('SELECT * FROM db_merish_cafe.inventories WHERE item_id = :item_id LIMIT 1');
                 $existingStmt->execute([':item_id' => $itemId]);
                 $existing = $existingStmt->fetch();
 
@@ -407,12 +420,11 @@ class AdminController
                 }
 
                 $updateStmt = $this->db->prepare(
-                    'UPDATE inventories
+                    'UPDATE db_merish_cafe.inventories
                      SET item_name = :item_name,
                          stock_qty = stock_qty + :stock_add,
                          min_stock = :min_stock,
-                         unit = :unit,
-                         extra_charge_per_unit = :extra_charge_per_unit
+                         unit = :unit
                      WHERE item_id = :item_id'
                 );
                 $updateStmt->execute([
@@ -420,7 +432,6 @@ class AdminController
                     ':stock_add' => (float) $stockAddRaw,
                     ':min_stock' => $minStockRaw !== '' ? (float) $minStockRaw : (float) $existing['min_stock'],
                     ':unit' => $unit !== '' ? $unit : $existing['unit'],
-                    ':extra_charge_per_unit' => $extraChargeRaw !== '' ? (float) $extraChargeRaw : (float) $existing['extra_charge_per_unit'],
                     ':item_id' => $itemId,
                 ]);
 
@@ -433,15 +444,14 @@ class AdminController
                 }
 
                 $insertStmt = $this->db->prepare(
-                    'INSERT INTO inventories (item_name, stock_qty, min_stock, unit, extra_charge_per_unit)
-                     VALUES (:item_name, :stock_qty, :min_stock, :unit, :extra_charge_per_unit)'
+                    'INSERT INTO db_merish_cafe.inventories (item_name, stock_qty, min_stock, unit)
+                     VALUES (:item_name, :stock_qty, :min_stock, :unit)'
                 );
                 $insertStmt->execute([
                     ':item_name' => $itemName,
                     ':stock_qty' => (float) $stockAddRaw,
                     ':min_stock' => $minStockRaw !== '' ? (float) $minStockRaw : 0,
                     ':unit' => $unit,
-                    ':extra_charge_per_unit' => $extraChargeRaw !== '' ? (float) $extraChargeRaw : 0,
                 ]);
 
                 $_SESSION['success'] = 'Item inventory baru berhasil ditambahkan.';
@@ -979,12 +989,12 @@ class AdminController
                     stock_qty,
                     min_stock,
                     unit,
-                    extra_charge_per_unit,
+                    0 AS extra_charge_per_unit,
                     CASE
                         WHEN stock_qty <= min_stock THEN 'Low Stock'
                         ELSE 'Healthy'
                     END AS stock_status
-             FROM inventories
+               FROM db_merish_cafe.inventories
              ORDER BY stock_qty ASC, item_name ASC"
         );
         $rows = $stmt->fetchAll();
@@ -1000,7 +1010,7 @@ class AdminController
                     rtrim(rtrim(number_format((float) $row['min_stock'], 2, '.', ''), '0'), '.'),
                     $row['unit'],
                     $row['stock_status'],
-                    'Rp ' . number_format((float) $row['extra_charge_per_unit'], 0, ',', '.'),
+                    'Rp 0',
                 ];
             }, $rows),
         ];

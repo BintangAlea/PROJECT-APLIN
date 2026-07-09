@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿ï»¿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -127,7 +127,7 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container-fluid">
-            <a class="navbar-brand" href="index.php?page=home">✨ MERISH</a>
+            <a class="navbar-brand" href="index.php?page=home">Ã¢Å“Â¨ MERISH</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -147,7 +147,7 @@
                             <span class="user-badge">Hi, <?php echo htmlspecialchars(substr($_SESSION['full_name'] ?? 'User', 0, 20)); ?>!</span>
                         </li>
                         <li class="nav-item">
-                            <form method="POST" action="index.php?page=login&action=logout" style="display:inline;">
+                            <form method="POST" action="<?= LOGOUT_URL ?>" style="display:inline;">
                                 <button class="btn btn-merish ms-2" type="submit">Logout</button>
                             </form>
                         </li>
@@ -160,3 +160,4 @@
             </div>
         </div>
     </nav>
+
