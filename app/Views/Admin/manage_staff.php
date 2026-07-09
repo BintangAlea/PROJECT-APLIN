@@ -1,4 +1,4 @@
-﻿ï»¿<?php
+﻿<?php
 $pageTitle = 'Staff & Review - Merish Admin';
 $staff = $staff ?? [];
 $reviews = $reviews ?? [];

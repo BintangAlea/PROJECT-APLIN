@@ -1,4 +1,4 @@
-﻿ï»¿<?php
+﻿<?php
 $pageTitle = 'Cafe Orders Live - Merish Admin';
 $editOrder = $orderForEdit ?? null;
 $availableMenu = $menus ?? [];
@@ -314,14 +314,17 @@ $availableReservations = $reservations ?? [];
     <main class="main">
         <div class="topbar">
             <div class="search-box rounded-0">
-                <span>Ã¢Å’â€¢</span>
+                <span></span>
                 <input type="text" placeholder="Search..." aria-label="Search">
             </div>
             <h1 class="page-title text-center flex-grow-1">Merish Admin</h1>
             <div class="d-flex align-items-center gap-2">
-                <button class="icon-btn" type="button" aria-label="Notifications">Ã°Å¸â€â€</button>
-                <button class="icon-btn" type="button" aria-label="Refresh">Ã¢â€ Â»</button>
-                <button class="icon-btn" type="button" aria-label="Profile">Ã¢â€”Å’</button>
+                <!-- Removed empty icon placeholders to avoid redundant empty buttons -->
+                <div class="topbar-actions">
+                    <a href="#" class="me-2" aria-label="Notifications" title="Notifications">🔔</a>
+                    <a href="#" class="me-2" aria-label="Refresh" title="Refresh">↺</a>
+                    <a href="#" aria-label="Profile" title="Profile">👤</a>
+                </div>
             </div>
         </div>
 

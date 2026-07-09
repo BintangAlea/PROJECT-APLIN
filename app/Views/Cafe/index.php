@@ -1,4 +1,4 @@
-﻿ï»¿<?php
+﻿<?php
 $isLoggedIn = isset($_SESSION['user_id']);
 $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
 ?>
@@ -365,7 +365,7 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
                     <div class="col-lg-6">
                         <div class="greeting-box">
                             <div class="d-flex align-items-center">
-                                <span class="avatar-chip">Ã°Å¸â€˜Â¤</span>
+                                <span class="avatar-chip"></span>
                                 <p class="greet-line">Halo, <?php echo htmlspecialchars($displayName); ?>!</p>
                             </div>
                         </div>
@@ -445,7 +445,7 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
 
         <section class="order-wrap">
             <div class="container">
-                <button class="btn order-btn" type="button" id="orderNowBtn">Order Now <span class="ms-2">Ã¢â€ â€™</span></button>
+                <button class="btn order-btn" type="button" id="orderNowBtn">Order Now <span class="ms-2"></span></button>
             </div>
         </section>
     </main>

@@ -1,4 +1,4 @@
-﻿ï»¿<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -266,24 +266,29 @@
 
 <script>
 function updateOrderStatus(orderId, newStatus) {
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = 'index.php?page=barista&action=updateOrderStatus';
+    // Send a minimal AJAX request so the UI doesn't need a full reload.
+    const params = new URLSearchParams();
+    params.append('order_id', orderId);
+    params.append('status', newStatus);
 
-    const orderInput = document.createElement('input');
-    orderInput.type = 'hidden';
-    orderInput.name = 'order_id';
-    orderInput.value = orderId;
-
-    const statusInput = document.createElement('input');
-    statusInput.type = 'hidden';
-    statusInput.name = 'status';
-    statusInput.value = newStatus;
-
-    form.appendChild(orderInput);
-    form.appendChild(statusInput);
-    document.body.appendChild(form);
-    form.submit();
+    fetch('index.php?page=barista&action=updateOrderStatus', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: params.toString()
+    })
+    .then(res => res.json().catch(() => ({ success: false, message: 'Invalid JSON response' })))
+    .then(data => {
+        if (data && data.success) {
+            // simple approach: reload to reflect server state
+            location.reload();
+        } else {
+            alert(data.message || 'Gagal mengubah status pesanan');
+        }
+    })
+    .catch(() => alert('Network error saat mengubah status'));
 }
 </script>
 </body>

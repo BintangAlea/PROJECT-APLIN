@@ -1,4 +1,4 @@
-﻿ï»¿<?php
+﻿<?php
 $pageTitle = 'Master Data & Stock Management - Merish Admin';
 $inventories = $inventories ?? [];
 $services = $services ?? [];

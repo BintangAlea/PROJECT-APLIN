@@ -47,9 +47,22 @@ class BaristaController
 
         if ($orderId > 0 && $normalizedStatus !== null) {
             $this->ordersModel->update($orderId, ['STATUS' => $normalizedStatus]);
+            // If AJAX request, return JSON; otherwise fallback to session+redirect
+            $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true, 'message' => 'Order status updated']);
+                exit;
+            }
             $_SESSION['success'] = 'Order status updated';
             header('Location: index.php?page=barista');
         } else {
+            $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Invalid data']);
+                exit;
+            }
             $_SESSION['error'] = 'Invalid data';
             header('Location: index.php?page=barista');
         }

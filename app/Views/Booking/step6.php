@@ -325,13 +325,13 @@ $qrCodeUrl = $qr_code_url ?? ($reservation['booking_qr_code_url'] ?? '');
             </section>
 
             <div class="support-stack">
-                <article class="support-card">
+                <!-- <article class="support-card">
                     <div class="support-head">
                         <span class="support-icon">✉</span>
                         <h2 class="support-title">Email Notification Sent</h2>
                     </div>
                     <p class="support-copy">We've sent a summary of your request to your registered email address. Please check your spam folder if you don't see it within 5 minutes.</p>
-                </article>
+                </article> -->
 
                 <article class="support-card">
                     <div class="support-head">

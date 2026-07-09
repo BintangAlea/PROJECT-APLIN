@@ -1,4 +1,4 @@
-﻿ï»¿<?php
+﻿<?php
 $activeBills = $activeBills ?? [];
 $selectedBill = $selectedBill ?? null;
 $flashSuccess = $flashSuccess ?? null;

@@ -1,4 +1,4 @@
-﻿ï»¿<?php
+﻿<?php
 $pageTitle = 'Admin Overview - Merish';
 $displayName = $_SESSION['full_name'] ?? 'Admin';
 $formatCurrency = static function ($value): string {

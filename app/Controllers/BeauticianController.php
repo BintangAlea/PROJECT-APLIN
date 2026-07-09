@@ -37,11 +37,24 @@ class BeauticianController
         return $beauticianId;
     }
 
-    private function renderScheduleView(int $upcomingDays, string $pageTitle): void
+    private function renderScheduleView(int $upcomingDays, string $pageTitle, ?string $selectedDate = null): void
     {
         $beauticianId = $this->getBeauticianId();
-        $todaySchedule = $this->reservationsModel->getTodayScheduleByBeautician($beauticianId);
+        // If a specific date was provided, use that date for the main schedule view
+        if (!empty($selectedDate)) {
+            $todaySchedule = $this->reservationsModel->getScheduleByBeauticianAndDate($beauticianId, $selectedDate);
+        } else {
+            $todaySchedule = $this->reservationsModel->getTodayScheduleByBeautician($beauticianId);
+        }
+
         $upcomingSchedule = $this->reservationsModel->getUpcomingByBeautician($beauticianId, $upcomingDays);
+        // Build seven date options starting from today
+        $dateOptions = [];
+        for ($i = 0; $i < 7; $i++) {
+            $d = date('Y-m-d', strtotime("+{$i} days"));
+            $dateOptions[] = $d;
+        }
+        $selectedDate = $selectedDate ?: date('Y-m-d');
         $scheduleHeading = $pageTitle;
         $upcomingLabel = $upcomingDays <= 1 ? 'Next 24 Hours' : 'Next ' . $upcomingDays . ' Days';
         $activeMenu = 'schedule';
@@ -73,7 +86,12 @@ class BeauticianController
 
     public function schedule()
     {
-        $this->renderScheduleView(14, 'Schedule');
+        $date = $_GET['date'] ?? null;
+        // validate YYYY-MM-DD
+        if (!empty($date) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) !== 1) {
+            $date = null;
+        }
+        $this->renderScheduleView(14, 'Schedule', $date);
     }
 
     public function settings()

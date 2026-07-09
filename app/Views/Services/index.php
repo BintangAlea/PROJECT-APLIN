@@ -1,4 +1,4 @@
-﻿ï»¿<?php
+﻿<?php
 $isLoggedIn = isset($_SESSION['user_id']);
 $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
 ?>
@@ -405,7 +405,7 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
             <h1 class="hero-heading">Our Signature Treatments</h1>
             <p class="hero-sub">Curated services designed to elevate your personal style with professional precision.</p>
             <div class="promo-pill">
-                <span>Ã¢Å“Â§</span>
+                <span></span>
                 <span>Enjoy a 20% synergy discount on combined services</span>
             </div>
         </div>
@@ -473,7 +473,7 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
                         <div class="expert-photo expert-elena"></div>
                         <h3 class="expert-name">Elena R.</h3>
                         <p class="expert-role">Color Director</p>
-                        <div class="expert-stars">Ã¢Ëœâ€ Ã¢Ëœâ€ Ã¢Ëœâ€ Ã¢Ëœâ€ Ã¢Ëœâ€ </div>
+                        <div class="expert-stars"></div>
                         <p class="expert-copy">Master of dimensional color and balayage techniques with over a decade of high-fashion experience.</p>
                     </article>
                 </div>
@@ -483,7 +483,7 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
                         <div class="expert-photo expert-marcus"></div>
                         <h3 class="expert-name">Marcus T.</h3>
                         <p class="expert-role">Master Cutter</p>
-                        <div class="expert-stars">Ã¢Ëœâ€ Ã¢Ëœâ€ Ã¢Ëœâ€ Ã¢Ëœâ€ Ã¢Ëœâ€ </div>
+                        <div class="expert-stars"></div>
                         <p class="expert-copy">Precision cutting specialist known for creating effortless, structured silhouettes tailored to each individual.</p>
                     </article>
                 </div>
@@ -493,7 +493,7 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
                         <div class="expert-photo expert-chloe"></div>
                         <h3 class="expert-name">Chloe M.</h3>
                         <p class="expert-role">Senior Esthetician</p>
-                        <div class="expert-stars">Ã¢Ëœâ€ Ã¢Ëœâ€ Ã¢Ëœâ€ Ã¢Ëœâ€ Ã¢Ëœâ€ </div>
+                        <div class="expert-stars"></div>    
                         <p class="expert-copy">Specializing in advanced skincare treatments and meticulous brow architecture to enhance natural beauty.</p>
                     </article>
                 </div>

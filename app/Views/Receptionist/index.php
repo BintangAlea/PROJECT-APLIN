@@ -1,4 +1,4 @@
-﻿ï»¿<?php
+﻿<?php
 $activeAreaSeats = $activeAreaSeats ?? [];
 $loungeSeats = $loungeSeats ?? [];
 $seatOccupancy = $seatOccupancy ?? [];

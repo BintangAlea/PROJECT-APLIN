@@ -76,6 +76,19 @@
             <div class="p-4 p-lg-5 flex-grow-1">
                 <div class="panel p-4 p-lg-5">
                     <div class="section-title mb-4"><?= htmlspecialchars($scheduleHeading ?? "Today's Schedule") ?></div>
+                    <div class="mb-3">
+                        <div class="d-flex gap-2 flex-wrap">
+                            <?php
+                            $dateOptions = $dateOptions ?? [];
+                            $selectedDate = $selectedDate ?? date('Y-m-d');
+                            foreach ($dateOptions as $d):
+                                $label = date('D, d M', strtotime($d));
+                                $isActive = ($d === $selectedDate) ? 'active' : '';
+                            ?>
+                                <a href="index.php?page=beautician&action=schedule&date=<?php echo $d; ?>" class="btn btn-sm btn-outline-secondary rounded-0 <?php echo $isActive; ?>" style="min-width:110px;"><?php echo $label; ?></a>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
                     <div class="timeline">
                         <?php $items = $todaySchedule ?? []; ?>
                         <?php if (!empty($items)): ?>

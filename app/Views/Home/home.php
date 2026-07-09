@@ -1,4 +1,4 @@
-﻿ï»¿<?php
+﻿<?php
 $isLoggedIn = isset($_SESSION['user_id']);
 $displayName = $_SESSION['full_name'] ?? 'Guest';
 ?>
@@ -267,21 +267,21 @@ $displayName = $_SESSION['full_name'] ?? 'Guest';
             <div class="row g-4">
                 <div class="col-md-4">
                     <article class="cert-card h-100">
-                        <div class="cert-icon">Ã¢Å“Âª</div>
+                        <div class="cert-icon"></div>
                         <h3>Voted Best Salon</h3>
                         <p>Recognized for unparalleled service and editorial styling.</p>
                     </article>
                 </div>
                 <div class="col-md-4">
                     <article class="cert-card h-100">
-                        <div class="cert-icon">Ã¢Å“Â¿</div>
+                        <div class="cert-icon"></div>
                         <h3>Certified Master Colorists</h3>
                         <p>Our team holds advanced certifications in modern color techniques.</p>
                     </article>
                 </div>
                 <div class="col-md-4">
                     <article class="cert-card h-100">
-                        <div class="cert-icon">Ã¢â€”Å’</div>
+                        <div class="cert-icon"></div>
                         <h3>Organic & Sustainable</h3>
                         <p>Committed to using premium, eco-conscious products.</p>
                     </article>

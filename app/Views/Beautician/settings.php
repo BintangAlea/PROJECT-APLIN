@@ -1,4 +1,4 @@
-﻿ï»¿<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -36,19 +36,19 @@
     <div class="app-frame row g-0">
         <aside class="col-lg-2 sidebar d-flex flex-column">
             <div class="p-4">
-                <div class="text-center mb-4"><div class="brand-title">L'Ãƒâ€°clat<br>Management</div></div>
+                <div class="text-center mb-4"><div class="brand-title"><br>Management</div></div>
                 <div class="d-flex align-items-center gap-3 mb-4">
                     <img class="avatar" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=240&q=80" alt="Beautician profile">
                     <div>
                         <div class="fw-semibold" style="font-size:1.05rem;"><?= htmlspecialchars($_SESSION['full_name'] ?? 'Beautician') ?></div>
                         <div class="brand-subtitle">Senior Esthetician</div>
-                        <div class="brand-subtitle"><span style="color:#7c5d66;">Ã¢â€”Â</span> Online</div>
+                        <div class="brand-subtitle"><span style="color:#7c5d66;"></span> Online</div>
                     </div>
                 </div>
-                <a class="sidebar-link" href="index.php?page=beautician"><span>Ã¢â€”Â«</span><span>Dashboard</span></a>
-                <a class="sidebar-link" href="index.php?page=beautician&action=schedule"><span>Ã¢â€”Â·</span><span>Schedule</span></a>
-                <a class="sidebar-link" href="index.php?page=beautician&action=treatments"><span>Ã¢Å“Â¦</span><span>Treatments</span></a>
-                <a class="sidebar-link" href="index.php?page=beautician&action=achievements"><span>Ã¢Å’Â</span><span>Achievements</span></a>
+                <a class="sidebar-link" href="index.php?page=beautician"><span></span><span>Dashboard</span></a>
+                <a class="sidebar-link" href="index.php?page=beautician&action=schedule"><span></span><span>Schedule</span></a>
+                <a class="sidebar-link" href="index.php?page=beautician&action=treatments"><span></span><span>Treatments</span></a>
+                <a class="sidebar-link" href="index.php?page=beautician&action=achievements"><span></span><span>Achievements</span></a>
             </div>
             <div class="mt-auto p-4 sidebar-footer">
                 <a class="sidebar-link active" href="index.php?page=beautician&action=settings"><span>Ã¢Å¡â„¢</span><span>Settings</span></a>
