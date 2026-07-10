@@ -127,13 +127,79 @@ class BookingController
             $promos = $promoStmt->fetchAll();
 
             // Map promos to bundle-like format for the view
+            $mapping = [
+                1 => [
+                    'services' => ['SV01'],
+                    'menus' => ['M001']
+                ],
+                2 => [
+                    'services' => ['SV03'],
+                    'menus' => ['M009']
+                ],
+                3 => [
+                    'services' => ['SV33'],
+                    'menus' => [],
+                    'fb_custom_price' => 25000
+                ],
+                4 => [
+                    'services' => ['SV52'],
+                    'menus' => ['M002']
+                ],
+                5 => [
+                    'services' => ['SV50', 'SV63', 'ADD-20'],
+                    'menus' => []
+                ],
+                6 => [
+                    'services' => ['SV36', 'SV19', 'ADD-16'],
+                    'menus' => []
+                ],
+                7 => [
+                    'services' => ['SV02', 'SV37', 'ADD-15'],
+                    'menus' => []
+                ],
+                8 => [
+                    'services' => ['SV49', 'SV60', 'ADD-19'],
+                    'menus' => []
+                ]
+            ];
+
             $bundles = [];
             foreach ($promos as $promo) {
+                $id = (int)$promo['promo_id'];
+                $originalPrice = 0;
+                
+                if (isset($mapping[$id])) {
+                    $map = $mapping[$id];
+                    
+                    if (!empty($map['services'])) {
+                        $placeholders = implode(',', array_fill(0, count($map['services']), '?'));
+                        $sStmt = $db->prepare("SELECT SUM(base_tariff) as total FROM services WHERE service_id IN ($placeholders)");
+                        $sStmt->execute($map['services']);
+                        $originalPrice += (float)($sStmt->fetchColumn() ?? 0);
+                    }
+                    
+                    if (!empty($map['menus'])) {
+                        $placeholders = implode(',', array_fill(0, count($map['menus']), '?'));
+                        $mStmt = $db->prepare("SELECT SUM(price) as total FROM db_merish_cafe.menus WHERE menu_id IN ($placeholders)");
+                        $mStmt->execute($map['menus']);
+                        $originalPrice += (float)($mStmt->fetchColumn() ?? 0);
+                    }
+                    
+                    if (isset($map['fb_custom_price'])) {
+                        $originalPrice += $map['fb_custom_price'];
+                    }
+                }
+                
+                $discountValue = (float)$promo['discount_value'];
+                $finalPrice = max(0, $originalPrice - $discountValue);
+                
                 $bundles[] = [
                     'bundle_id' => 'promo_' . $promo['promo_id'],
                     'bundle_name' => $promo['promo_name'],
-                    'description' => 'Termasuk: ' . $promo['included_fb_item'],
-                    'discount_value' => (float)$promo['discount_value'],
+                    'description' => 'Termasuk: ' . ($promo['included_fb_item'] ?: 'Paket Spesial'),
+                    'original_price' => $originalPrice,
+                    'final_price' => $finalPrice,
+                    'discount_value' => $discountValue,
                     'badge' => 'Promo',
                     'icon' => '✦',
                 ];

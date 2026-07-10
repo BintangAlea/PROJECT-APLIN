@@ -61,7 +61,7 @@ $seatId = $seat_id ?? '';
         }
         .menu-image {
             width: 100%;
-            height: 150px;
+            height: 220px;
             background: linear-gradient(135deg, #D4A574 0%, #C39368 100%);
             display: flex;
             align-items: center;
@@ -198,36 +198,37 @@ $seatId = $seat_id ?? '';
                 <?php if (!empty($menus)): ?>
                     <?php foreach ($menus as $menu): ?>
                         <div class="menu-card">
-                            <div class="menu-image">
+                            <div class="menu-image" style="background-image: url('<?php echo htmlspecialchars($menu['image'] ?? ''); ?>'); background-size: contain; background-repeat: no-repeat; background-position: center; background-color: #ffffff; font-size: <?php echo !empty($menu['image']) ? '0' : '2rem'; ?>;">
                                 <?php 
-                                    $menuNameLower = strtolower($menu['menu_name'] ?? '');
-                                    if (str_contains($menuNameLower, 'kopi') || str_contains($menuNameLower, 'coffee') || str_contains($menuNameLower, 'latte') || str_contains($menuNameLower, 'espresso')) {
-                                        $menuCat = 'Kopi';
-                                    } elseif (str_contains($menuNameLower, 'teh') || str_contains($menuNameLower, 'tea') || str_contains($menuNameLower, 'matcha')) {
-                                        $menuCat = 'Teh';
-                                    } elseif (str_contains($menuNameLower, 'croissant') || str_contains($menuNameLower, 'pastry') || str_contains($menuNameLower, 'cake') || str_contains($menuNameLower, 'roti')) {
-                                        $menuCat = 'Makanan';
-                                    } else {
-                                        $menuCat = 'Kopi';
+                                    if (empty($menu['image'])) {
+                                        $dbCat = trim($menu['category'] ?? '');
+                                        $menuCat = match (strtolower($dbCat)) {
+                                            'kopi' => 'Kopi',
+                                            'teh' => 'Teh',
+                                            'pastry' => 'Makanan',
+                                            'non coffee', 'non-coffee' => 'Smoothie',
+                                            'snack' => 'Snack',
+                                            default => 'Kopi',
+                                        };
+                                        $emoji = [
+                                            'Kopi' => '☕',
+                                            'Teh' => '🫖',
+                                            'Smoothie' => '🥤',
+                                            'Makanan' => '🍰',
+                                            'Snack' => '🍪',
+                                            'Dessert' => '🧁'
+                                        ];
+                                        echo $emoji[$menuCat] ?? '🍽️';
                                     }
-                                    $emoji = [
-                                        'Kopi' => '☕',
-                                        'Teh' => '🫖',
-                                        'Smoothie' => '🥤',
-                                        'Makanan' => '🍰',
-                                        'Snack' => '🍪',
-                                        'Dessert' => '🧁'
-                                    ];
-                                    echo $emoji[$menuCat] ?? '🍽️';
                                 ?>
                             </div>
                             <div class="menu-card-body">
                                 <div class="menu-card-meta">
-                                    <span class="menu-category"><?php echo htmlspecialchars($menuCat); ?></span>
+                                    <span class="menu-category"><?php echo htmlspecialchars($menu['category'] ?? 'Kopi'); ?></span>
                                     <span class="menu-price">IDR <?php echo number_format($menu['price']); ?></span>
                                 </div>
                                 <h3 class="menu-name"><?php echo htmlspecialchars($menu['menu_name']); ?></h3>
-                                <p class="menu-description"><?php echo htmlspecialchars($menu['menu_name']); ?></p>
+                                <p class="menu-description"><?php echo htmlspecialchars(!empty($menu['description']) ? $menu['description'] : $menu['menu_name']); ?></p>
                                 
                                 <form class="add-to-cart-form" method="POST" action="index.php?page=qrorder&action=addItem">
                                     <div class="qty-selector">

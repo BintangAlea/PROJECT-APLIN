@@ -22,11 +22,15 @@ class CafeController
             $cafeHistory = $userModel->getCafeHistory($_SESSION['full_name'] ?? '');
         }
 
+        $menusModel = new MenusModel();
+        $menus = $menusModel->findAll();
+
         return [
             'view' => 'Cafe.index',
             'data' => [
                 'salonHistory' => $salonHistory,
-                'cafeHistory' => $cafeHistory
+                'cafeHistory' => $cafeHistory,
+                'menus' => $menus
             ]
         ];
     }

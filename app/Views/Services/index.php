@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $isLoggedIn = isset($_SESSION['user_id']);
 $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
 ?>
@@ -184,24 +184,23 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
             background-size: cover;
             background-position: center;
             filter: grayscale(100%);
+            transition: filter 0.3s ease;
+        }
+
+        .service-card:hover .service-visual {
+            filter: grayscale(0%);
         }
 
         .visual-hair {
-            background-image:
-                linear-gradient(120deg, rgba(0, 0, 0, 0.08), rgba(255, 255, 255, 0.06)),
-                repeating-linear-gradient(130deg, #7f8188 0 6px, #9ca0a6 6px 13px, #70737a 13px 19px);
+            background-image: url('assets/MERISH_PICTURES/services/signature balayage.jpg');
         }
 
         .visual-nails {
-            background-image:
-                radial-gradient(circle at 40% 70%, #d9d9d9 0 16%, transparent 17%),
-                linear-gradient(145deg, #9ba0a7 0%, #b8bcc1 45%, #8f949a 100%);
+            background-image: url('assets/MERISH_PICTURES/services/editorial manicure.jpg');
         }
 
         .visual-lashes {
-            background-image:
-                linear-gradient(90deg, #babec4 0 14%, #d2d4d8 14% 100%),
-                linear-gradient(140deg, #a9adb4 0%, #d6d8dc 100%);
+            background-image: url('assets/MERISH_PICTURES/services/volume lash extensions.jpg');
         }
 
         .service-body {
@@ -275,18 +274,23 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
             background-size: cover;
             background-position: center;
             filter: grayscale(100%);
+            transition: filter 0.3s ease;
+        }
+
+        .expert-card:hover .expert-photo {
+            filter: grayscale(0%);
         }
 
         .expert-elena {
-            background-image: linear-gradient(140deg, #d5d7da 0%, #abafb6 100%);
+            background-image: url('assets/MERISH_PICTURES/experts/Sarah Roberts.webp');
         }
 
         .expert-marcus {
-            background-image: linear-gradient(140deg, #2f3135 0%, #7c828b 100%);
+            background-image: url('assets/MERISH_PICTURES/experts/Niki Rose.webp');
         }
 
         .expert-chloe {
-            background-image: linear-gradient(140deg, #b7bbc2 0%, #8f949d 100%);
+            background-image: url('assets/MERISH_PICTURES/experts/Ambar Eliyah.webp');
         }
 
         .expert-name {
@@ -411,17 +415,7 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
         </div>
     </header>
 
-    <div class="divider-band d-flex align-items-center">
-        <div class="container">
-            <div class="filters">
-                <button type="button" class="btn filter-btn active" data-filter="all">All</button>
-                <button type="button" class="btn filter-btn" data-filter="hair">Hair</button>
-                <button type="button" class="btn filter-btn" data-filter="nails">Nails</button>
-                <button type="button" class="btn filter-btn" data-filter="lashes">Lashes</button>
-                <button type="button" class="btn filter-btn" data-filter="wax">Wax & Eyebrows</button>
-            </div>
-        </div>
-    </div>
+
 
     <section class="service-grid">
         <div class="container">
@@ -471,8 +465,8 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
                 <div class="col-lg-4 col-md-6">
                     <article class="expert-card">
                         <div class="expert-photo expert-elena"></div>
-                        <h3 class="expert-name">Elena R.</h3>
-                        <p class="expert-role">Color Director</p>
+                        <h3 class="expert-name">Sarah Roberts</h3>
+                        <p class="expert-role">COLOR & HAIR DIRECTOR</p>
                         <div class="expert-stars"></div>
                         <p class="expert-copy">Master of dimensional color and balayage techniques with over a decade of high-fashion experience.</p>
                     </article>
@@ -481,20 +475,20 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
                 <div class="col-lg-4 col-md-6">
                     <article class="expert-card">
                         <div class="expert-photo expert-marcus"></div>
-                        <h3 class="expert-name">Marcus T.</h3>
-                        <p class="expert-role">Master Cutter</p>
+                        <h3 class="expert-name">Niki Rose</h3>
+                        <p class="expert-role">SENIOR NAILIST</p>
                         <div class="expert-stars"></div>
-                        <p class="expert-copy">Precision cutting specialist known for creating effortless, structured silhouettes tailored to each individual.</p>
+                        <p class="expert-copy">Precision nail specialist known for creating flawless, structured extensions and elegant designs tailored to each individual.</p>
                     </article>
                 </div>
 
                 <div class="col-lg-4 col-md-6">
                     <article class="expert-card">
                         <div class="expert-photo expert-chloe"></div>
-                        <h3 class="expert-name">Chloe M.</h3>
-                        <p class="expert-role">Senior Esthetician</p>
+                        <h3 class="expert-name">Ambar Eliyah</h3>
+                        <p class="expert-role">SENIOR LASH TECHNICIAN</p>
                         <div class="expert-stars"></div>    
-                        <p class="expert-copy">Specializing in advanced skincare treatments and meticulous brow architecture to enhance natural beauty.</p>
+                        <p class="expert-copy">Specializing in advanced lash extensions and meticulous lash mapping to enhance natural beauty.</p>
                     </article>
                 </div>
             </div>
@@ -524,23 +518,6 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const filterButtons = document.querySelectorAll('.filter-btn');
-        const serviceItems = document.querySelectorAll('.service-item');
-
-        filterButtons.forEach((button) => {
-            button.addEventListener('click', () => {
-                filterButtons.forEach((item) => item.classList.remove('active'));
-                button.classList.add('active');
-
-                const selectedFilter = button.dataset.filter;
-
-                serviceItems.forEach((service) => {
-                    const category = service.dataset.category;
-                    const shouldShow = selectedFilter === 'all' || category === selectedFilter;
-                    service.style.display = shouldShow ? '' : 'none';
-                });
-            });
-        });
 
         function bookService(serviceId, serviceName) {
             const params = new URLSearchParams({

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $isLoggedIn = isset($_SESSION['user_id']);
 $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
 ?>
@@ -178,10 +178,12 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
         }
 
         .menu-image {
-            height: 180px;
+            height: 360px;
             border-bottom: 1px solid #ddd2d2;
-            background-size: cover;
+            background-size: contain;
+            background-repeat: no-repeat;
             background-position: center;
+            background-color: #ffffff;
         }
 
         .drink-latte {
@@ -383,66 +385,86 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
                     <button class="tab-btn" type="button" data-filter="non-coffee">Non-Coffee</button>
                 </div>
             </div>
-        </section>
-
-        <section class="menu-section">
+        </section>        <section class="menu-section">
             <div class="container">
-                <div class="row g-4">
-                    <div class="col-lg-4 col-md-6 cafe-item" data-category="kopi">
-                        <article class="menu-card">
-                            <div class="menu-image drink-latte"></div>
-                            <div class="menu-body">
-                                <div class="title-row">
-                                    <h2 class="menu-name">Iced Rose Latte</h2>
-                                    <p class="menu-price">Rp 45.000</p>
-                                </div>
-                                <p class="menu-desc">Signature espresso blend with delicate rose syrup, creamy milk, and organic dried rose.</p>
-                            </div>
-                        </article>
-                    </div>
+                <div class="row g-4" id="menuContainer">
+                    <?php if (!empty($menus)): ?>
+                        <?php foreach ($menus as $menu): ?>
+                            <?php
+                            $menuId = $menu['menu_id'] ?? '';
+                            $menuName = $menu['menu_name'] ?? '';
+                            $price = (float)($menu['price'] ?? 0);
+                            $desc = !empty($menu['description']) ? $menu['description'] : 'Artisan creation crafted by our barista.';
+                            
+                            // Map category from DB to filter category
+                            // DB category: Kopi, Teh, Pastry, Non Coffee, Snack
+                            // Filter category: kopi, teh, pastry, non-coffee
+                            $dbCat = trim($menu['category'] ?? '');
+                            if ($dbCat === '') {
+                                $nameLower = strtolower($menuName);
+                                if (str_contains($nameLower, 'kopi') || str_contains($nameLower, 'coffee') || str_contains($nameLower, 'latte') || str_contains($nameLower, 'espresso')) {
+                                    $dbCat = 'Kopi';
+                                } elseif (str_contains($nameLower, 'teh') || str_contains($nameLower, 'tea') || str_contains($nameLower, 'matcha')) {
+                                    $dbCat = 'Teh';
+                                } elseif (str_contains($nameLower, 'croissant') || str_contains($nameLower, 'pastry') || str_contains($nameLower, 'cake') || str_contains($nameLower, 'roti')) {
+                                    $dbCat = 'Pastry';
+                                } else {
+                                    $dbCat = 'Kopi';
+                                }
+                            }
+                            
+                            $filterCat = match (strtolower($dbCat)) {
+                                'kopi' => 'kopi',
+                                'teh' => 'teh',
+                                'pastry' => 'pastry',
+                                'non coffee', 'non-coffee' => 'non-coffee',
+                                'snack' => 'pastry',
+                                default => 'kopi',
+                            };
 
-                    <div class="col-lg-4 col-md-6 cafe-item" data-category="kopi">
-                        <article class="menu-card">
-                            <div class="menu-image drink-cappuccino"></div>
-                            <div class="menu-body">
-                                <div class="title-row">
-                                    <h2 class="menu-name">Classic Cappuccino</h2>
-                                    <p class="menu-price">Rp 38.000</p>
-                                </div>
-                                <p class="menu-desc">Rich double espresso balanced with equal parts steamed milk and a thick layer of foam.</p>
-                            </div>
-                        </article>
-                    </div>
+                            $image = trim($menu['image'] ?? '');
+                            if (str_contains($image, 'almond croissant.jpg')) {
+                                $image = str_replace('almond croissant.jpg', 'almond croissant.png', $image);
+                            } elseif (str_contains($image, 'cookies cream.jpg')) {
+                                $image = str_replace('cookies cream.jpg', 'cookies cream.png', $image);
+                            } elseif (str_contains($image, 'espresso.jpg')) {
+                                $image = str_replace('espresso.jpg', 'espresso.png', $image);
+                            } elseif (str_contains($image, 'tiramisu cake.webp')) {
+                                $image = str_replace('tiramisu cake.webp', 'tiramisu cake.jpg', $image);
+                            } elseif (str_contains($image, 'Truffle fries.webp')) {
+                                $image = str_replace('Truffle fries.webp', 'truffle fries.png', $image);
+                            }
 
-                    <div class="col-lg-4 col-md-6 cafe-item" data-category="teh">
-                        <article class="menu-card">
-                            <div class="menu-image drink-earlgrey"></div>
-                            <div class="menu-body">
-                                <div class="title-row">
-                                    <h2 class="menu-name">Earl Grey Lavender</h2>
-                                    <p class="menu-price">Rp 42.000</p>
-                                </div>
-                                <p class="menu-desc">Premium bergamot-infused black tea steeped with culinary lavender buds for aroma.</p>
+                            if ($image === '') {
+                                $image = match ($filterCat) {
+                                    'teh' => 'assets/MERISH_PICTURES/CAFE/jasmine tea.jpg',
+                                    'pastry' => 'assets/MERISH_PICTURES/CAFE/almond croissant.png',
+                                    'non-coffee' => 'assets/MERISH_PICTURES/CAFE/choco frappe.jpg',
+                                    default => 'assets/MERISH_PICTURES/CAFE/americano.jpg',
+                                };
+                            }
+                            ?>
+                            <div class="col-lg-4 col-md-6 cafe-item" data-category="<?php echo $filterCat; ?>">
+                                <article class="menu-card">
+                                    <div class="menu-image" style="background-image: url('<?php echo htmlspecialchars($image); ?>');"></div>
+                                    <div class="menu-body">
+                                        <div class="title-row">
+                                            <h2 class="menu-name"><?php echo htmlspecialchars($menuName); ?></h2>
+                                            <p class="menu-price">Rp <?php echo number_format($price, 0, ',', '.'); ?></p>
+                                        </div>
+                                        <p class="menu-desc"><?php echo htmlspecialchars($desc); ?></p>
+                                    </div>
+                                </article>
                             </div>
-                        </article>
-                    </div>
-
-                    <div class="col-lg-4 col-md-6 cafe-item" data-category="pastry">
-                        <article class="menu-card">
-                            <div class="menu-image food-croissant"></div>
-                            <div class="menu-body">
-                                <div class="title-row">
-                                    <h2 class="menu-name">Almond Croissant</h2>
-                                    <p class="menu-price">Rp 35.000</p>
-                                </div>
-                                <p class="menu-desc">Twice-baked butter croissant filled with rich almond frangipane and topped with sliced almonds.</p>
-                            </div>
-                        </article>
-                    </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="col-12 text-center py-4">
+                            <div class="alert alert-warning">Belum ada menu cafe yang tersedia.</div>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </section>
-
         <section class="order-wrap">
             <div class="container">
                 <button class="btn order-btn" type="button" id="orderNowBtn">Order Now <span class="ms-2"></span></button>

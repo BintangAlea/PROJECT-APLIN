@@ -193,22 +193,28 @@ foreach ($services as $item) {
             background-size: cover;
             background-position: center;
             filter: grayscale(100%);
+            transition: filter 0.3s ease;
+        }
+
+        .category-card:hover .category-visual,
+        .category-card.active .category-visual {
+            filter: grayscale(0%);
         }
 
         .visual-hair {
-            background-image: repeating-linear-gradient(145deg, #8d7f76 0 7px, #b4a79f 7px 14px, #7c6f68 14px 22px);
+            background-image: url('assets/MERISH_PICTURES/SALON/hair.jpg');
         }
 
         .visual-nails {
-            background-image: linear-gradient(130deg, #5a5757 0%, #989191 45%, #c4bdbc 100%);
+            background-image: url('assets/MERISH_PICTURES/SALON/nails.jpg');
         }
 
         .visual-lashes {
-            background-image: linear-gradient(130deg, #bcb4b4 0%, #8c8484 100%);
+            background-image: url('assets/MERISH_PICTURES/SALON/lash.jpg');
         }
 
         .visual-wax {
-            background-image: linear-gradient(130deg, #b2a6a4 0%, #8e8180 100%);
+            background-image: url('assets/MERISH_PICTURES/SALON/wax.jpg');
         }
 
         .check-mark {
@@ -447,7 +453,7 @@ foreach ($services as $item) {
                                             <p class="service-desc"><?php echo htmlspecialchars($service['description'] ?? 'Professional service with premium treatment quality.'); ?></p>
                                         </div>
                                         <div class="col-3 col-md-2 service-meta">
-                                            $<?php echo number_format($price, 0); ?>
+                                            Rp <?php echo number_format($price, 0, ',', '.'); ?>
                                             <small><?php echo $duration > 0 ? $duration . ' mins' : '60 mins'; ?></small>
                                         </div>
                                     </div>

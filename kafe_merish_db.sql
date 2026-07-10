@@ -10,6 +10,9 @@ CREATE TABLE menus (
     menu_name VARCHAR(100) NOT NULL,
     price DECIMAL(10,2) NOT NULL,
     is_available BOOLEAN NOT NULL DEFAULT TRUE,  
+    category ENUM('Kopi', 'Teh', 'Pastry', 'Non Coffee', 'Snack') NOT NULL,
+    description TEXT NULL,
+    image VARCHAR(255) NULL,
     PRIMARY KEY (menu_id)
 ) ENGINE=INNODB;
 

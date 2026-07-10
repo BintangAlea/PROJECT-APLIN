@@ -182,9 +182,11 @@ if (!$seatId && $isLoggedIn) {
         }
 
         .menu-card-visual {
-            height: 126px;
-            background-size: cover;
+            height: 260px;
+            background-size: contain;
+            background-repeat: no-repeat;
             background-position: center;
+            background-color: #ffffff;
             border-bottom: 1px solid #eadede;
         }
 
@@ -582,33 +584,65 @@ if (!$seatId && $isLoggedIn) {
                             $menuId = (string) ($menu['menu_id'] ?? '');
                             $menuName = (string) ($menu['menu_name'] ?? 'Menu Item');
                             $menuPrice = (int) ($menu['price'] ?? 0);
-                            // Infer category from menu_name keywords (menus table has no category column)
-                            $nameLower = strtolower($menuName);
-                            if (str_contains($nameLower, 'kopi') || str_contains($nameLower, 'coffee') || str_contains($nameLower, 'latte') || str_contains($nameLower, 'espresso')) {
-                                $menuCategory = 'kopi';
-                            } elseif (str_contains($nameLower, 'teh') || str_contains($nameLower, 'tea') || str_contains($nameLower, 'matcha')) {
-                                $menuCategory = 'teh';
-                            } elseif (str_contains($nameLower, 'croissant') || str_contains($nameLower, 'pastry') || str_contains($nameLower, 'cake') || str_contains($nameLower, 'roti')) {
-                                $menuCategory = 'pastry';
-                            } else {
-                                $menuCategory = 'kopi';
+                            $dbCat = trim($menu['category'] ?? '');
+                            if ($dbCat === '') {
+                                $nameLower = strtolower($menuName);
+                                if (str_contains($nameLower, 'kopi') || str_contains($nameLower, 'coffee') || str_contains($nameLower, 'latte') || str_contains($nameLower, 'espresso')) {
+                                    $dbCat = 'Kopi';
+                                } elseif (str_contains($nameLower, 'teh') || str_contains($nameLower, 'tea') || str_contains($nameLower, 'matcha')) {
+                                    $dbCat = 'Teh';
+                                } elseif (str_contains($nameLower, 'croissant') || str_contains($nameLower, 'pastry') || str_contains($nameLower, 'cake') || str_contains($nameLower, 'roti')) {
+                                    $dbCat = 'Pastry';
+                                } else {
+                                    $dbCat = 'Kopi';
+                                }
                             }
-                            $visualClass = ($menuCategory === 'pastry') ? 'croissant' : (($menuCategory === 'teh') ? 'rose-latte' : 'signature-latte');
+                            $menuCategory = match (strtolower($dbCat)) {
+                                'kopi' => 'kopi',
+                                'teh' => 'teh',
+                                'pastry' => 'pastry',
+                                'non coffee', 'non-coffee' => 'non-coffee',
+                                'snack' => 'pastry',
+                                default => 'kopi',
+                            };
+                            $desc = !empty($menu['description']) ? $menu['description'] : 'Tambahkan menu ini ke keranjang sebelum lanjut ke pembayaran.';
+                            $image = trim($menu['image'] ?? '');
+                            if (str_contains($image, 'almond croissant.jpg')) {
+                                $image = str_replace('almond croissant.jpg', 'almond croissant.png', $image);
+                            } elseif (str_contains($image, 'cookies cream.jpg')) {
+                                $image = str_replace('cookies cream.jpg', 'cookies cream.png', $image);
+                            } elseif (str_contains($image, 'espresso.jpg')) {
+                                $image = str_replace('espresso.jpg', 'espresso.png', $image);
+                            } elseif (str_contains($image, 'tiramisu cake.webp')) {
+                                $image = str_replace('tiramisu cake.webp', 'tiramisu cake.jpg', $image);
+                            } elseif (str_contains($image, 'Truffle fries.webp')) {
+                                $image = str_replace('Truffle fries.webp', 'truffle fries.png', $image);
+                            }
+
+                            if ($image === '') {
+                                $image = match ($menuCategory) {
+                                    'teh' => 'assets/MERISH_PICTURES/CAFE/jasmine tea.jpg',
+                                    'pastry' => 'assets/MERISH_PICTURES/CAFE/almond croissant.png',
+                                    'non-coffee' => 'assets/MERISH_PICTURES/CAFE/choco frappe.jpg',
+                                    default => 'assets/MERISH_PICTURES/CAFE/americano.jpg',
+                                };
+                            }
                             ?>
                             <article class="menu-card">
-                                <div class="menu-card-visual <?php echo htmlspecialchars($visualClass); ?>"></div>
+                                <div class="menu-card-visual" style="background-image: url('<?php echo htmlspecialchars($image); ?>'); background-size: contain; background-repeat: no-repeat; background-position: center; background-color: #ffffff;"></div>
                                 <div class="menu-card-body">
                                     <div class="menu-card-meta">
                                         <span><?php echo htmlspecialchars($menuCategory); ?></span>
                                         <span class="menu-card-price">IDR <?php echo number_format($menuPrice, 0, ',', '.'); ?></span>
                                     </div>
                                     <h3 class="menu-card-name"><?php echo htmlspecialchars($menuName); ?></h3>
-                                    <p class="menu-card-desc">Tambahkan menu ini ke keranjang sebelum lanjut ke pembayaran.</p>
+                                    <p class="menu-card-desc"><?php echo htmlspecialchars($desc); ?></p>
                                     <form method="POST" action="index.php?page=cafe&action=addToCart" class="m-0">
                                         <input type="hidden" name="menu_id" value="<?php echo htmlspecialchars($menuId); ?>">
                                         <input type="hidden" name="menu_name" value="<?php echo htmlspecialchars($menuName); ?>">
                                         <input type="hidden" name="price" value="<?php echo htmlspecialchars((string) $menuPrice); ?>">
                                         <input type="hidden" name="category" value="<?php echo htmlspecialchars($menuCategory); ?>">
+                                        <input type="hidden" name="image" value="<?php echo htmlspecialchars($image); ?>">
                                         <?php if ($seatId): ?>
                                             <input type="hidden" name="seat" value="<?php echo htmlspecialchars($seatId); ?>">
                                         <?php endif; ?>
@@ -621,21 +655,14 @@ if (!$seatId && $isLoggedIn) {
                 </div>
 
                 <h2 class="section-title">Your Order</h2>
-
-                <?php if (!empty($cartItems)): ?>
+                 <?php if (!empty($cartItems)): ?>
                     <?php foreach ($cartItems as $item): ?>
                         <?php
-                        // Infer category from item name for visual class (cart session has no category/image)
-                        $itemCat = 'kopi';
-                        $nl = strtolower($item['name'] ?? '');
-                        if (str_contains($nl, 'croissant') || str_contains($nl, 'pastry') || str_contains($nl, 'cake') || str_contains($nl, 'roti')) {
-                            $itemCat = 'pastry';
-                        } elseif (str_contains($nl, 'teh') || str_contains($nl, 'tea') || str_contains($nl, 'matcha')) {
-                            $itemCat = 'teh';
-                        }
+                        $itemCat = trim($item['category'] ?? 'kopi');
+                        $image = !empty($item['image']) ? $item['image'] : 'assets/MERISH_PICTURES/CAFE/americano.jpg';
                         ?>
                         <div class="cart-item">
-                            <div class="thumb <?php echo htmlspecialchars($itemCat === 'pastry' ? 'croissant' : ($itemCat === 'teh' ? 'rose-latte' : 'signature-latte')); ?>"></div>
+                            <div class="thumb" style="background-image: url('<?php echo htmlspecialchars($image); ?>'); background-size: cover; background-position: center;"></div>
                             <div>
                                 <div class="item-name"><?php echo htmlspecialchars($item['name']); ?></div>
                                 <div class="item-sub"><?php echo $itemCat === 'pastry' ? 'Warmed' : 'Oat Milk, Less Sugar'; ?></div>
