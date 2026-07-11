@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $pageTitle = 'Salon VIP Appointments - Merish Admin';
 $displayName = $_SESSION['full_name'] ?? 'Admin';
 $editData = $reservationForEdit ?? null;
@@ -315,7 +315,6 @@ $formattedTime = $editData['reservation_time'] ?? date('H:i');
         </nav>
 
         <div class="sidebar-footer">
-            <a class="nav-link px-0" href="index.php?page=admin&action=settings">Settings</a>
             <a class="nav-link px-0" href="<?= LOGOUT_URL ?>">Logout</a>
         </div>
     </aside>
@@ -324,16 +323,13 @@ $formattedTime = $editData['reservation_time'] ?? date('H:i');
         <div class="topbar">
             <div class="search-box rounded-0">
                 <span></span>
-                <input type="text" placeholder="Search..." aria-label="Search">
+                <input type="text" id="res-topbar-search" placeholder="Search..." aria-label="Search">
             </div>
             <h1 class="page-title text-center flex-grow-1">Merish Admin</h1>
             <div class="d-flex align-items-center gap-2">
-                <!-- Removed empty icon placeholders to avoid redundant empty buttons -->
-                <div class="topbar-actions">
-                    <a href="#" class="me-2" aria-label="Notifications" title="Notifications">🔔</a>
-                    <a href="#" class="me-2" aria-label="Refresh" title="Refresh">↺</a>
-                    <a href="#" aria-label="Profile" title="Profile">👤</a>
-                </div>
+                <button class="icon-btn" type="button" aria-label="Refresh" onclick="location.reload()" title="Refresh">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                </button>
             </div>
         </div>
 
@@ -343,7 +339,7 @@ $formattedTime = $editData['reservation_time'] ?? date('H:i');
                 <p class="hero-subtitle">Manage exclusive bookings and curate the editorial experience.</p>
             </div>
             <div class="hero-actions">
-                <button class="btn">New Booking</button>
+                <a class="btn" href="index.php?page=admin&action=manageReservations">+ New Appointment</a>
             </div>
         </div>
 
@@ -358,16 +354,16 @@ $formattedTime = $editData['reservation_time'] ?? date('H:i');
             <div class="col-xl-8">
                 <div class="filter-bar row g-3 mb-3">
                     <div class="col-md-4">
-                        <select class="form-select" aria-label="Filter by stylist">
-                            <option selected>By Stylist</option>
+                        <select id="res-filter-stylist" class="form-select" aria-label="Filter by stylist">
+                            <option value="">By Stylist</option>
                             <?php foreach ($beauticians as $beautician): ?>
                                 <option><?php echo htmlspecialchars($beautician['NAME']); ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <select class="form-select" aria-label="Filter by status">
-                            <option selected>By Status</option>
+                        <select id="res-filter-status" class="form-select" aria-label="Filter by status">
+                            <option value="">By Status</option>
                             <option>Pending</option>
                             <option>Confirmed</option>
                             <option>In-Service</option>
@@ -376,7 +372,7 @@ $formattedTime = $editData['reservation_time'] ?? date('H:i');
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <input type="text" class="form-control" placeholder="Search client or service...">
+                        <input id="res-filter-text" type="text" class="form-control" placeholder="Search client or service...">
                     </div>
                 </div>
 
@@ -394,7 +390,7 @@ $formattedTime = $editData['reservation_time'] ?? date('H:i');
                                     <th class="text-end">Action</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="res-tbody">
                                 <?php if (!empty($reservations)): ?>
                                     <?php foreach ($reservations as $reservation): ?>
                                         <?php
@@ -531,6 +527,29 @@ $formattedTime = $editData['reservation_time'] ?? date('H:i');
     </main>
 </div>
 
+<script>
+(function() {
+    function filterRows() {
+        const q1 = (document.getElementById('res-topbar-search').value || '').toLowerCase().trim();
+        const q2 = (document.getElementById('res-filter-text').value || '').toLowerCase().trim();
+        const q = q1 || q2;
+        const stylist = (document.getElementById('res-filter-stylist').value || '').toLowerCase().trim();
+        const status = (document.getElementById('res-filter-status').value || '').toLowerCase().trim();
+        document.querySelectorAll('#res-tbody tr').forEach(function(row) {
+            const text = row.textContent.toLowerCase();
+            const show = (!q || text.includes(q))
+                      && (!stylist || text.includes(stylist))
+                      && (!status || text.includes(status));
+            row.style.display = show ? '' : 'none';
+        });
+    }
+    ['res-topbar-search','res-filter-text','res-filter-stylist','res-filter-status'].forEach(function(id) {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', filterRows);
+        if (el) el.addEventListener('change', filterRows);
+    });
+})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

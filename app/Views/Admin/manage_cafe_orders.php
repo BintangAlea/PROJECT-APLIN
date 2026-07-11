@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $pageTitle = 'Cafe Orders Live - Merish Admin';
 $editOrder = $orderForEdit ?? null;
 $availableMenu = $menus ?? [];
@@ -290,11 +290,11 @@ $availableReservations = $reservations ?? [];
 <div class="shell">
     <aside class="sidebar">
         <div>
-            <span class="brand">MERISH</span>
-            <div class="brand-sub">Luxury Suite</div>
+            <span class="brand">Merish</span>
+            <div class="brand-sub">Management Portal</div>
         </div>
 
-        <button class="new-booking btn w-100" type="button" onclick="document.getElementById('order-form').scrollIntoView({behavior:'smooth'})">New Booking</button>
+        <button class="new-booking btn w-100" type="button" onclick="document.getElementById('order-form').scrollIntoView({behavior:'smooth'})">+ New Cafe Order</button>
 
         <nav class="nav flex-column side-nav gap-1">
             <a class="nav-link" href="index.php?page=admin">Dashboard</a>
@@ -306,7 +306,6 @@ $availableReservations = $reservations ?? [];
         </nav>
 
         <div class="sidebar-footer">
-            <a class="nav-link px-0" href="index.php?page=admin&action=settings">Settings</a>
             <a class="nav-link px-0" href="<?= LOGOUT_URL ?>">Logout</a>
         </div>
     </aside>
@@ -315,16 +314,13 @@ $availableReservations = $reservations ?? [];
         <div class="topbar">
             <div class="search-box rounded-0">
                 <span></span>
-                <input type="text" placeholder="Search..." aria-label="Search">
+                <input type="text" id="orders-search" placeholder="Search..." aria-label="Search">
             </div>
             <h1 class="page-title text-center flex-grow-1">Merish Admin</h1>
             <div class="d-flex align-items-center gap-2">
-                <!-- Removed empty icon placeholders to avoid redundant empty buttons -->
-                <div class="topbar-actions">
-                    <a href="#" class="me-2" aria-label="Notifications" title="Notifications">🔔</a>
-                    <a href="#" class="me-2" aria-label="Refresh" title="Refresh">↺</a>
-                    <a href="#" aria-label="Profile" title="Profile">👤</a>
-                </div>
+                <button class="icon-btn" type="button" aria-label="Refresh" onclick="location.reload()" title="Refresh">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                </button>
             </div>
         </div>
 
@@ -361,7 +357,7 @@ $availableReservations = $reservations ?? [];
                                     <th class="text-end">Action</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="orders-tbody">
                                 <?php if (!empty($orders)): ?>
                                     <?php foreach ($orders as $order): ?>
                                         <?php
@@ -479,6 +475,19 @@ $availableReservations = $reservations ?? [];
     </main>
 </div>
 
+<script>
+(function() {
+    const input = document.getElementById('orders-search');
+    const tbody = document.getElementById('orders-tbody');
+    if (!input || !tbody) return;
+    input.addEventListener('input', function() {
+        const q = this.value.toLowerCase().trim();
+        tbody.querySelectorAll('tr').forEach(function(row) {
+            row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+    });
+})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

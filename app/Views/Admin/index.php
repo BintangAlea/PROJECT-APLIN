@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $pageTitle = 'Admin Overview - Merish';
 $displayName = $_SESSION['full_name'] ?? 'Admin';
 $formatCurrency = static function ($value): string {
@@ -306,7 +306,7 @@ $formatCurrency = static function ($value): string {
             <div class="brand-sub">Management Portal</div>
         </div>
 
-        <button class="new-booking btn w-100" type="button" onclick="window.location.href='index.php?page=booking&step=1'">New Booking</button>
+        <a class="new-booking btn w-100 text-decoration-none d-block text-center" href="index.php?page=admin&action=manageReservations">New Appointment</a>
 
         <nav class="nav flex-column side-nav gap-1">
             <a class="nav-link active" href="index.php?page=admin">Dashboard</a>
@@ -318,7 +318,6 @@ $formatCurrency = static function ($value): string {
         </nav>
 
         <div class="sidebar-footer">
-            <span class="nav-link px-0 d-block" aria-disabled="true" style="cursor: default; opacity: 0.8;">System Settings</span>
             <a class="nav-link px-0" href="<?= LOGOUT_URL ?>">Logout</a>
         </div>
     </aside>
@@ -326,16 +325,16 @@ $formatCurrency = static function ($value): string {
     <main class="main">
         <div class="topbar">
             <div class="search-box rounded-0">
-                <span>âŒ•</span>
-                <input type="text" placeholder="Search..." aria-label="Search">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="admin-search" placeholder="Search..." aria-label="Search">
             </div>
 
             <h1 class="page-title text-center flex-grow-1">Admin Overview</h1>
 
             <div class="d-flex align-items-center gap-2">
-                <button class="icon-btn" type="button" aria-label="Notifications">ðŸ””</button>
-                <button class="icon-btn" type="button" aria-label="Refresh">â†»</button>
-                <button class="icon-btn" type="button" aria-label="Help">?</button>
+                <button class="icon-btn" type="button" aria-label="Refresh" onclick="location.reload()" title="Refresh page">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                </button>
             </div>
         </div>
 
@@ -344,14 +343,20 @@ $formatCurrency = static function ($value): string {
                 <div class="stat-card">
                     <div class="stat-label">Total Pendapatan Hari Ini</div>
                     <div class="stat-value"><?php echo $formatCurrency($totalRevenueToday); ?></div>
-                    <div class="stat-note">â†— Sesuai transaksi yang sudah lunas</div>
+                    <div class="stat-note">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
+                        Sesuai transaksi yang sudah lunas
+                    </div>
                 </div>
             </div>
             <div class="col-lg-6">
                 <div class="stat-card">
                     <div class="stat-label">Reservasi Aktif</div>
                     <div class="stat-value"><?php echo number_format($activeReservations, 0, ',', '.'); ?> Sesi</div>
-                    <div class="stat-note">â± Next in 15 mins</div>
+                    <div class="stat-note">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        Next in 15 mins
+                    </div>
                 </div>
             </div>
         </div>
@@ -360,7 +365,7 @@ $formatCurrency = static function ($value): string {
             <h2 class="section-title">Integrated Queue</h2>
             <a href="#" class="text-decoration-none" style="color: var(--muted);">View All</a>
             <h2 class="section-title ms-auto me-3">Inventory Status</h2>
-            <span style="color: var(--muted);">â‹¯</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--muted);"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
         </div>
 
         <div class="row g-3 align-items-start">
@@ -375,7 +380,7 @@ $formatCurrency = static function ($value): string {
                                 <th>Status</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="queue-tbody">
                             <?php if (!empty($queueItems)): ?>
                                 <?php foreach ($queueItems as $row): ?>
                                     <?php
@@ -449,6 +454,19 @@ $formatCurrency = static function ($value): string {
     </main>
 </div>
 
+<script>
+(function() {
+    const input = document.getElementById('admin-search');
+    const tbody = document.getElementById('queue-tbody');
+    if (!input || !tbody) return;
+    input.addEventListener('input', function() {
+        const q = this.value.toLowerCase().trim();
+        tbody.querySelectorAll('tr').forEach(function(row) {
+            row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+    });
+})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html><?php // Admin view ?>

@@ -317,22 +317,34 @@ class AdminController
 
     public function manageMenus()
     {
-        $inventoriesStmt = $this->db->query(
-            "SELECT item_id,
-                    item_name,
-                    stock_qty,
-                    min_stock,
-                    unit,
-                    0 AS extra_charge_per_unit,
+        // Cafe inventory with BOM usage
+        $cafeInventoriesStmt = $this->db->query(
+            "SELECT i.item_id,
+                    i.item_name,
+                    i.stock_qty,
+                    i.min_stock,
+                    i.unit,
                     CASE
-                        WHEN stock_qty <= min_stock THEN 'Low Stock'
+                        WHEN i.stock_qty <= i.min_stock THEN 'Low Stock'
                         ELSE 'Healthy'
                     END AS stock_status,
-                    (min_stock - stock_qty) AS shortage
-             FROM db_merish_cafe.inventories
-             ORDER BY stock_qty ASC, item_name ASC"
+                    COALESCE(
+                        GROUP_CONCAT(DISTINCT m.menu_name ORDER BY m.menu_name SEPARATOR ', '),
+                        '-'
+                    ) AS used_in_menus
+             FROM db_merish_cafe.inventories i
+             LEFT JOIN db_merish_cafe.bom_details bd ON bd.item_id = i.item_id
+             LEFT JOIN db_merish_cafe.menus m ON m.menu_id = bd.menu_id
+             GROUP BY i.item_id, i.item_name, i.stock_qty, i.min_stock, i.unit
+             ORDER BY i.stock_qty ASC, i.item_name ASC"
         );
-        $inventories = $inventoriesStmt->fetchAll();
+        $cafeInventories = $cafeInventoriesStmt->fetchAll();
+
+        // Salon inventory — kosong untuk sementara
+        $salonInventories = [];
+
+        // Keep $inventories pointing to cafe for backward compat (low stock alerts etc)
+        $inventories = $cafeInventories;
 
         $servicesStmt = $this->db->query(
             "SELECT service_id,
@@ -340,7 +352,7 @@ class AdminController
                     category,
                     base_tariff,
                     est_duration
-             FROM services
+             FROM db_merish_salon.services
              ORDER BY category ASC, service_name ASC"
         );
         $services = $servicesStmt->fetchAll();
@@ -368,8 +380,8 @@ class AdminController
             "SELECT
                 (SELECT COUNT(*) FROM db_merish_cafe.inventories) AS total_inventory_items,
                 (SELECT COUNT(*) FROM db_merish_cafe.inventories WHERE stock_qty <= min_stock) AS low_stock_items,
-                (SELECT COUNT(*) FROM services) AS total_services,
-                (SELECT COUNT(*) FROM menus) AS total_menus"
+                (SELECT COUNT(*) FROM db_merish_salon.services) AS total_services,
+                (SELECT COUNT(*) FROM db_merish_cafe.menus) AS total_menus"
         );
         $summary = $summaryStmt->fetch() ?: [];
 

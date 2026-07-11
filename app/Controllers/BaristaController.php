@@ -9,6 +9,7 @@ class BaristaController
 {
     private OrdersModel $ordersModel;
     private MenusModel $menusModel;
+    private \PDO $db;
 
     public function __construct()
     {
@@ -18,6 +19,7 @@ class BaristaController
             exit;
         }
         
+        $this->db = \App\Core\Database::getConnection();
         $this->ordersModel = new OrdersModel();
         $this->menusModel = new MenusModel();
     }
@@ -86,5 +88,87 @@ class BaristaController
     {
         $orders = $this->ordersModel->findAll();
         require __DIR__ . '/../Views/Barista/order_history.php';
+    }
+
+    public function paymentCashier()
+    {
+        $statusFilter = $_GET['filter'] ?? 'unpaid';
+
+        // Fetch orders based on filter
+        if ($statusFilter === 'paid') {
+            $stmt = $this->db->query("
+                SELECT o.*, 
+                       (SELECT GROUP_CONCAT(CONCAT(m.menu_name, ' (x', od.qty, ')') SEPARATOR ', ') 
+                        FROM db_merish_cafe.order_details od 
+                        JOIN db_merish_cafe.menus m ON od.menu_id = m.menu_id 
+                        WHERE od.order_id = o.order_id) as items_summary
+                FROM db_merish_cafe.orders o
+                WHERE o.payment_status = 'Paid'
+                ORDER BY o.order_date DESC
+            ");
+        } else {
+            $stmt = $this->db->query("
+                SELECT o.*, 
+                       (SELECT GROUP_CONCAT(CONCAT(m.menu_name, ' (x', od.qty, ')') SEPARATOR ', ') 
+                        FROM db_merish_cafe.order_details od 
+                        JOIN db_merish_cafe.menus m ON od.menu_id = m.menu_id 
+                        WHERE od.order_id = o.order_id) as items_summary
+                FROM db_merish_cafe.orders o
+                WHERE o.payment_status = 'Unpaid'
+                ORDER BY o.order_date DESC
+            ");
+        }
+        $orders = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $selectedOrderId = (int)($_GET['order_id'] ?? 0);
+        $selectedOrder = null;
+        $selectedOrderDetails = [];
+        if ($selectedOrderId > 0) {
+            $orderStmt = $this->db->prepare("SELECT * FROM db_merish_cafe.orders WHERE order_id = :id");
+            $orderStmt->execute([':id' => $selectedOrderId]);
+            $selectedOrder = $orderStmt->fetch(\PDO::FETCH_ASSOC);
+
+            if ($selectedOrder) {
+                $selectedOrderDetails = $this->ordersModel->getOrderDetails($selectedOrderId);
+            }
+        }
+
+        $pageTitle = 'Cafe Cashier';
+        $activeMenu = 'payments';
+        
+        $flashSuccess = $_SESSION['success'] ?? null;
+        $flashError = $_SESSION['error'] ?? null;
+        unset($_SESSION['success'], $_SESSION['error']);
+
+        require __DIR__ . '/../Views/Barista/payments.php';
+    }
+
+    public function settlePayment()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?page=barista&action=paymentCashier');
+            exit;
+        }
+
+        $orderId = (int)($_POST['order_id'] ?? 0);
+        $paymentMethod = $_POST['payment_method'] ?? 'Cash';
+
+        if ($orderId > 0 && in_array($paymentMethod, ['Cash', 'QRIS'], true)) {
+            $updated = $this->ordersModel->update($orderId, [
+                'payment_status' => 'Paid',
+                'payment_method' => $paymentMethod
+            ]);
+
+            if ($updated) {
+                $_SESSION['success'] = 'Pembayaran berhasil diselesaikan!';
+            } else {
+                $_SESSION['error'] = 'Gagal memproses pembayaran.';
+            }
+        } else {
+            $_SESSION['error'] = 'Input tidak valid.';
+        }
+
+        header('Location: index.php?page=barista&action=paymentCashier&order_id=' . $orderId);
+        exit;
     }
 }

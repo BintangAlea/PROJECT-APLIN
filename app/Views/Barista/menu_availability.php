@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -121,29 +121,29 @@
         <aside class="col-lg-2 sidebar d-flex flex-column">
             <div class="p-4">
                 <div class="d-flex justify-content-center mb-3">
-                    <img class="avatar" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=240&q=80" alt="Barista profile">
+                    <img class="avatar" src="assets/merish_pictures/barista/Dimas.jpg" alt="Barista profile">
                 </div>
                 <div class="text-center mb-4">
                     <div class="brand-title">Merish<br>Barista</div>
                     <div class="brand-subtitle mt-2">Online</div>
                 </div>
                 <a class="sidebar-link" href="index.php?page=barista">
-                    <span></span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="2" x2="6" y2="4"></line><line x1="10" y1="2" x2="10" y2="4"></line><line x1="14" y1="2" x2="14" y2="4"></line></svg>
                     <span>KDS Board</span>
                 </a>
                 <a class="sidebar-link active" href="index.php?page=barista&action=menuAvailability">
-                    <span></span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
                     <span>Menu Availability</span>
+                </a>
+                <a class="sidebar-link" href="index.php?page=barista&action=paymentCashier">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                    <span>Cafe Cashier</span>
                 </a>
             </div>
             <div class="mt-auto p-4 sidebar-footer">
-                <a class="sidebar-link" href="<?= LOGOUT_URL ?>">
-                    <span></span>
-                    <span>Settings</span>
-                </a>
-                <a class="sidebar-link" href="<?= LOGOUT_URL ?>">
-                    <span>?</span>
-                    <span>Support</span>
+                <a class="sidebar-link text-danger" href="<?= LOGOUT_URL ?>">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    <span>Logout</span>
                 </a>
             </div>
         </aside>
@@ -174,7 +174,8 @@
                             <?php $available = !empty($menu['is_available']); ?>
                             <div class="menu-row d-flex align-items-center justify-content-between gap-3">
                                 <div class="d-flex align-items-center gap-3">
-                                    <div class="menu-thumb"></div>
+                                    <?php $imgUrl = !empty($menu['image']) ? $menu['image'] : ''; ?>
+                                    <div class="menu-thumb" style="background-image: url('<?= htmlspecialchars($imgUrl) ?>'); background-size: cover; background-position: center; border: 1px solid var(--line);"></div>
                                     <div>
                                         <div class="menu-name"><?= htmlspecialchars($menu['menu_name'] ?? 'Menu') ?></div>
                                         <div class="menu-desc">Merish beverage item</div>

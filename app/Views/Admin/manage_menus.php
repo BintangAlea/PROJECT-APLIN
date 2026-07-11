@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $pageTitle = 'Master Data & Stock Management - Merish Admin';
 $inventories = $inventories ?? [];
 $services = $services ?? [];
@@ -448,11 +448,11 @@ $catalogAnchor = '#catalog-form';
     <div class="shell">
         <aside class="sidebar">
             <div>
-                <a class="brand" href="index.php?page=admin">LUXE</a>
+                <a class="brand" href="index.php?page=admin">Merish</a>
                 <div class="brand-sub">MANAGEMENT PORTAL</div>
             </div>
 
-            <a class="new-booking" href="index.php?page=admin&action=manageReservations">+ NEW BOOKING</a>
+            <a class="new-booking" href="index.php?page=admin&action=manageReservations">+ New Appointment</a>
 
             <nav class="nav flex-column side-nav gap-1">
                 <a class="nav-link" href="index.php?page=admin">Dashboard</a>
@@ -464,7 +464,6 @@ $catalogAnchor = '#catalog-form';
             </nav>
 
             <div class="sidebar-footer d-grid gap-1">
-                <a class="nav-link" href="index.php?page=admin&action=settings">System Settings</a>
                 <a class="nav-link" href="<?= LOGOUT_URL ?>">Logout</a>
             </div>
         </aside>
@@ -472,14 +471,14 @@ $catalogAnchor = '#catalog-form';
         <main class="main">
             <div class="topbar">
                 <div class="search-box rounded-0">
-                    <span>âŒ•</span>
-                    <input type="text" placeholder="Search services, menus, stock...">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="menus-search" placeholder="Search services, menus, stock...">
                 </div>
                 <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
                     <div class="d-none d-md-block text-uppercase small text-muted fw-semibold">Admin Overview</div>
-                    <button type="button" class="icon-btn">ðŸ””</button>
-                    <button type="button" class="icon-btn">â†»</button>
-                    <button type="button" class="icon-btn">â—Œ</button>
+                    <button type="button" class="icon-btn" aria-label="Refresh" onclick="location.reload()" title="Refresh">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                    </button>
                     <a class="action-btn ms-2" href="<?php echo $catalogAnchor; ?>">Add New Service/Menu</a>
                 </div>
             </div>
@@ -534,7 +533,7 @@ $catalogAnchor = '#catalog-form';
                                         <th>Action</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="services-tbody">
                                     <?php if (empty($services)): ?>
                                         <tr>
                                             <td colspan="5" class="text-center py-4 text-muted">Belum ada service yang terdaftar.</td>
@@ -584,7 +583,7 @@ $catalogAnchor = '#catalog-form';
                                             <th>Availability</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody id="menus-tbody">
                                         <?php if (empty($menus)): ?>
                                             <tr>
                                                 <td colspan="5" class="text-center py-4 text-muted">Belum ada menu cafe yang terhubung ke BOM.</td>
@@ -617,11 +616,12 @@ $catalogAnchor = '#catalog-form';
                         </div>
                     </section>
 
-                    <section id="inventory-section" class="panel section-anchor">
+                    <!-- CAFE INVENTORY -->
+                    <section id="inventory-section" class="panel section-anchor mb-4">
                         <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
                             <div>
-                                <h2 class="card-headline mb-1">Raw Goods Inventory</h2>
-                                <div class="small-muted">Pantau stok shampoo, kopi, susu, dan bahan lain yang dipakai di treatment maupun cafe.</div>
+                                <h2 class="card-headline mb-1">Raw Goods Inventory — Cafe</h2>
+                                <div class="small-muted">Bahan baku kafe beserta menu-menu yang menggunakannya (berdasarkan BOM).</div>
                             </div>
                             <div>
                                 <div class="small-muted text-uppercase fw-semibold">Low Stock</div>
@@ -638,16 +638,17 @@ $catalogAnchor = '#catalog-form';
                                         <th>Minimum</th>
                                         <th>Unit</th>
                                         <th>Status</th>
+                                        <th>Dipakai di Menu</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <?php if (empty($inventories)): ?>
+                                <tbody id="inventory-tbody">
+                                    <?php if (empty($cafeInventories)): ?>
                                         <tr>
-                                            <td colspan="6" class="text-center py-4 text-muted">Belum ada data inventory.</td>
+                                            <td colspan="7" class="text-center py-4 text-muted">Belum ada data inventory kafe.</td>
                                         </tr>
                                     <?php else: ?>
-                                        <?php foreach ($inventories as $item): ?>
+                                        <?php foreach ($cafeInventories as $item): ?>
                                             <tr>
                                                 <td>
                                                     <div class="fw-semibold"><?php echo $escape($item['item_name']); ?></div>
@@ -661,12 +662,47 @@ $catalogAnchor = '#catalog-form';
                                                         <?php echo $escape($item['stock_status']); ?>
                                                     </span>
                                                 </td>
+                                                <td class="small text-muted"><?php echo $escape($item['used_in_menus']); ?></td>
                                                 <td>
                                                     <a class="pill-action" href="#restock-form" data-item-id="<?php echo $escape($item['item_id']); ?>">Add Stock</a>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
                                     <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <!-- SALON INVENTORY -->
+                    <section id="salon-inventory-section" class="panel section-anchor">
+                        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
+                            <div>
+                                <h2 class="card-headline mb-1">Raw Goods Inventory — Salon</h2>
+                                <div class="small-muted">Bahan baku salon (shampoo, conditioner, cat rambut, dll). Belum ada data saat ini.</div>
+                            </div>
+                            <div>
+                                <div class="small-muted text-uppercase fw-semibold">Total Items</div>
+                                <div class="stat-value fs-3 mb-0">0</div>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table inventory-table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Stock</th>
+                                        <th>Minimum</th>
+                                        <th>Unit</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="salon-inventory-tbody">
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">Belum ada data inventory salon. Data akan ditambahkan kemudian.</td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -849,6 +885,23 @@ $catalogAnchor = '#catalog-form';
             </div>
         </main>
     </div>
+
+<script>
+(function() {
+    const input = document.getElementById('menus-search');
+    if (!input) return;
+    input.addEventListener('input', function() {
+        const q = this.value.toLowerCase().trim();
+        ['services-tbody','menus-tbody','inventory-tbody'].forEach(function(id) {
+            const tbody = document.getElementById(id);
+            if (!tbody) return;
+            tbody.querySelectorAll('tr').forEach(function(row) {
+                row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+            });
+        });
+    });
+})();
+</script>
 </body>
 </html>
 

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $pageTitle = 'Staff & Review - Merish Admin';
 $staff = $staff ?? [];
 $reviews = $reviews ?? [];
@@ -426,11 +426,11 @@ $roleLabel = static function (string $role): string {
     <div class="shell">
         <aside class="sidebar">
             <div>
-                <a class="brand" href="index.php?page=admin">LUXE</a>
+                <a class="brand" href="index.php?page=admin">Merish</a>
                 <div class="brand-sub">Management Portal</div>
             </div>
 
-            <a class="new-booking" href="index.php?page=admin&action=manageReservations">+ New Booking</a>
+            <a class="new-booking" href="index.php?page=admin&action=manageReservations">+ New Appointment</a>
 
             <nav class="nav flex-column side-nav gap-1">
                 <a class="nav-link" href="index.php?page=admin">Dashboard</a>
@@ -442,7 +442,6 @@ $roleLabel = static function (string $role): string {
             </nav>
 
             <div class="sidebar-footer d-grid gap-1">
-                <a class="nav-link" href="index.php?page=admin&action=settings">System Settings</a>
                 <a class="nav-link" href="<?= LOGOUT_URL ?>">Logout</a>
             </div>
         </aside>
@@ -452,12 +451,12 @@ $roleLabel = static function (string $role): string {
                 <h1 class="top-title">Admin Overview</h1>
                 <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
                     <div class="search-box rounded-0">
-                        <span>âŒ•</span>
-                        <input type="text" placeholder="Search staff or reviews...">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input type="text" id="staff-search" placeholder="Search staff or reviews...">
                     </div>
-                    <button class="icon-btn" type="button">ðŸ””</button>
-                    <button class="icon-btn" type="button">â†º</button>
-                    <button class="icon-btn" type="button">?</button>
+                    <button class="icon-btn" type="button" aria-label="Refresh" onclick="location.reload()" title="Refresh page">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                    </button>
                     <a class="action-btn" href="index.php?page=admin&action=reports">Export Report</a>
                 </div>
             </div>
@@ -513,7 +512,7 @@ $roleLabel = static function (string $role): string {
                             <a href="#register-staff" class="action-btn">Register New Staff</a>
                         </div>
 
-                        <div class="staff-grid">
+                        <div class="staff-grid" id="staff-grid">
                             <?php if (empty($staff)): ?>
                                 <div class="staff-card d-flex align-items-center justify-content-center text-muted">Belum ada data staff.</div>
                             <?php else: ?>
@@ -523,7 +522,7 @@ $roleLabel = static function (string $role): string {
                                             <div class="avatar"><?php echo strtoupper(substr((string) ($person['NAME'] ?? 'S'), 0, 1)); ?></div>
                                             <div class="flex-grow-1">
                                                 <?php if ($topPerformer && (int) $topPerformer['user_id'] === (int) $person['user_id']): ?>
-                                                    <div class="top-performer">â˜… Top Performer</div>
+                                                    <div class="top-performer"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> Top Performer</div>
                                                 <?php endif; ?>
                                                 <h3 class="staff-name"><?php echo $escape($person['NAME']); ?></h3>
                                                 <p class="staff-role"><?php echo $escape($roleLabel((string) $person['ROLE'])); ?></p>
@@ -532,7 +531,7 @@ $roleLabel = static function (string $role): string {
                                         </div>
 
                                         <div class="rating-row">
-                                            <div><span class="star">â˜…</span><?php echo $formatRating($person['avg_rating']); ?></div>
+                                            <div><svg width="13" height="13" viewBox="0 0 24 24" fill="#c9a227" stroke="#c9a227" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px;vertical-align:middle;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg><?php echo $formatRating($person['avg_rating']); ?></div>
                                             <div><?php echo number_format((int) $person['total_reviews']); ?> reviews</div>
                                         </div>
                                     </article>
@@ -607,6 +606,24 @@ $roleLabel = static function (string $role): string {
             </div>
         </main>
     </div>
+
+<script>
+(function() {
+    const input = document.getElementById('staff-search');
+    if (!input) return;
+    input.addEventListener('input', function() {
+        const q = this.value.toLowerCase().trim();
+        // Filter staff cards
+        document.querySelectorAll('#staff-grid article').forEach(function(card) {
+            card.style.display = card.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+        // Filter review table rows
+        document.querySelectorAll('#review-tbody tr').forEach(function(row) {
+            row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+    });
+})();
+</script>
 </body>
 </html>
 

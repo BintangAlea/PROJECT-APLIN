@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $pageTitle = 'Performance Intelligence - Merish Admin';
 $startDate = $startDate ?? date('Y-m-01');
 $endDate = $endDate ?? date('Y-m-t');
@@ -406,11 +406,11 @@ $topSalon = array_slice($reportData['rows'] ?? [], 0, 3);
     <div class="shell">
         <aside class="sidebar">
             <div>
-                <a class="brand" href="index.php?page=admin">LUXE</a>
+                <a class="brand" href="index.php?page=admin">Merish</a>
                 <div class="brand-sub">Management Portal</div>
             </div>
 
-            <a class="new-booking" href="index.php?page=admin&action=manageReservations">+ New Booking</a>
+            <a class="new-booking" href="index.php?page=admin&action=manageReservations">+ New Appointment</a>
 
             <nav class="nav flex-column side-nav gap-1">
                 <a class="nav-link" href="index.php?page=admin">Dashboard</a>
@@ -422,7 +422,6 @@ $topSalon = array_slice($reportData['rows'] ?? [], 0, 3);
             </nav>
 
             <div class="sidebar-footer d-grid gap-1">
-                <a class="nav-link" href="index.php?page=admin&action=settings">System Settings</a>
                 <a class="nav-link" href="<?= LOGOUT_URL ?>">Logout</a>
             </div>
         </aside>
