@@ -14,18 +14,42 @@ $categoryButtons = [
     'wax' => 'Wax & Eyebrows',
 ];
 
+$anyAvailableTitle = match ($selectedCategory) {
+    'nails' => 'Any Available Nailist',
+    'lashes' => 'Any Available Lash Technician',
+    'wax' => 'Any Available Wax Specialist',
+    default => 'Any Available Hair Stylist',
+};
+
 $staffCards = [];
 foreach ($beauticians as $b) {
-    $specialization = (string) ($b['specialization'] ?? 'Hair Stylist');
+    $specialization = (string) ($b['specialization'] ?? ($b['role'] ?? 'Hair Stylist'));
     $category = (string) ($b['category'] ?? 'hair');
+    
+    $nameMap = [
+        'Kak Sarah' => 'Sarah Roberts.webp',
+        'Kak Niki' => 'Niki Rose.webp',
+        'Kak Ambar' => 'Ambar Eliyah.webp',
+        'Kak Angel' => 'Kak Angel.webp',
+        'Kak Jennifer' => 'Kak Jennifer.webp',
+        'Kak Wendy' => 'Kak Wendy.webp',
+        'Kak Winda' => 'Kak Winda.webp',
+        'Kak Nirmana' => 'Kak Nirmana.jpg',
+        'Kak Nurul' => 'Kak Nurul.jpg',
+        'Kak Zeba' => 'Kak Zeba.webp',
+        'Kak Zac' => 'Kak Zac.webp',
+    ];
+    $beauticianName = (string) ($b['name'] ?? 'Staff');
+    $photoFile = $nameMap[$beauticianName] ?? null;
 
     $staffCards[] = [
         'id' => (string) ($b['user_id'] ?? ''),
-        'name' => (string) ($b['name'] ?? 'Staff'),
+        'name' => $beauticianName,
         'role' => strtoupper($specialization),
         'category' => $category,
-        'available' => true,
+        'available' => (bool) ($b['available'] ?? true),
         'avatar' => 'avatar-' . ((int) ($b['user_id'] ?? 0) % 3),
+        'photo' => $photoFile
     ];
 }
 ?>
@@ -170,16 +194,26 @@ foreach ($beauticians as $b) {
             color: #7a4f61;
         }
 
+        .filter-btn:disabled,
+        .filter-btn.disabled-tab {
+            opacity: 0.4;
+            background: #eae6e7;
+            border-color: #dfd7d9;
+            color: #b1a5a9 !important;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
         .staff-grid {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 0.9rem;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 1rem;
         }
 
         .staff-card {
             border: 1px solid #d3c8cb;
             background: var(--card);
-            min-height: 304px;
+            min-height: 350px;
             position: relative;
             overflow: hidden;
             display: flex;
@@ -187,9 +221,9 @@ foreach ($beauticians as $b) {
         }
 
         .staff-visual {
-            height: 210px;
+            height: 260px;
             background-size: cover;
-            background-position: center;
+            background-position: center top;
             border-bottom: 1px solid #ddd2d5;
             filter: grayscale(100%);
         }
@@ -299,6 +333,23 @@ foreach ($beauticians as $b) {
             padding: 0.35rem 0.7rem;
         }
 
+        .status-badge {
+            font-size: 0.72rem;
+            font-weight: 700;
+            display: inline-block;
+            margin-top: 0.3rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-online {
+            color: #2e7d32;
+        }
+        
+        .status-offline {
+            color: #7d7276;
+        }
+
         .footer-line {
             margin-top: 1.2rem;
             background: #eae4e4;
@@ -387,7 +438,14 @@ foreach ($beauticians as $b) {
 
                 <div class="filter-tabs" id="filterTabs">
                     <?php foreach ($categoryButtons as $key => $label): ?>
-                        <button type="button" class="btn filter-btn <?php echo $selectedCategory === $key ? 'active' : ''; ?>" data-filter="<?php echo htmlspecialchars($key); ?>"><?php echo $selectedCategory === $key ? '✓ ' : ''; ?><?php echo htmlspecialchars($label); ?></button>
+                        <?php
+                        $isCurrent = ($selectedCategory === $key);
+                        $btnClass = $isCurrent ? 'active' : 'disabled-tab';
+                        $btnDisabled = $isCurrent ? '' : 'disabled';
+                        ?>
+                        <button type="button" class="btn filter-btn <?php echo $btnClass; ?>" <?php echo $btnDisabled; ?> data-filter="<?php echo htmlspecialchars($key); ?>">
+                            <?php echo $isCurrent ? '✓ ' : ''; ?><?php echo htmlspecialchars($label); ?>
+                        </button>
                     <?php endforeach; ?>
                 </div>
 
@@ -397,7 +455,7 @@ foreach ($beauticians as $b) {
                     <div class="staff-grid" id="staffGrid">
                         <article class="staff-card auto-card" data-category="hair nails lashes wax" data-available="true">
                             <div class="auto-icon">🗂</div>
-                            <h2 class="auto-title">Any Available Staff</h2>
+                            <h2 class="auto-title"><?php echo htmlspecialchars($anyAvailableTitle); ?></h2>
                             <p class="auto-sub">Let us match you with the first available expert for your requested time.</p>
                             <button type="button" class="select-btn" data-select-id="">→</button>
                         </article>
@@ -407,13 +465,22 @@ foreach ($beauticians as $b) {
                         <?php else: ?>
                             <?php foreach ($staffCards as $staff): ?>
                                 <article class="staff-card <?php echo !$staff['available'] ? 'unavailable' : ''; ?>" data-category="<?php echo htmlspecialchars($staff['category']); ?>" data-available="<?php echo $staff['available'] ? 'true' : 'false'; ?>">
-                                    <div class="staff-visual <?php echo htmlspecialchars($staff['avatar']); ?>"></div>
+                                    <?php
+                                    $styleAttr = '';
+                                    if (!empty($staff['photo'])) {
+                                        $styleAttr = 'style="background-image: url(\'assets/merish_pictures/experts/' . htmlspecialchars($staff['photo']) . '\'); filter: none;"';
+                                    }
+                                    ?>
+                                    <div class="staff-visual <?php echo empty($styleAttr) ? htmlspecialchars($staff['avatar']) : ''; ?>" <?php echo $styleAttr; ?>></div>
                                     <?php if (!$staff['available']): ?>
                                         <div class="unavailable-overlay">Not Available</div>
                                     <?php endif; ?>
                                     <div class="staff-info">
                                         <h2 class="staff-name"><?php echo htmlspecialchars($staff['name']); ?></h2>
                                         <p class="staff-role"><?php echo htmlspecialchars($staff['role']); ?></p>
+                                        <span class="status-badge <?php echo $staff['available'] ? 'status-online' : 'status-offline'; ?>">
+                                            <?php echo $staff['available'] ? '● Online' : '● Offline'; ?>
+                                        </span>
                                     </div>
                                     <?php if ($staff['available']): ?>
                                         <button type="button" class="select-btn" data-select-id="<?php echo htmlspecialchars($staff['id']); ?>">→</button>

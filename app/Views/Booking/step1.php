@@ -496,10 +496,16 @@ foreach ($services as $item) {
     function filterServices(category) {
         categoryTitle.textContent = categoryLabels[category] || 'Services';
         serviceRows.forEach((row) => {
-            row.style.display = row.dataset.serviceCategory === category ? '' : 'none';
+            const isMatch = row.dataset.serviceCategory === category;
+            row.style.display = isMatch ? '' : 'none';
+            if (!isMatch) {
+                const cb = row.querySelector('.service-checkbox');
+                if (cb) {
+                    cb.checked = false;
+                }
+            }
         });
 
-        // Don't uncheck when changing categories so users can select across categories
         updateActiveOptionStyle();
     }
 

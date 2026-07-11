@@ -168,14 +168,16 @@ class CafeController
         $totalPrice = array_reduce($cart, static function (int $carry, array $item): int {
             return $carry + ((int) ($item['price'] ?? 0) * (int) ($item['qty'] ?? 1));
         }, 0);
+        $tax = (int) round($totalPrice * 0.1);
+        $totalWithTax = $totalPrice + $tax;
 
         $ordersModel = new OrdersModel();
         $orderId = $ordersModel->create([
             'guest_name' => $guestName,
             'seat_id' => $seatId !== '' ? $seatId : null,
-            'total_amount' => $totalPrice,
+            'total_amount' => $totalWithTax,
             'payment_method' => $paymentMethod,
-            'payment_status' => 'Unpaid',
+            'payment_status' => ($paymentMethod === 'QRIS') ? 'Paid' : 'Unpaid',
             'status' => 'New',
         ]);
 

@@ -210,12 +210,26 @@ $seatName = $payment['seat_name'] ?? '';
             <?php if (!empty($orderDetails)): ?>
                 <div class="item-list">
                     <h3>Item Pesanan</h3>
+                    <?php 
+                    $detailsSubtotal = 0;
+                    foreach ($orderDetails as $detail) {
+                        $detailsSubtotal += (float)$detail['subtotal'];
+                    }
+                    $hasTax = ($totalAmount > $detailsSubtotal);
+                    $calculatedTax = (int) round($detailsSubtotal * 0.1);
+                    ?>
                     <?php foreach ($orderDetails as $detail): ?>
                         <div class="item-row">
                             <span class="item-name"><?= htmlspecialchars($detail['menu_name']) ?> x<?= (int)$detail['qty'] ?></span>
                             <span class="item-sub">Rp <?= number_format((float)$detail['subtotal'], 0, ',', '.') ?></span>
                         </div>
                     <?php endforeach; ?>
+                    <?php if ($hasTax): ?>
+                        <div class="item-row text-muted border-top pt-1 mt-1" style="font-size: 0.8rem;">
+                            <span>Tax & Service (10%)</span>
+                            <span>Rp <?= number_format($calculatedTax, 0, ',', '.') ?></span>
+                        </div>
+                    <?php endif; ?>
                     <div class="total-row">
                         <span>Total</span>
                         <span class="value">Rp <?= number_format((float)$totalAmount, 0, ',', '.') ?></span>

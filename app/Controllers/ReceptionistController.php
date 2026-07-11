@@ -175,8 +175,164 @@ class ReceptionistController
 
     public function scheduleBooking()
     {
-        $reservations = $this->reservationsModel->findAll();
+        // 1. Fetch all active services
+        $serviceStmt = $this->db->query("SELECT service_id, service_name, category, base_tariff, est_duration FROM services WHERE is_addon = 0 ORDER BY service_name ASC");
+        $services = $serviceStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // 2. Fetch all stylists/beauticians
+        $beauticianStmt = $this->db->query("
+            SELECT sp.user_id, u.NAME as name, sp.specialization, sp.work_status
+            FROM staff_profiles sp
+            JOIN users u ON sp.user_id = u.user_id
+            ORDER BY u.NAME ASC
+        ");
+        $beauticians = $beauticianStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // 3. Fetch all seats
+        $seatStmt = $this->db->query("SELECT seat_id, seat_name FROM seats WHERE zone_type = 'Kursi Salon' ORDER BY seat_id ASC");
+        $seats = $seatStmt->fetchAll(PDO::FETCH_ASSOC);
+
         require __DIR__ . '/../Views/Receptionist/schedule_booking.php';
+    }
+
+    public function getAvailability()
+    {
+        header('Content-Type: application/json');
+        $date = $_GET['date'] ?? date('Y-m-d');
+        $time = $_GET['time'] ?? '09:00';
+        $serviceId = $_GET['service_id'] ?? '';
+        $duration = 60;
+        if (!empty($serviceId)) {
+            // Get service duration
+            $serviceStmt = $this->db->prepare("SELECT est_duration FROM services WHERE service_id = :service_id LIMIT 1");
+            $serviceStmt->execute([':service_id' => $serviceId]);
+            $service = $serviceStmt->fetch(PDO::FETCH_ASSOC);
+            if ($service) {
+                $duration = (int)$service['est_duration'];
+            }
+        }
+
+        $startTimestamp = strtotime("$date $time");
+        $endTimestamp = $startTimestamp + ($duration * 60);
+
+        // Find active reservations that overlap with this range
+        $resStmt = $this->db->prepare("
+            SELECT r.seat_id, rd.beautician_id, r.schedule_time, s.est_duration
+            FROM reservations r
+            JOIN reservation_details rd ON r.res_id = rd.res_id
+            JOIN services s ON rd.service_id = s.service_id
+            WHERE r.STATUS IN ('Pending', 'Confirmed', 'In-Service')
+              AND DATE(r.schedule_time) = :date
+        ");
+        $resStmt->execute([':date' => $date]);
+        $reservations = $resStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $occupiedSeats = [];
+        $busyBeauticians = [];
+
+        foreach ($reservations as $res) {
+            $resStart = strtotime($res['schedule_time']);
+            $resEnd = $resStart + ((int)$res['est_duration'] * 60);
+
+            // Check if intervals overlap
+            if (max($startTimestamp, $resStart) < min($endTimestamp, $resEnd)) {
+                if (!empty($res['seat_id'])) {
+                    $occupiedSeats[] = $res['seat_id'];
+                }
+                if (!empty($res['beautician_id'])) {
+                    $busyBeauticians[] = (int)$res['beautician_id'];
+                }
+            }
+        }
+
+        echo json_encode([
+            'occupied_seats' => array_values(array_unique($occupiedSeats)),
+            'busy_beauticians' => array_values(array_unique($busyBeauticians))
+        ]);
+        exit;
+    }
+
+    public function createWalkInBooking()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?page=receptionist');
+            exit;
+        }
+
+        $guestName = trim($_POST['guest_name'] ?? '');
+        $date = trim($_POST['schedule_date'] ?? date('Y-m-d'));
+        $time = trim($_POST['schedule_time'] ?? '09:00');
+        $serviceId = trim($_POST['service_id'] ?? '');
+        $beauticianId = (int)($_POST['beautician_id'] ?? 0);
+        $seatId = trim($_POST['seat_id'] ?? '');
+
+        if ($guestName === '' || $serviceId === '' || $beauticianId <= 0 || $seatId === '') {
+            $_SESSION['error'] = 'Semua field wajib diisi.';
+            header('Location: index.php?page=receptionist&action=scheduleBooking');
+            exit;
+        }
+
+        try {
+            // Get service tariff
+            $serviceStmt = $this->db->prepare("SELECT base_tariff FROM services WHERE service_id = :service_id LIMIT 1");
+            $serviceStmt->execute([':service_id' => $serviceId]);
+            $service = $serviceStmt->fetch(PDO::FETCH_ASSOC);
+            $tariff = $service ? (float)$service['base_tariff'] : 0.0;
+
+            $this->db->beginTransaction();
+
+            // Create temporary walk-in customer user
+            $email = 'walkin_' . time() . '_' . rand(100, 999) . '@merish-walkin.com';
+            $userStmt = $this->db->prepare("
+                INSERT INTO users (NAME, email, PASSWORD, ROLE)
+                VALUES (:name, :email, 'walkin123', 'Customer')
+            ");
+            $userStmt->execute([
+                ':name' => $guestName,
+                ':email' => $email
+            ]);
+            $userId = (int)$this->db->lastInsertId();
+
+            // Insert into reservations
+            $status = ($date === date('Y-m-d')) ? 'In-Service' : 'Confirmed';
+            $scheduleTime = "$date $time:00";
+
+            $resStmt = $this->db->prepare("
+                INSERT INTO reservations (user_id, seat_id, promo_id, STATUS, schedule_time, is_dp_paid, dp_amount)
+                VALUES (:user_id, :seat_id, NULL, :status, :schedule_time, 0, 0)
+            ");
+            $resStmt->execute([
+                ':user_id' => $userId,
+                ':seat_id' => $seatId,
+                ':status' => $status,
+                ':schedule_time' => $scheduleTime
+            ]);
+
+            $resId = (int)$this->db->lastInsertId();
+
+            // Insert into reservation_details
+            $detStmt = $this->db->prepare("
+                INSERT INTO reservation_details (res_id, service_id, beautician_id, qty, subtotal)
+                VALUES (:res_id, :service_id, :beautician_id, 1, :subtotal)
+            ");
+            $detStmt->execute([
+                ':res_id' => $resId,
+                ':service_id' => $serviceId,
+                ':beautician_id' => $beauticianId,
+                ':subtotal' => $tariff
+            ]);
+
+            $this->db->commit();
+            $_SESSION['success'] = 'Booking Walk-in berhasil dibuat!';
+        } catch (\Throwable $exception) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            $_SESSION['error'] = 'Gagal membuat booking: ' . $exception->getMessage();
+        }
+
+        header('Location: index.php?page=receptionist');
+        exit;
     }
 
     public function viewReservations()
@@ -426,8 +582,7 @@ class ReceptionistController
             "SELECT seat_id, seat_name
              FROM seats
              WHERE zone_type = 'Kursi Salon'
-             ORDER BY seat_id ASC
-             LIMIT 5"
+             ORDER BY seat_id ASC"
         );
         $rows = $stmt->fetchAll();
 
@@ -435,13 +590,12 @@ class ReceptionistController
             return $rows;
         }
 
-        return [
-            ['seat_id' => 'S01', 'seat_name' => '01'],
-            ['seat_id' => 'S02', 'seat_name' => '02'],
-            ['seat_id' => 'S03', 'seat_name' => '03'],
-            ['seat_id' => 'S04', 'seat_name' => '04'],
-            ['seat_id' => 'S05', 'seat_name' => '05'],
-        ];
+        $fallback = [];
+        for ($i = 1; $i <= 15; $i++) {
+            $id = 'S' . str_pad($i, 2, '0', STR_PAD_LEFT);
+            $fallback[] = ['seat_id' => $id, 'seat_name' => 'Kursi Salon ' . $i];
+        }
+        return $fallback;
     }
 
     private function getLoungeSeats(): array

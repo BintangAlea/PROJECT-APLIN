@@ -228,18 +228,20 @@ class QROrderController
         }
 
         // Calculate total
-        $total = 0;
+        $subtotal = 0;
         foreach ($cart as $item) {
-            $total += $item['price'] * $item['qty'];
+            $subtotal += $item['price'] * $item['qty'];
         }
+        $tax = (int) round($subtotal * 0.1);
+        $totalWithTax = $subtotal + $tax;
 
         // Create cafe order record
         $orderId = $this->ordersModel->create([
             'guest_name' => $qrOrder['is_guest'] ? 'Guest' : 'Member',
             'seat_id' => $qrOrder['seat_id'],
-            'total_amount' => $total,
+            'total_amount' => $totalWithTax,
             'payment_method' => $paymentMethod,
-            'payment_status' => 'Unpaid',
+            'payment_status' => ($paymentMethod === 'QRIS') ? 'Paid' : 'Unpaid',
             'status' => 'New'
         ]);
 

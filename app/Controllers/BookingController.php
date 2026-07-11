@@ -80,8 +80,26 @@ class BookingController
                 exit;
             }
 
+            // Fetch new category
+            $servicesModel = new ServicesModel();
+            $newService = $servicesModel->findById($serviceIds[0]);
+            $newCategory = $this->normalizeBookingCategory((string) ($newService['category'] ?? 'hair'));
+
+            // Fetch old category from session if exists
+            $oldServiceId = $_SESSION['booking']['service_id'] ?? null;
+            $oldService = $oldServiceId ? $servicesModel->findById($oldServiceId) : null;
+            $oldCategory = $oldService ? $this->normalizeBookingCategory((string) ($oldService['category'] ?? 'hair')) : null;
+
             // Store in session
             $_SESSION['booking'] = $_SESSION['booking'] ?? [];
+            
+            // If category changed, reset addons and promo
+            if ($oldCategory && $oldCategory !== $newCategory) {
+                $_SESSION['booking']['addon_ids'] = [];
+                $_SESSION['booking']['promo_id'] = null;
+                $_SESSION['booking']['beautician_id'] = null;
+            }
+
             $_SESSION['booking']['service_ids'] = $serviceIds;
             // Kept for backward compatibility if needed in UI
             $_SESSION['booking']['service_id'] = $serviceIds[0]; 
@@ -242,10 +260,12 @@ class BookingController
     public function step3()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            date_default_timezone_set('Asia/Jakarta');
+            
             $isLoggedIn = isset($_SESSION['user_id']);
             $user = null;
             $vipAccessEnabled = false;
-            $bookingWindowDays = 1;
+            $bookingWindowDays = 30;
             $memberTierName = 'Guest';
 
             if ($isLoggedIn) {
@@ -254,28 +274,74 @@ class BookingController
                 $loyaltyStage = (int) ($user['loyalty_stage'] ?? 1);
                 $totalSpent = (float) ($user['total_spent'] ?? 0);
 
-                $bookingWindowDays = max(1, LoyaltyModel::getBookingWindow($loyaltyStage));
+                $bookingWindowDays = $loyaltyStage >= 3 ? 45 : 30;
                 $vipAccessEnabled = $loyaltyStage >= 3 || $totalSpent >= 2000000;
                 $memberTierName = LoyaltyModel::getTierName($loyaltyStage);
             }
+
+            $booking = $_SESSION['booking'] ?? [];
+            $minDate = date('Y-m-d');
+            $maxDate = date('Y-m-d', strtotime('+' . max(1, $bookingWindowDays) . ' days'));
+            
+            // Accept date parameter from GET and save to session
+            $selectedDate = $_GET['date'] ?? ($booking['reservation_date'] ?? $minDate);
+            if ($selectedDate < $minDate) {
+                $selectedDate = $minDate;
+            } elseif ($selectedDate > $maxDate) {
+                $selectedDate = $maxDate;
+            }
+            $_SESSION['booking'] = $_SESSION['booking'] ?? [];
+            $_SESSION['booking']['reservation_date'] = $selectedDate;
+
+            // Accept view month/year from GET parameters
+            $selectedDateObj = new \DateTime($selectedDate);
+            $viewMonth = isset($_GET['view_month']) ? (int) $_GET['view_month'] : (int) $selectedDateObj->format('m');
+            $viewYear = isset($_GET['view_year']) ? (int) $_GET['view_year'] : (int) $selectedDateObj->format('Y');
+
+            // Sanitize view month and year
+            if ($viewMonth < 1 || $viewMonth > 12) {
+                $viewMonth = (int) $selectedDateObj->format('m');
+            }
+            if ($viewYear < 2000 || $viewYear > 2100) {
+                $viewYear = (int) $selectedDateObj->format('Y');
+            }
+
+            // Fetch pricing
+            $pricingService = new \App\Core\PricingService();
+            $serviceIdsParam = !empty($booking['service_ids']) ? $booking['service_ids'] : ($booking['service_id'] ?? null);
+            $pricing = $pricingService->calculateTotal(
+                $serviceIdsParam,
+                $booking['addon_ids'] ?? [],
+                $booking['promo_id'] ?? null
+            );
+
+            // Fetch duration
+            $durationMinutes = $this->getBookingDurationMinutes($booking);
 
             return [
                 'view' => 'Booking/step3',
                 'data' => [
                     'step' => 3,
                     'title' => 'Pilih Tanggal & Waktu',
-                    'booking' => $_SESSION['booking'] ?? [],
-                    'min_date' => date('Y-m-d', strtotime('+1 day')),
-                    'max_date' => date('Y-m-d', strtotime('+' . max(1, $bookingWindowDays) . ' days')),
+                    'booking' => $_SESSION['booking'],
+                    'min_date' => $minDate,
+                    'max_date' => $maxDate,
                     'booking_window_days' => $bookingWindowDays,
                     'vip_access_enabled' => $vipAccessEnabled,
                     'member_name' => $user['NAME'] ?? ($_SESSION['full_name'] ?? 'Guest'),
-                    'member_tier_name' => $memberTierName
+                    'member_tier_name' => $memberTierName,
+                    'pricing' => $pricing,
+                    'duration_minutes' => $durationMinutes,
+                    'selected_date' => $selectedDate,
+                    'view_month' => $viewMonth,
+                    'view_year' => $viewYear
                 ]
             ];
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            date_default_timezone_set('Asia/Jakarta');
+            
             $date = $_POST['reservation_date'] ?? null;
             $time = $_POST['reservation_time'] ?? null;
 
@@ -285,9 +351,69 @@ class BookingController
                 exit;
             }
 
-            $_SESSION['booking'] = $_SESSION['booking'] ?? [];
+            // Check if selected time is in the past
+            if ($date === date('Y-m-d') && $time <= date('H:i')) {
+                $_SESSION['booking_error'] = 'Slot waktu sudah terlewat. Silakan pilih waktu lain.';
+                header('Location: /index.php?page=booking&step=3');
+                exit;
+            }
+
+            $booking = $_SESSION['booking'] ?? [];
+            $durationMinutes = $this->getBookingDurationMinutes($booking);
+
+            // Get category
+            $servicesModel = new ServicesModel();
+            $service = $servicesModel->findById((string)($booking['service_id'] ?? ''));
+            $category = $this->normalizeBookingCategory((string)($service['category'] ?? 'hair'));
+
+            // Check if there are any staff members registered in the database for this category at all
+            $specializations = $this->getSpecializationsForCategory($category);
+            $placeholders = implode(',', array_fill(0, count($specializations), '?'));
+            $countStmt = $this->db->prepare("SELECT COUNT(*) FROM staff_profiles WHERE specialization IN ({$placeholders})");
+            $countStmt->execute($specializations);
+            $totalMatchingBeauticians = (int)$countStmt->fetchColumn();
+
+            // Check overlap
+            $availableSeats = $this->getAvailableSeatsForBooking($date, $time, $durationMinutes);
+            
+            $beauticianCheckPassed = false;
+            if ($totalMatchingBeauticians === 0) {
+                $beauticianCheckPassed = true; // Skip beautician check if no matching specialization registered in DB
+            } else {
+                $availableBeauticians = $this->getAvailableBeauticiansForBooking($category, $date, $time, $durationMinutes);
+                if (!empty($availableBeauticians)) {
+                    $beauticianCheckPassed = true;
+                }
+            }
+
+            // Check if end time is past 18:00
+            $startDateTimeStr = $date . ' ' . $time . ':00';
+            $endTimestamp = strtotime($startDateTimeStr) + ($durationMinutes * 60);
+            $endTimeFormatted = date('H:i', $endTimestamp);
+
+            if ($endTimeFormatted > '18:00' || empty($availableSeats) || !$beauticianCheckPassed) {
+                // Conflict detected! Find next suggestion
+                $endTimeStr = date('H:i', strtotime($startDateTimeStr) + ($durationMinutes * 60));
+                $suggestion = $this->findNextAvailableSlot($date, $endTimeStr, $durationMinutes, $category);
+
+                if ($suggestion) {
+                    $_SESSION['booking_error'] = "Slot waktu " . htmlspecialchars($time) . " - " . htmlspecialchars($endTimeStr) . " tidak tersedia karena bentrok. Rekomendasi slot terdekat: " . htmlspecialchars($suggestion['time']) . " pada " . htmlspecialchars(date('d M Y', strtotime($suggestion['date'])));
+                    $_SESSION['booking_suggestion'] = $suggestion;
+                } else {
+                    $_SESSION['booking_error'] = "Slot waktu " . htmlspecialchars($time) . " - " . htmlspecialchars($endTimeStr) . " tidak tersedia. Silakan pilih waktu lain.";
+                }
+
+                // Keep selected inputs in session so they can see what they selected
+                $_SESSION['booking']['reservation_date'] = $date;
+                $_SESSION['booking']['reservation_time'] = $time;
+
+                header('Location: /index.php?page=booking&step=3');
+                exit;
+            }
+
             $_SESSION['booking']['reservation_date'] = $date;
             $_SESSION['booking']['reservation_time'] = $time;
+            $_SESSION['booking']['seat_id'] = $availableSeats[0]['seat_id'];
 
             header('Location: /index.php?page=booking&step=4');
             exit;
@@ -308,7 +434,7 @@ class BookingController
             $selectedDate = (string) ($booking['reservation_date'] ?? date('Y-m-d', strtotime('+1 day')));
             $selectedTime = (string) ($booking['reservation_time'] ?? '10:00');
             $durationMinutes = $this->getBookingDurationMinutes($booking);
-            $beauticians = $this->getAvailableBeauticiansForBooking($selectedCategory, $selectedDate, $selectedTime, $durationMinutes);
+            $beauticians = $this->getBeauticiansForBookingView($selectedCategory, $selectedDate, $selectedTime, $durationMinutes);
 
             return [
                 'view' => 'Booking/step4',
@@ -332,6 +458,23 @@ class BookingController
             $beauticianId = $_POST['beautician_id'] ?? null;
 
             $_SESSION['booking'] = $_SESSION['booking'] ?? [];
+
+            if (empty($beauticianId)) {
+                // Sapu Jagat: Pick the first available beautician
+                $servicesModel = new ServicesModel();
+                $selectedServiceId = (string) ($_SESSION['booking']['service_id'] ?? '');
+                $selectedService = $selectedServiceId !== '' ? $servicesModel->findById($selectedServiceId) : null;
+                $category = $this->normalizeBookingCategory((string) ($selectedService['category'] ?? 'hair'));
+                $date = $_SESSION['booking']['reservation_date'] ?? date('Y-m-d');
+                $time = $_SESSION['booking']['reservation_time'] ?? '10:00';
+                $durationMinutes = $this->getBookingDurationMinutes($_SESSION['booking']);
+
+                $available = $this->getAvailableBeauticiansForBooking($category, $date, $time, $durationMinutes);
+                if (!empty($available)) {
+                    $beauticianId = $available[0]['user_id'];
+                }
+            }
+
             $_SESSION['booking']['beautician_id'] = $beauticianId;
 
             // Check if logged in before proceeding to checkout
@@ -804,68 +947,80 @@ class BookingController
 
     private function getBookingDurationMinutes(array $booking): int
     {
-        $duration = 60;
-
-        if (!empty($booking['service_id'])) {
-            $servicesModel = new ServicesModel();
-            $service = $servicesModel->findById((string) $booking['service_id']);
-            if (!empty($service['est_duration'])) {
-                $duration = (int) $service['est_duration'];
-            }
+        $totalDuration = 0;
+        $serviceIds = [];
+        if (!empty($booking['service_ids'])) {
+            $serviceIds = $booking['service_ids'];
+        } elseif (!empty($booking['service_id'])) {
+            $serviceIds = [$booking['service_id']];
         }
-
-        return max(30, $duration);
+        
+        $addonIds = $booking['addon_ids'] ?? [];
+        $allIds = array_merge($serviceIds, $addonIds);
+        $allIds = array_filter(array_unique($allIds));
+        
+        if (!empty($allIds)) {
+            $placeholders = implode(',', array_fill(0, count($allIds), '?'));
+            $stmt = $this->db->prepare("SELECT SUM(COALESCE(est_duration, 0)) as total_duration FROM services WHERE service_id IN ($placeholders)");
+            $stmt->execute($allIds);
+            $totalDuration = (int)$stmt->fetchColumn();
+        }
+        
+        return $totalDuration > 0 ? $totalDuration : 60;
     }
 
-    private function getAvailableBeauticiansForBooking(string $category, string $reservationDate, string $reservationTime, int $durationMinutes): array
+    private function getBeauticiansForBookingView(string $category, string $reservationDate, string $reservationTime, int $durationMinutes): array
     {
-        $specializations = $this->getSpecializationsForCategory($category);
-        $placeholders = implode(',', array_fill(0, count($specializations), '?'));
-
-        $stmt = $this->db->prepare(
-            "SELECT sp.profile_id,
-                    u.user_id,
-                    u.NAME AS name,
-                    u.email,
-                    sp.specialization,
-                    sp.work_status
-             FROM staff_profiles sp
-             JOIN users u ON sp.user_id = u.user_id
-             WHERE sp.work_status = 'Online'
-               AND u.ROLE = 'Beautician'
-               AND sp.specialization IN ({$placeholders})
-             ORDER BY u.NAME ASC"
-        );
-        $stmt->execute($specializations);
-        $candidates = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        if (empty($candidates)) {
-            return [];
-        }
-
-        $busyStmt = $this->db->prepare(
-            "SELECT rd.beautician_id,
-                    r.schedule_time,
-                    COALESCE(s.est_duration, 60) AS est_duration
-             FROM reservations r
-             JOIN reservation_details rd ON rd.res_id = r.res_id
-             JOIN services s ON s.service_id = rd.service_id
-             WHERE DATE(r.schedule_time) = :date
-               AND r.STATUS IN ('Pending', 'Confirmed', 'In-Service')
-               AND rd.beautician_id IS NOT NULL"
-        );
-        $busyStmt->execute([':date' => $reservationDate]);
-        $busyRows = $busyStmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = $this->db->prepare("
+            SELECT es.employee_name AS name,
+                   es.role,
+                   es.shift_start,
+                   es.shift_end,
+                   u.user_id,
+                   u.email,
+                   sp.profile_id,
+                   sp.specialization,
+                   sp.work_status
+            FROM employee_schedules es
+            LEFT JOIN users u ON es.employee_name = u.NAME
+            LEFT JOIN staff_profiles sp ON u.user_id = sp.user_id
+            WHERE (
+                (:cat1 = 'nails' AND es.role LIKE '%Nailist%') OR
+                (:cat2 = 'lashes' AND es.role LIKE '%Lash%') OR
+                (:cat3 = 'wax' AND (es.role LIKE '%Wax%' OR es.role LIKE '%Eyebrow%')) OR
+                (:cat4 = 'hair' AND es.role LIKE '%Hair%')
+            )
+            ORDER BY es.employee_name ASC
+        ");
+        $stmt->execute([
+            ':cat1' => $category,
+            ':cat2' => $category,
+            ':cat3' => $category,
+            ':cat4' => $category
+        ]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
         $requestStart = new \DateTimeImmutable($reservationDate . ' ' . $reservationTime);
         $requestEnd = $requestStart->modify('+' . max(30, $durationMinutes) . ' minutes');
-        $busyBeauticians = [];
 
+        $busyStmt = $this->db->prepare("
+            SELECT rd.beautician_id,
+                   r.schedule_time,
+                   COALESCE(s.est_duration, 60) AS est_duration
+            FROM reservations r
+            JOIN reservation_details rd ON rd.res_id = r.res_id
+            JOIN services s ON s.service_id = rd.service_id
+            WHERE DATE(r.schedule_time) = :date
+              AND r.STATUS IN ('Pending', 'Confirmed', 'In-Service')
+              AND rd.beautician_id IS NOT NULL
+        ");
+        $busyStmt->execute([':date' => $reservationDate]);
+        $busyRows = $busyStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+        $busyBeauticians = [];
         foreach ($busyRows as $busyRow) {
             $busyBeauticianId = (int) ($busyRow['beautician_id'] ?? 0);
-            if ($busyBeauticianId <= 0) {
-                continue;
-            }
+            if ($busyBeauticianId <= 0) continue;
 
             $busyStart = new \DateTimeImmutable((string) ($busyRow['schedule_time'] ?? $reservationDate . ' 00:00:00'));
             $busyEnd = $busyStart->modify('+' . max(30, (int) ($busyRow['est_duration'] ?? 60)) . ' minutes');
@@ -875,18 +1030,143 @@ class BookingController
             }
         }
 
-        $available = [];
-        foreach ($candidates as $candidate) {
-            $beauticianId = (int) ($candidate['user_id'] ?? 0);
-            if ($beauticianId <= 0 || isset($busyBeauticians[$beauticianId])) {
-                continue;
+        $result = [];
+        foreach ($rows as $row) {
+            $beauticianId = (int) ($row['user_id'] ?? 0);
+            $available = true;
+
+            // Check shift hours
+            $shiftStartStr = $reservationDate . ' ' . ($row['shift_start'] ?? '09:00:00');
+            $shiftEndStr = $reservationDate . ' ' . ($row['shift_end'] ?? '21:00:00');
+            $shiftStart = new \DateTimeImmutable($shiftStartStr);
+            $shiftEnd = new \DateTimeImmutable($shiftEndStr);
+
+            if ($requestStart < $shiftStart || $requestEnd > $shiftEnd) {
+                $available = false;
             }
 
-            $candidate['category'] = $this->getBeauticianCategoryFromSpecialization((string) ($candidate['specialization'] ?? 'Hair Stylist'));
-            $candidate['available'] = true;
-            $available[] = $candidate;
+            // Check conflict
+            if ($beauticianId > 0 && isset($busyBeauticians[$beauticianId])) {
+                $available = false;
+            }
+
+            $row['available'] = $available;
+            $row['category'] = $category;
+            $result[] = $row;
         }
 
+        return $result;
+    }
+
+    private function getAvailableBeauticiansForBooking(string $category, string $reservationDate, string $reservationTime, int $durationMinutes): array
+    {
+        $all = $this->getBeauticiansForBookingView($category, $reservationDate, $reservationTime, $durationMinutes);
+        $available = [];
+        foreach ($all as $b) {
+            if ($b['available']) {
+                $available[] = $b;
+            }
+        }
         return $available;
+    }
+
+    private function getAvailableSeatsForBooking(string $reservationDate, string $reservationTime, int $durationMinutes): array
+    {
+        $startStr = $reservationDate . ' ' . $reservationTime . ':00';
+        $endStr = date('Y-m-d H:i:s', strtotime($startStr) + ($durationMinutes * 60));
+        
+        $stmtSeats = $this->db->query("SELECT seat_id, seat_name FROM seats WHERE zone_type = 'Kursi Salon'");
+        $allSeats = $stmtSeats->fetchAll(PDO::FETCH_ASSOC);
+        
+        $stmtOccupied = $this->db->prepare("
+            SELECT DISTINCT r.seat_id 
+            FROM reservations r
+            WHERE r.status IN ('Pending', 'Confirmed', 'In-Service')
+              AND :new_start < DATE_ADD(r.schedule_time, INTERVAL (
+                  SELECT COALESCE(SUM(s.est_duration), 60) 
+                  FROM reservation_details rd 
+                  JOIN services s ON rd.service_id = s.service_id 
+                  WHERE rd.res_id = r.res_id
+              ) MINUTE)
+              AND :new_end > r.schedule_time
+        ");
+        $stmtOccupied->execute([
+            ':new_start' => $startStr,
+            ':new_end' => $endStr
+        ]);
+        $occupiedSeatIds = $stmtOccupied->fetchAll(PDO::FETCH_COLUMN) ?: [];
+        
+        $available = [];
+        foreach ($allSeats as $seat) {
+            if (!in_array($seat['seat_id'], $occupiedSeatIds)) {
+                $available[] = $seat;
+            }
+        }
+        return $available;
+    }
+
+    private function findNextAvailableSlot(string $selectedDate, string $endTimeStr, int $durationMinutes, string $category): ?array
+    {
+        $currentDateTime = new \DateTime($selectedDate . ' ' . $endTimeStr);
+        
+        $specializations = $this->getSpecializationsForCategory($category);
+        $placeholders = implode(',', array_fill(0, count($specializations), '?'));
+        $countStmt = $this->db->prepare("SELECT COUNT(*) FROM staff_profiles WHERE specialization IN ({$placeholders})");
+        $countStmt->execute($specializations);
+        $totalMatchingBeauticians = (int)$countStmt->fetchColumn();
+
+        // Loop up to 7 days ahead
+        for ($day = 0; $day < 7; $day++) {
+            if ($day > 0) {
+                $currentDateTime->setTime(9, 0);
+            }
+            
+            while ($currentDateTime->format('H:i') <= '17:30') {
+                $startStr = $currentDateTime->format('Y-m-d H:i:s');
+                $endTimestamp = $currentDateTime->getTimestamp() + ($durationMinutes * 60);
+                $endDayStr = date('Y-m-d', $endTimestamp);
+                $endTimeFormatted = date('H:i', $endTimestamp);
+                
+                if ($endDayStr === $currentDateTime->format('Y-m-d') && $endTimeFormatted <= '18:00') {
+                    $availableSeats = $this->getAvailableSeatsForBooking(
+                        $currentDateTime->format('Y-m-d'),
+                        $currentDateTime->format('H:i'),
+                        $durationMinutes
+                    );
+                    if (!empty($availableSeats)) {
+                        $beauticianCheckPassed = false;
+                        if ($totalMatchingBeauticians === 0) {
+                            $beauticianCheckPassed = true;
+                        } else {
+                            $availBeauticians = $this->getAvailableBeauticiansForBooking(
+                                $category, 
+                                $currentDateTime->format('Y-m-d'), 
+                                $currentDateTime->format('H:i'), 
+                                $durationMinutes
+                            );
+                            if (!empty($availBeauticians)) {
+                                $beauticianCheckPassed = true;
+                            }
+                        }
+
+                        if ($beauticianCheckPassed) {
+                            return [
+                                'date' => $currentDateTime->format('Y-m-d'),
+                                'time' => $currentDateTime->format('H:i'),
+                                'seat_id' => $availableSeats[0]['seat_id'],
+                                'seat_name' => $availableSeats[0]['seat_name'],
+                                'duration' => $durationMinutes
+                            ];
+                        }
+                    }
+                }
+                
+                $currentDateTime->modify('+30 minutes');
+            }
+            
+            $currentDateTime->modify('+1 day');
+        }
+        
+        return null;
     }
 }

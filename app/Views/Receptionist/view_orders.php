@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $activeBills = $activeBills ?? [];
 $selectedBill = $selectedBill ?? null;
 $flashSuccess = $flashSuccess ?? null;
@@ -89,6 +89,29 @@ $formatCurrency = static fn ($value): string => 'Rp ' . number_format((float) $v
             text-decoration: none;
             display: inline-flex;
             justify-content: center;
+        }
+
+        .sidebar-logout {
+            margin-top: 0.5rem;
+            border: 1px solid #dcaeb7;
+            background: transparent;
+            color: #8b6472;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.85rem 1rem;
+            text-decoration: none;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .sidebar-logout:hover {
+            background: #ffebee;
+            color: #c62828;
+            border-color: #f5c2c7;
         }
 
         .main { padding: 0; }
@@ -374,19 +397,17 @@ $formatCurrency = static fn ($value): string => 'Rp ' . number_format((float) $v
             </nav>
 
             <a class="new-booking" href="index.php?page=receptionist&action=scheduleBooking">+ New Booking</a>
+            <a class="sidebar-logout" href="<?= LOGOUT_URL ?>">Logout</a>
         </aside>
 
         <main class="main">
             <header class="topbar">
                 <div class="search-box rounded-0">
-                    <span>âŒ•</span>
+                    <span>🔍</span>
                     <input type="text" placeholder="Search orders, clients...">
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <button class="icon-btn" type="button">ðŸ””</button>
-                    <button class="icon-btn" type="button">?</button>
-                    <a class="walkin-btn" href="index.php?page=receptionist">Walk-In Check-In</a>
-                    <a class="icon-btn text-decoration-none" href="<?= LOGOUT_URL ?>">âŽ‹</a>
+                    <a class="walkin-btn" href="index.php?page=receptionist&action=scheduleBooking">Walk-In Check-In</a>
                 </div>
             </header>
 

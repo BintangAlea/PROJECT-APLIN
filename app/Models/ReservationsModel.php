@@ -201,8 +201,75 @@ class ReservationsModel
                 return false;
             }
 
-            // Insert into reservations
+            // Calculate service duration
+            $durationMinutes = 60;
+            $serviceIdsCheck = $data['service_ids'] ?? [];
+            if (!empty($serviceId) && !in_array($serviceId, $serviceIdsCheck)) {
+                $serviceIdsCheck[] = $serviceId;
+            }
+            if (!empty($serviceIdsCheck)) {
+                $placeholders = implode(',', array_fill(0, count($serviceIdsCheck), '?'));
+                $dStmt = $this->db->prepare("SELECT SUM(COALESCE(est_duration, 0)) FROM services WHERE service_id IN ($placeholders)");
+                $dStmt->execute($serviceIdsCheck);
+                $sumDuration = (int) $dStmt->fetchColumn();
+                if ($sumDuration > 0) {
+                    $durationMinutes = $sumDuration;
+                }
+            }
+
             $scheduleTime = date('Y-m-d H:i:s', strtotime($reservationDate . ' ' . $reservationTime));
+            $newEnd = date('Y-m-d H:i:s', strtotime($scheduleTime) + ($durationMinutes * 60));
+
+            // Check seat overlap
+            $overlapSeatStmt = $this->db->prepare("
+                SELECT COUNT(*) 
+                FROM reservations r
+                WHERE r.seat_id = :seat_id
+                  AND r.status IN ('Pending', 'Confirmed', 'In-Service')
+                  AND :new_start < DATE_ADD(r.schedule_time, INTERVAL (
+                      SELECT COALESCE(SUM(s.est_duration), 60) 
+                      FROM reservation_details rd 
+                      JOIN services s ON rd.service_id = s.service_id 
+                      WHERE rd.res_id = r.res_id
+                  ) MINUTE)
+                  AND :new_end > r.schedule_time
+            ");
+            $overlapSeatStmt->execute([
+                ':seat_id' => $seatId,
+                ':new_start' => $scheduleTime,
+                ':new_end' => $newEnd
+            ]);
+            if ($overlapSeatStmt->fetchColumn() > 0) {
+                error_log("ReservationsModel.create() - Seat overlap detected for seat: " . $seatId);
+                return false;
+            }
+
+            // Check staff (beautician) overlap
+            if ($beauticianId !== null) {
+                $overlapStaffStmt = $this->db->prepare("
+                    SELECT COUNT(*) 
+                    FROM reservations r
+                    JOIN reservation_details rd ON r.res_id = rd.res_id
+                    WHERE rd.beautician_id = :beautician_id
+                      AND r.status IN ('Pending', 'Confirmed', 'In-Service')
+                      AND :new_start < DATE_ADD(r.schedule_time, INTERVAL (
+                          SELECT COALESCE(SUM(s.est_duration), 60) 
+                          FROM reservation_details rd2 
+                          JOIN services s ON rd2.service_id = s.service_id 
+                          WHERE rd2.res_id = r.res_id
+                      ) MINUTE)
+                      AND :new_end > r.schedule_time
+                ");
+                $overlapStaffStmt->execute([
+                    ':beautician_id' => $beauticianId,
+                    ':new_start' => $scheduleTime,
+                    ':new_end' => $newEnd
+                ]);
+                if ($overlapStaffStmt->fetchColumn() > 0) {
+                    error_log("ReservationsModel.create() - Staff overlap detected for beautician: " . $beauticianId);
+                    return false;
+                }
+            }
             
             $stmt = $this->db->prepare('
                 INSERT INTO reservations (user_id, seat_id, promo_id, STATUS, schedule_time, is_dp_paid, dp_amount, payment_proof_url)

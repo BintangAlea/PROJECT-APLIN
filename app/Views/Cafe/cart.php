@@ -701,14 +701,39 @@ if (!$seatId && $isLoggedIn) {
 
                     <?php if (!empty($cartItems)): ?>
                         <?php foreach ($cartItems as $item): ?>
-                            <div class="summary-line">
-                                <span><?php echo (int) $item['qty']; ?>x <?php echo htmlspecialchars($item['name']); ?></span>
-                                <span><?php echo number_format($item['line_total'], 0, ',', '.'); ?></span>
+                            <div class="summary-line align-items-center mb-3">
+                                <div class="d-flex flex-column" style="max-width: 140px;">
+                                    <span style="font-weight: 600; color: #3f3137; line-height: 1.2; text-align: left;"><?php echo htmlspecialchars($item['name']); ?></span>
+                                    <span style="font-size: 0.72rem; color: var(--muted); text-align: left;">IDR <?php echo number_format($item['price'], 0, ',', '.'); ?></span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2 ms-auto">
+                                    <div class="qty-box" style="padding: 0.2rem 0.4rem; min-width: 76px; font-size: 0.8rem; border-radius: 6px; gap: 0.5rem; background: #faf3f3; border: 1px solid #eadede; display: inline-flex; align-items: center; justify-content: space-between;">
+                                        <form method="POST" action="index.php?page=cafe&action=updateCart" class="m-0 d-inline">
+                                            <input type="hidden" name="menu_id" value="<?php echo htmlspecialchars($item['menu_id']); ?>">
+                                            <?php if ($seatId): ?>
+                                                <input type="hidden" name="seat" value="<?php echo htmlspecialchars($seatId); ?>">
+                                            <?php endif; ?>
+                                            <button type="submit" name="qty" value="<?php echo max(0, $item['qty'] - 1); ?>" style="font-size: 0.85rem; padding: 0 4px; font-weight: bold; color: #8c6674; border: 0; background: transparent;">−</button>
+                                        </form>
+                                        <span class="value" style="font-size: 0.8rem; width: 14px; text-align: center; font-weight: 700; color: #3f3137;"><?php echo (int) $item['qty']; ?></span>
+                                        <form method="POST" action="index.php?page=cafe&action=updateCart" class="m-0 d-inline">
+                                            <input type="hidden" name="menu_id" value="<?php echo htmlspecialchars($item['menu_id']); ?>">
+                                            <?php if ($seatId): ?>
+                                                <input type="hidden" name="seat" value="<?php echo htmlspecialchars($seatId); ?>">
+                                            <?php endif; ?>
+                                            <button type="submit" name="qty" value="<?php echo $item['qty'] + 1; ?>" style="font-size: 0.85rem; padding: 0 4px; font-weight: bold; color: #8c6674; border: 0; background: transparent;">+</button>
+                                        </form>
+                                    </div>
+                                    <span style="font-weight: 600; font-size: 0.82rem; min-width: 60px; text-align: right; color: #3f3137;">
+                                        <?php echo number_format($item['line_total'], 0, ',', '.'); ?>
+                                    </span>
+                                </div>
                             </div>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <div class="summary-line"><span>1x Signature Latte</span><span>45.000</span></div>
-                        <div class="summary-line"><span>1x Butter Croissant</span><span>35.000</span></div>
+                        <div class="text-center py-3 text-muted" style="font-size: 0.8rem; border: 1px dashed #eee1df; background: rgba(255,255,255,0.5); margin-bottom: 1rem;">
+                            Keranjang kosong
+                        </div>
                     <?php endif; ?>
 
                     <div class="summary-divider"></div>

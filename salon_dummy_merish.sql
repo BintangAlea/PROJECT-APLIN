@@ -7,6 +7,7 @@ TRUNCATE TABLE reservation_details;
 TRUNCATE TABLE reservations;
 TRUNCATE TABLE promotions;
 TRUNCATE TABLE staff_profiles;
+TRUNCATE TABLE employee_schedules;
 TRUNCATE TABLE seats;
 TRUNCATE TABLE services;
 TRUNCATE TABLE users;
@@ -18,17 +19,44 @@ INSERT INTO users (NAME, email, PASSWORD, ROLE) VALUES
 ('Siska Resepsionis', 'resep@merish.com', '12345', 'Receptionist'),
 ('Kak Sarah', 'sarah@merish.com', '12345', 'Beautician'),
 ('Dimas Barista', 'dimas@merish.com', '12345', 'Barista'),
-('Alina Customer', 'alina@gmail.com', '12345', 'Customer');
+('Alina Customer', 'alina@gmail.com', '12345', 'Customer'),
+('Kak Niki', 'niki@merish.com', '12345', 'Beautician'),
+('Kak Ambar', 'ambar@merish.com', '12345', 'Beautician'),
+('Kak Nurul', 'nurul@merish.com', '12345', 'Beautician'),
+('Kak Angel', 'angel@merish.com', '12345', 'Beautician'),
+('Kak Jennifer', 'jennifer@merish.com', '12345', 'Beautician'),
+('Kak Winda', 'winda@merish.com', '12345', 'Beautician'),
+('Kak Wendy', 'wendy@merish.com', '12345', 'Beautician'),
+('Kak Nirmana', 'nirmana@merish.com', '12345', 'Beautician'),
+('Kak Zeba', 'zeba@merish.com', '12345', 'Beautician'),
+('Kak Zac', 'zac@merish.com', '12345', 'Beautician');
 
+ALTER TABLE staff_profiles 
+MODIFY COLUMN specialization ENUM('Barista', 'Hair Stylist', 'Lash Technician', 'Nailist', 'Wax & Eyebrows Specialist');
 INSERT INTO staff_profiles (user_id, specialization, work_status) VALUES
 (3, 'Hair Stylist', 'Online'),
-(4, 'Barista', 'Online');
+(4, 'Barista', 'Online'),
+(6, 'Nailist', 'Online'),                 -- Kak Niki
+(7, 'Lash Technician', 'Online'),              -- Kak Ambar
+(8, 'Lash Technician', 'Online'),              -- Kak Nurul
+(9, 'Nailist', 'Online'),                      -- Kak Angel
+(10, 'Nailist', 'Online'),                     -- Kak Jennifer
+(11, 'Wax & Eyebrows Specialist', 'Online'),   -- Kak Winda
+(12, 'Wax & Eyebrows Specialist', 'Online'),   -- Kak Wendy
+(13, 'Hair Stylist', 'Online'),
+(14, 'Hair Stylist', 'Online'), 
+(15, 'Hair Stylist', 'Online'); 
+
 
 -- 2. Master Data Layanan Salon (Utama & Add-On)
 INSERT INTO services (service_id, service_name, category, is_addon, base_tariff, est_duration) VALUES
 -- ==========================================
 -- KATEGORI: HAIRS (Cut, Style & Treatment)
 -- ==========================================
+('SV01', 'Signature Balayage', 'Hair', FALSE, 850000, 240),
+('SV02', 'Ladies Signature Cut & Blow', 'Hair', FALSE, 250000, 60),
+('SV03', 'Editorial Manicure', 'Nails', FALSE, 350000, 60),
+('SV05', 'Volume Lash Extensions', 'Lashes', FALSE, 600000, 120),
 ('SV06', 'Kids Haircut (Under 10 y.o)', 'Hair', FALSE, 150000, 30),
 ('SV07', 'Wash & Blow Dry (Standard)', 'Hair', FALSE, 120000, 45),
 ('SV08', 'Permanent Blow / Korean Wave', 'Hair', FALSE, 1200000, 180),
@@ -105,6 +133,7 @@ INSERT INTO services (service_id, service_name, category, is_addon, base_tariff,
 -- ==========================================
 -- KATEGORI: HAIRS (Add-ons)
 -- ==========================================
+('ADD-03', 'Extra Bleaching (Add-on to any service)', 'Hair', TRUE, 75000, 0),
 ('ADD-04', 'Shampoo Upgrade (Anti-Dandruff / Color Protect / Scalp Care)', 'Hair', TRUE, 50000, 0),
 ('ADD-05', 'Hair Serum / Ampoule Injection', 'Hair', TRUE, 75000, 0),
 ('ADD-06', 'Collagen Booster Shot (Mixed into hair color/treatment)', 'Hair', TRUE, 100000, 0),
@@ -183,3 +212,16 @@ INSERT INTO reservation_details (res_id, service_id, beautician_id, qty, subtota
 -- Resepsionis Input ADD-ON: Alina mendadak minta Extra Bleaching saat di kursi
 INSERT INTO reservation_details (res_id, service_id, beautician_id, qty, subtotal) VALUES
 (1, 'ADD-03', NULL, 1, 75000.00);
+
+INSERT INTO employee_schedules (employee_name, role, shift_start, shift_end) VALUES
+('Kak Sarah', 'Senior Hair Stylist', '09:00:00', '21:00:00'),
+('Kak Niki', 'Senior Nailist', '09:00:00', '21:00:00'),
+('Kak Ambar', 'Senior Lash Technician', '09:00:00', '21:00:00'),
+('Kak Nurul', 'Lash Technician', '09:00:00', '21:00:00'),
+('Kak Angel', 'Nailist', '09:00:00', '21:00:00'),
+('Kak Jennifer', 'Nailist', '09:00:00', '21:00:00'),
+('Kak Winda', 'Wax & Eyebrow Specialist', '09:00:00', '21:00:00'),
+('Kak Wendy', 'Wax & Eyebrow Specialist', '09:00:00', '21:00:00'),
+('Kak Nirmana', 'Hair Stylist', '09:00:00', '21:00:00'),
+('Kak Zeba', 'Hair Stylist', '09:00:00', '21:00:00'),
+('Kak Zac', 'Hair Stylist', '09:00:00', '21:00:00');

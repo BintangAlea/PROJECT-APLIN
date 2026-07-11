@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $isLoggedIn = isset($_SESSION['user_id']);
 $displayName = $_SESSION['full_name'] ?? 'Guest';
 ?>
@@ -263,7 +263,7 @@ $displayName = $_SESSION['full_name'] ?? 'Guest';
 
     <section class="cert-section">
         <div class="container">
-            <h2 class="cert-title">Recognized Excellence<br>Sertifikasi</h2>
+            <h2 class="cert-title">Recognized Excellence<br>Sertification</h2>
             <div class="row g-4">
                 <div class="col-md-4">
                     <article class="cert-card h-100">
@@ -302,7 +302,7 @@ $displayName = $_SESSION['full_name'] ?? 'Guest';
                         <a href="#">Contact</a>
                         <a href="#">Location</a>
                         <a href="#">Instagram</a>
-                        <a href="#">Pinterest</a>
+                        <a href="#">Tiktok</a>
                     </div>
                 </div>
             </div>
@@ -486,12 +486,26 @@ $displayName = $_SESSION['full_name'] ?? 'Guest';
                                         </div>
                                         <div class="border-top border-bottom py-2 my-2">
                                             <div class="small fw-semibold text-muted mb-1">F&B Items:</div>
+                                            <?php 
+                                            $detailsSubtotal = 0;
+                                            foreach ($order['details'] as $det) {
+                                                $detailsSubtotal += (float)$det['subtotal'];
+                                            }
+                                            $hasTax = ($order['total_amount'] > $detailsSubtotal);
+                                            $calculatedTax = (int) round($detailsSubtotal * 0.1);
+                                            ?>
                                             <?php foreach ($order['details'] as $det): ?>
                                                 <div class="d-flex justify-content-between small">
                                                     <span><?php echo htmlspecialchars($det['menu_name']); ?> x<?php echo (int)$det['qty']; ?></span>
                                                     <span>Rp <?php echo number_format($det['subtotal'], 0, ',', '.'); ?></span>
                                                 </div>
                                             <?php endforeach; ?>
+                                            <?php if ($hasTax): ?>
+                                                <div class="d-flex justify-content-between small text-muted border-top pt-1 mt-1">
+                                                    <span>Tax & Service (10%)</span>
+                                                    <span>Rp <?php echo number_format($calculatedTax, 0, ',', '.'); ?></span>
+                                                </div>
+                                            <?php endif; ?>
                                         </div>
                                         <div class="d-flex justify-content-between small mb-2">
                                             <span class="text-muted">Total Pembayaran:</span>

@@ -574,12 +574,16 @@ $requiredDp = 50000;
 
                             <?php if (!empty($addons)): ?>
                                 <?php foreach ($addons as $addon): ?>
+                                    <?php
+                                    $addonName = $addon['addon_name'] ?? ($addon['service_name'] ?? 'Add-on');
+                                    $addonPrice = $addon['price'] ?? ($addon['base_tariff'] ?? 0);
+                                    ?>
                                     <div class="receipt-item">
                                         <div class="left">
-                                            <div class="title"><?php echo htmlspecialchars($addon['addon_name'] ?? 'Add-on'); ?></div>
+                                            <div class="title"><?php echo htmlspecialchars($addonName); ?></div>
                                             <div class="desc">Bundle Savings</div>
                                         </div>
-                                        <div class="amount">Rp<?php echo number_format((int) ($addon['price'] ?? 0), 0, ',', '.'); ?></div>
+                                        <div class="amount">Rp<?php echo number_format((int) $addonPrice, 0, ',', '.'); ?></div>
                                     </div>
                                 <?php endforeach; ?>
                             <?php endif; ?>

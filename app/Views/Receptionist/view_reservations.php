@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $reservations = $reservations ?? [];
 $availableSalonSeats = $availableSalonSeats ?? [];
 $availableLoungeSeats = $availableLoungeSeats ?? [];
@@ -86,7 +86,7 @@ $statusClass = static function (string $status): string {
         }
 
         .new-booking {
-            margin-top: 0.5rem;
+            margin-top: auto;
             background: var(--accent);
             color: #fff;
             text-transform: uppercase;
@@ -98,6 +98,29 @@ $statusClass = static function (string $status): string {
             text-decoration: none;
             display: inline-flex;
             justify-content: center;
+        }
+
+        .sidebar-logout {
+            margin-top: 0.5rem;
+            border: 1px solid #dcaeb7;
+            background: transparent;
+            color: #8b6472;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.85rem 1rem;
+            text-decoration: none;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .sidebar-logout:hover {
+            background: #ffebee;
+            color: #c62828;
+            border-color: #f5c2c7;
         }
 
         .main {
@@ -295,13 +318,14 @@ $statusClass = static function (string $status): string {
                 <div class="brand-sub">Reception Management</div>
             </div>
 
-            <a class="new-booking" href="index.php?page=receptionist&action=scheduleBooking">New Booking</a>
-
             <nav class="nav flex-column side-nav gap-1">
                 <a class="nav-link" href="index.php?page=receptionist">Seat Map</a>
                 <a class="nav-link active" href="index.php?page=receptionist&action=viewReservations">Appointments</a>
                 <a class="nav-link" href="index.php?page=receptionist&action=viewOrders">Cashier</a>
             </nav>
+
+            <a class="new-booking" href="index.php?page=receptionist&action=scheduleBooking">New Booking</a>
+            <a class="sidebar-logout" href="<?= LOGOUT_URL ?>">Logout</a>
         </aside>
 
         <main class="main">
@@ -464,20 +488,7 @@ $statusClass = static function (string $status): string {
                             </select>
                         </div>
 
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" value="1" id="hasCompanionCheck" name="has_companion">
-                            <label class="form-check-label" for="hasCompanionCheck">Bawa Pendamping?</label>
-                        </div>
 
-                        <div class="companion-fields" id="companionFields">
-                            <label class="form-label">Pilih Meja Kafe (Pendamping)</label>
-                            <select class="form-select" id="loungeSeatSelect" name="lounge_seat_id">
-                                <option value="">Pilih meja...</option>
-                                <?php foreach ($availableLoungeSeats as $seat): ?>
-                                    <option value="<?php echo $escape($seat['seat_id']); ?>"><?php echo $escape($seat['seat_id'] . ' - ' . ($seat['seat_name'] ?? $seat['seat_id'])); ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
                     </div>
 
                     <div class="modal-footer">

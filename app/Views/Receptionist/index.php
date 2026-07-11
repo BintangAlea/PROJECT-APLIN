@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $activeAreaSeats = $activeAreaSeats ?? [];
 $loungeSeats = $loungeSeats ?? [];
 $seatOccupancy = $seatOccupancy ?? [];
@@ -108,6 +108,29 @@ $statusClass = static function (string $status): string {
         .new-booking:hover {
             background: var(--accent-dark);
             color: #fff;
+        }
+
+        .sidebar-logout {
+            margin-top: 0.5rem;
+            border: 1px solid #dcaeb7;
+            background: transparent;
+            color: #8b6472;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.85rem 1rem;
+            text-decoration: none;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .sidebar-logout:hover {
+            background: #ffebee;
+            color: #c62828;
+            border-color: #f5c2c7;
         }
 
         .main {
@@ -386,6 +409,7 @@ $statusClass = static function (string $status): string {
             </nav>
 
             <a class="new-booking" href="index.php?page=receptionist&action=scheduleBooking">New Booking</a>
+            <a class="sidebar-logout" href="<?= LOGOUT_URL ?>">Logout</a>
         </aside>
 
         <main class="main">
@@ -393,13 +417,10 @@ $statusClass = static function (string $status): string {
                 <h1 class="title">Merish</h1>
                 <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
                     <div class="search-box rounded-0">
-                        <span>âŒ•</span>
+                        <span>🔍</span>
                         <input type="text" placeholder="Search customer...">
                     </div>
-                    <button type="button" class="action-btn" data-bs-toggle="modal" data-bs-target="#walkInModal">Walk-In Check-In</button>
-                    <button class="icon-btn" type="button">ðŸ””</button>
-                    <button class="icon-btn" type="button">?</button>
-                    <a class="icon-btn text-decoration-none" href="<?= LOGOUT_URL ?>">âŽ‹</a>
+                    <a class="btn text-decoration-none action-btn" href="index.php?page=receptionist&action=scheduleBooking" style="border-radius: 0; padding: 0.65rem 1.2rem; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #fff; background: var(--accent);">Walk-In Check-In</a>
                 </div>
             </header>
 
@@ -414,7 +435,7 @@ $statusClass = static function (string $status): string {
                 <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-2">
                     <div>
                         <h2 class="page-title">Live Seat Map</h2>
-                        <p class="subtitle">Pusat Zonasi Â· Real-time occupancy status</p>
+                        <p class="subtitle">Pusat Zonasi - Real-time occupancy status</p>
                     </div>
                     <div class="legend">
                         <span><i class="dot dot-empty"></i> Empty</span>
@@ -468,79 +489,11 @@ $statusClass = static function (string $status): string {
                     <?php endforeach; ?>
                 </section>
 
-                <div class="zone-head" style="margin-top:1.8rem;">Meja Kafe (Cafe Tables)</div>
-                <section class="seat-grid">
-                    <?php for ($i = 0; $i < count($loungeSeats); $i++): ?>
-                        <?php
-                        $table = $loungeSeats[$i];
-                        $queue = $loungeQueue[$i] ?? null;
-                        $tableLabel = (string) ($table['seat_name'] ?? $table['seat_id'] ?? 'T-0' . ($i + 1));
-                        ?>
 
-                        <?php if ($queue): ?>
-                            <article class="seat-card state-inservice">
-                                <div class="seat-top">
-                                    <div class="seat-id" style="font-size:1.5rem;"><?php echo $escape($tableLabel); ?></div>
-                                    <span class="mini-badge">Queue</span>
-                                </div>
-
-                                <div class="customer"><?php echo $escape($queue['customer_name']); ?></div>
-                                <div class="meta">Waiting lounge</div>
-                                <div class="meta">Orders <span class="small-pill"><?php echo (int) ($queue['fnb_count'] ?? 0); ?></span></div>
-
-                                <button
-                                    type="button"
-                                    class="transfer-btn"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#transferModal"
-                                    data-res-id="<?php echo $escape($queue['res_id']); ?>"
-                                    data-customer-name="<?php echo $escape($queue['customer_name']); ?>">
-                                    Transfer Seat
-                                </button>
-                            </article>
-                        <?php else: ?>
-                            <article class="seat-card state-empty">
-                                <div class="empty-center">
-                                    <span class="seat-id" style="font-size:1.7rem;"><?php echo $escape($tableLabel); ?></span>
-                                    <div>Empty</div>
-                                </div>
-                            </article>
-                        <?php endif; ?>
-                    <?php endfor; ?>
-                </section>
             </div>
         </main>
     </div>
 
-    <div class="modal fade" id="walkInModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-0 border-0">
-                <form method="post" action="index.php?page=receptionist&action=walkInCheckIn">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Walk-In Check-In</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Nama Pelanggan</label>
-                            <input type="text" class="form-control" name="guest_name" required>
-                        </div>
-                        <div class="mb-0">
-                            <label class="form-label">Arahkan ke</label>
-                            <select class="form-select" name="destination" required>
-                                <option value="salon">Kursi Salon (Langsung)</option>
-                                <option value="cafe">Meja Kafe (Waiting is Earning)</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-light rounded-0" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="action-btn">Check-In</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 
     <div class="modal fade" id="transferModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">

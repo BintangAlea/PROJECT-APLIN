@@ -307,19 +307,10 @@ $qrCodeUrl = $qr_code_url ?? ($reservation['booking_qr_code_url'] ?? '');
                             <span class="meta-label">Stylist</span>
                             <span><?php echo htmlspecialchars($beauticianName); ?></span>
                         </div>
-                    </div>
-                </div>
-
-                <div class="ticket-qr-area">
-                    <div class="qr-shell">
-                        <div class="qr-box">
-                            <?php if (!empty($qrCodeUrl) && strpos($qrCodeUrl, '/uploads') !== false): ?>
-                                <img src="<?php echo htmlspecialchars($qrCodeUrl); ?>" alt="Booking QR Code">
-                            <?php else: ?>
-                                <div class="qr-fallback" aria-label="QR placeholder"></div>
-                            <?php endif; ?>
+                        <div class="meta-row">
+                            <span class="meta-label">Booking ID</span>
+                            <span style="font-family: monospace; font-weight: bold; letter-spacing: 0.5px;"><?php echo htmlspecialchars($confirmationId); ?></span>
                         </div>
-                        <div class="qr-id">ID: <?php echo htmlspecialchars($confirmationId); ?></div>
                     </div>
                 </div>
             </section>

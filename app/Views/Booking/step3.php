@@ -1,26 +1,102 @@
 <?php
+date_default_timezone_set('Asia/Jakarta');
 $booking = $booking ?? [];
-$minDate = $min_date ?? date('Y-m-d', strtotime('+1 day'));
+$minDate = $min_date ?? date('Y-m-d');
 $bookingWindowDays = max(1, (int) ($booking_window_days ?? 1));
 $maxDate = $max_date ?? date('Y-m-d', strtotime('+' . $bookingWindowDays . ' days'));
 $vipAccessEnabled = (bool) ($vip_access_enabled ?? false);
 $memberName = $member_name ?? 'Guest';
 $memberTierName = $member_tier_name ?? 'Guest';
-$selectedDate = $booking['reservation_date'] ?? $minDate;
+$selectedDate = $selected_date ?? ($booking['reservation_date'] ?? $minDate);
 $selectedTime = $booking['reservation_time'] ?? '10:00';
+$pricing = $pricing ?? [];
+$durationMinutes = (int) ($duration_minutes ?? 60);
 
-$startDate = new DateTime($minDate);
-$dayOptions = [];
-for ($i = 0; $i < $bookingWindowDays; $i++) {
-    $day = clone $startDate;
-    $day->modify("+{$i} day");
-    if ($day->format('Y-m-d') > $maxDate) {
-        break;
-    }
-    $dayOptions[] = $day;
+$viewMonth = (int) ($view_month ?? date('m'));
+$viewYear = (int) ($view_year ?? date('Y'));
+
+$firstDayOfMonth = new DateTime("$viewYear-$viewMonth-01");
+$daysInMonth = (int)$firstDayOfMonth->format('t');
+$monthLabel = $firstDayOfMonth->format('F Y');
+
+// Weekday of the first day (0 for Sunday, 6 for Saturday)
+$firstWeekday = (int)$firstDayOfMonth->format('w');
+
+// Previous Month Info for padding
+$prevMonthDate = clone $firstDayOfMonth;
+$prevMonthDate->modify('-1 month');
+$prevMonth = (int)$prevMonthDate->format('m');
+$prevYear = (int)$prevMonthDate->format('Y');
+$daysInPrevMonth = (int)$prevMonthDate->format('t');
+
+// Next Month Info for padding
+$nextMonthDate = clone $firstDayOfMonth;
+$nextMonthDate->modify('+1 month');
+$nextMonth = (int)$nextMonthDate->format('m');
+$nextYear = (int)$nextMonthDate->format('Y');
+
+// Construct calendar grid cells (Sunday to Saturday)
+$gridCells = [];
+
+// 1. Previous month padding cells
+for ($i = $firstWeekday - 1; $i >= 0; $i--) {
+    $dNum = $daysInPrevMonth - $i;
+    $dVal = sprintf('%04d-%02d-%02d', $prevYear, $prevMonth, $dNum);
+    $gridCells[] = [
+        'date' => $dVal,
+        'day_num' => $dNum,
+        'current_month' => false,
+        'disabled' => true
+    ];
 }
 
-$monthLabel = !empty($dayOptions) ? $dayOptions[0]->format('F Y') : date('F Y');
+// 2. Current month cells
+for ($dNum = 1; $dNum <= $daysInMonth; $dNum++) {
+    $dVal = sprintf('%04d-%02d-%02d', $viewYear, $viewMonth, $dNum);
+    $disabled = false;
+    
+    // Check if in the past
+    if ($dVal < date('Y-m-d')) {
+        $disabled = true;
+    }
+    // Check if beyond max date
+    if ($dVal > $maxDate) {
+        $disabled = true;
+    }
+    
+    $gridCells[] = [
+        'date' => $dVal,
+        'day_num' => $dNum,
+        'current_month' => true,
+        'disabled' => $disabled
+    ];
+}
+
+// 3. Next month padding cells to complete multiple of 7
+$totalCells = count($gridCells);
+$rem = 7 - ($totalCells % 7);
+if ($rem < 7) {
+    for ($dNum = 1; $dNum <= $rem; $dNum++) {
+        $dVal = sprintf('%04d-%02d-%02d', $nextYear, $nextMonth, $dNum);
+        $gridCells[] = [
+            'date' => $dVal,
+            'day_num' => $dNum,
+            'current_month' => false,
+            'disabled' => true
+        ];
+    }
+}
+
+// Enable/Disable navigation buttons
+$currentMonthYear = date('Y-m');
+$viewMonthYear = sprintf('%04d-%02d', $viewYear, $viewMonth);
+$maxMonthYear = date('Y-m', strtotime($maxDate));
+
+$prevMonthDisabled = $viewMonthYear <= $currentMonthYear;
+$nextMonthDisabled = $viewMonthYear >= $maxMonthYear;
+
+$prevMonthUrl = $prevMonthDisabled ? 'javascript:void(0);' : "index.php?page=booking&step=3&date=" . urlencode($selectedDate) . "&view_month=" . $prevMonth . "&view_year=" . $prevYear;
+$nextMonthUrl = $nextMonthDisabled ? 'javascript:void(0);' : "index.php?page=booking&step=3&date=" . urlencode($selectedDate) . "&view_month=" . $nextMonth . "&view_year=" . $nextYear;
 $serviceLabel = !empty($booking['service_id']) ? ('Service #' . htmlspecialchars((string)$booking['service_id'])) : 'Signature Look';
 $addonLabel = !empty($booking['bundle_id']) ? ('Bundle #' . htmlspecialchars((string)$booking['bundle_id'])) : 'Add-on';
 
@@ -28,8 +104,8 @@ $morningSlots = [
     ['time' => '09:00', 'label' => '09:00 AM', 'disabled' => false],
     ['time' => '09:30', 'label' => '09:30 AM', 'disabled' => false],
     ['time' => '10:00', 'label' => '10:00 AM', 'disabled' => false],
-    ['time' => '10:30', 'label' => '10:30 AM', 'disabled' => true],
-    ['time' => '11:00', 'label' => '11:00 AM', 'disabled' => true],
+    ['time' => '10:30', 'label' => '10:30 AM', 'disabled' => false],
+    ['time' => '11:00', 'label' => '11:00 AM', 'disabled' => false],
     ['time' => '11:30', 'label' => '11:30 AM', 'disabled' => false],
 ];
 
@@ -37,11 +113,184 @@ $afternoonSlots = [
     ['time' => '12:00', 'label' => '12:00 PM', 'disabled' => false],
     ['time' => '12:30', 'label' => '12:30 PM', 'disabled' => false],
     ['time' => '13:00', 'label' => '01:00 PM', 'disabled' => false],
-    ['time' => '13:30', 'label' => '01:30 PM', 'disabled' => true],
+    ['time' => '13:30', 'label' => '01:30 PM', 'disabled' => false],
     ['time' => '14:00', 'label' => '02:00 PM', 'disabled' => false],
     ['time' => '14:30', 'label' => '02:30 PM', 'disabled' => false],
     ['time' => '15:00', 'label' => '03:00 PM', 'disabled' => false],
 ];
+
+// DYNAMIC SLOT EVALUATION (SMART SCHEDULING)
+$db = \App\Core\Database::getConnection();
+
+// Normalize category
+$category = 'hair';
+if (!empty($booking['service_id'])) {
+    $stmtS = $db->prepare("SELECT category FROM services WHERE service_id = :id");
+    $stmtS->execute([':id' => $booking['service_id']]);
+    $catVal = $stmtS->fetchColumn();
+    if ($catVal) {
+        $catNormalized = strtolower(trim($catVal));
+        $category = match ($catNormalized) {
+            'hair' => 'hair',
+            'nails' => 'nails',
+            'lashes' => 'lashes',
+            'wax & eyebrows', 'wax', 'eyebrows', 'wax and eyebrows' => 'wax',
+            default => 'hair',
+        };
+    }
+}
+
+// Helpers for checking slots on this selected date
+$getAvailSeats = function(string $time, int $dur) use ($db, $selectedDate) {
+    $startStr = $selectedDate . ' ' . $time . ':00';
+    $endStr = date('Y-m-d H:i:s', strtotime($startStr) + ($dur * 60));
+    
+    $stmtSeats = $db->query("SELECT seat_id FROM seats WHERE zone_type = 'Kursi Salon'");
+    $allSeats = $stmtSeats->fetchAll(PDO::FETCH_COLUMN) ?: [];
+    
+    $stmtOccupied = $db->prepare("
+        SELECT DISTINCT r.seat_id 
+        FROM reservations r
+        WHERE r.status IN ('Pending', 'Confirmed', 'In-Service')
+          AND :new_start < DATE_ADD(r.schedule_time, INTERVAL (
+              SELECT COALESCE(SUM(s.est_duration), 60) 
+              FROM reservation_details rd 
+              JOIN services s ON rd.service_id = s.service_id 
+              WHERE rd.res_id = r.res_id
+          ) MINUTE)
+          AND :new_end > r.schedule_time
+    ");
+    $stmtOccupied->execute([
+        ':new_start' => $startStr,
+        ':new_end' => $endStr
+    ]);
+    $occupiedSeatIds = $stmtOccupied->fetchAll(PDO::FETCH_COLUMN) ?: [];
+    
+    return count(array_diff($allSeats, $occupiedSeatIds)) > 0;
+};
+
+$getSpecializationsForCategory = function(string $cat) {
+    return match ($cat) {
+        'nails' => ['Nailist'],
+        'lashes' => ['Lash Technician'],
+        'wax' => ['Wax & Threading Specialist'],
+        default => ['Hair Stylist'],
+    };
+};
+
+$getAvailBeauticians = function(string $time, int $dur) use ($db, $selectedDate, $category, $getSpecializationsForCategory) {
+    $specializations = $getSpecializationsForCategory($category);
+    $placeholders = implode(',', array_fill(0, count($specializations), '?'));
+
+    $countStmt = $db->prepare("SELECT COUNT(*) FROM staff_profiles WHERE specialization IN ({$placeholders})");
+    $countStmt->execute($specializations);
+    $totalMatching = (int)$countStmt->fetchColumn();
+
+    if ($totalMatching === 0) {
+        return true; // No staff of this specialization registered at all, don't block
+    }
+
+    $stmt = $db->prepare(
+        "SELECT u.user_id
+         FROM staff_profiles sp
+         JOIN users u ON sp.user_id = u.user_id
+         WHERE sp.work_status = 'Online'
+           AND u.ROLE = 'Beautician'
+           AND sp.specialization IN ({$placeholders})
+         ORDER BY u.NAME ASC"
+    );
+    $stmt->execute($specializations);
+    $candidates = $stmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
+
+    if (empty($candidates)) {
+        return false;
+    }
+
+    $busyStmt = $db->prepare(
+        "SELECT rd.beautician_id,
+                r.schedule_time,
+                COALESCE(s.est_duration, 60) AS est_duration
+         FROM reservations r
+         JOIN reservation_details rd ON rd.res_id = r.res_id
+         JOIN services s ON s.service_id = rd.service_id
+         WHERE DATE(r.schedule_time) = :date
+           AND r.STATUS IN ('Pending', 'Confirmed', 'In-Service')
+           AND rd.beautician_id IS NOT NULL"
+    );
+    $busyStmt->execute([':date' => $selectedDate]);
+    $busyRows = $busyStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+    $requestStart = new \DateTimeImmutable($selectedDate . ' ' . $time);
+    $requestEnd = $requestStart->modify('+' . max(30, $dur) . ' minutes');
+    $busyBeauticians = [];
+
+    foreach ($busyRows as $busyRow) {
+        $busyBeauticianId = (int) ($busyRow['beautician_id'] ?? 0);
+        if ($busyBeauticianId <= 0) {
+            continue;
+        }
+
+        $busyStart = new \DateTimeImmutable((string) ($busyRow['schedule_time'] ?? $selectedDate . ' 00:00:00'));
+        $busyEnd = $busyStart->modify('+' . max(30, (int) ($busyRow['est_duration'] ?? 60)) . ' minutes');
+
+        if ($requestStart < $busyEnd && $requestEnd > $busyStart) {
+            $busyBeauticians[$busyBeauticianId] = true;
+        }
+    }
+
+    $availableCount = 0;
+    foreach ($candidates as $candId) {
+        if (!isset($busyBeauticians[(int)$candId])) {
+            $availableCount++;
+        }
+    }
+
+    return $availableCount > 0;
+};
+
+foreach ($morningSlots as &$slot) {
+    $endTimestamp = strtotime($selectedDate . ' ' . $slot['time']) + ($durationMinutes * 60);
+    $endTimeFormatted = date('H:i', $endTimestamp);
+    if ($selectedDate === date('Y-m-d') && $slot['time'] <= date('H:i')) {
+        $slot['disabled'] = true;
+    } elseif ($endTimeFormatted > '18:00') {
+        $slot['disabled'] = true;
+    } else {
+        $slot['disabled'] = !$getAvailSeats($slot['time'], $durationMinutes) || !$getAvailBeauticians($slot['time'], $durationMinutes);
+    }
+}
+unset($slot);
+
+foreach ($afternoonSlots as &$slot) {
+    $endTimestamp = strtotime($selectedDate . ' ' . $slot['time']) + ($durationMinutes * 60);
+    $endTimeFormatted = date('H:i', $endTimestamp);
+    if ($selectedDate === date('Y-m-d') && $slot['time'] <= date('H:i')) {
+        $slot['disabled'] = true;
+    } elseif ($endTimeFormatted > '18:00') {
+        $slot['disabled'] = true;
+    } else {
+        $slot['disabled'] = !$getAvailSeats($slot['time'], $durationMinutes) || !$getAvailBeauticians($slot['time'], $durationMinutes);
+    }
+}
+unset($slot);
+
+$allSlots = array_merge($morningSlots, $afternoonSlots);
+$selectedTimeIsAvailable = false;
+foreach ($allSlots as $s) {
+    if ($s['time'] === $selectedTime && !$s['disabled']) {
+        $selectedTimeIsAvailable = true;
+        break;
+    }
+}
+
+if (!$selectedTimeIsAvailable) {
+    foreach ($allSlots as $s) {
+        if (!$s['disabled']) {
+            $selectedTime = $s['time'];
+            break;
+        }
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -201,6 +450,19 @@ $afternoonSlots = [
             margin-left: 0.3rem;
         }
 
+        .weekday-header {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 0.55rem;
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.72rem;
+            color: #7a6f73;
+            margin-bottom: 0.4rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
         .day-grid {
             display: grid;
             grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -212,23 +474,18 @@ $afternoonSlots = [
             background: #f7f4f4;
             border-radius: 2px;
             padding: 0.5rem 0.2rem;
-            min-height: 74px;
+            min-height: 54px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-align: center;
             color: #6f6368;
             transition: all 0.2s ease;
-        }
-
-        .day-btn .dow {
-            display: block;
-            text-transform: uppercase;
-            font-size: 0.62rem;
-            letter-spacing: 1px;
-            margin-bottom: 0.22rem;
-            font-weight: 700;
+            cursor: pointer;
         }
 
         .day-btn .dom {
-            font-size: 1.5rem;
+            font-size: 1.35rem;
             font-family: 'Playfair Display', serif;
             color: #57474d;
             line-height: 1;
@@ -239,6 +496,38 @@ $afternoonSlots = [
             background: #f3e7ec;
             border-color: #8f6a7a;
             box-shadow: inset 0 0 0 1px #8f6a7a;
+        }
+
+        .day-btn.pad-btn {
+            opacity: 0.25;
+            background: transparent;
+            border-color: transparent;
+            cursor: default;
+            pointer-events: none;
+        }
+
+        .day-btn.disabled {
+            opacity: 0.35;
+            background: #eae6e7;
+            border-color: #dfd7d9;
+            color: #b1a5a9;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        
+        .day-btn.disabled .dom {
+            color: #b1a5a9;
+        }
+
+        .icon-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        a.disabled {
+            pointer-events: none;
+            cursor: default;
         }
 
         .slot-head {
@@ -476,6 +765,27 @@ $afternoonSlots = [
                     <input type="hidden" name="reservation_date" id="reservation_date" value="<?php echo htmlspecialchars($selectedDate); ?>">
                     <input type="hidden" name="reservation_time" id="reservation_time" value="<?php echo htmlspecialchars($selectedTime); ?>">
 
+                    <?php if (isset($_SESSION['booking_error']) && $_SESSION['booking_error']): ?>
+                        <div class="alert alert-danger mb-4" style="border-radius:0;"><?php echo htmlspecialchars($_SESSION['booking_error']); unset($_SESSION['booking_error']); ?></div>
+                    <?php endif; ?>
+
+                    <?php if (isset($_SESSION['booking_suggestion']) && $_SESSION['booking_suggestion']): ?>
+                        <?php $sugg = $_SESSION['booking_suggestion']; ?>
+                        <div class="alert alert-warning mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2" style="border-radius:0;border:1px solid #dcb56a;color:#6b4f1b;background:#fefbf3;">
+                            <div>
+                                <strong>Rekomendasi Waktu Terdekat:</strong> Slot kosong berikutnya adalah pada 
+                                <strong><?php echo date('d M Y', strtotime($sugg['date'])); ?> pukul <?php echo htmlspecialchars($sugg['time']); ?></strong>.
+                            </div>
+                            <button type="button" class="btn btn-sm btn-dark text-uppercase fw-bold" id="applySuggestionBtn" 
+                                    data-date="<?php echo htmlspecialchars($sugg['date']); ?>" 
+                                    data-time="<?php echo htmlspecialchars($sugg['time']); ?>"
+                                    style="letter-spacing:1px;font-size:0.75rem;border-radius:0;background:#4a3b1a;border:none;">
+                                Gunakan Rekomendasi
+                            </button>
+                        </div>
+                        <?php unset($_SESSION['booking_suggestion']); ?>
+                    <?php endif; ?>
+
                     <div class="row g-4">
                         <div class="col-xl-8">
                             <h1 class="panel-title">Select Date & Time</h1>
@@ -498,19 +808,40 @@ $afternoonSlots = [
                                 <div class="month-header">
                                     <h2 class="month-title"><?php echo htmlspecialchars($monthLabel); ?></h2>
                                     <div>
-                                        <button type="button" class="icon-btn">‹</button>
-                                        <button type="button" class="icon-btn">›</button>
+                                        <a href="<?php echo htmlspecialchars($prevMonthUrl); ?>" class="icon-btn-link <?php echo $prevMonthDisabled ? 'disabled' : ''; ?>" style="text-decoration:none;">
+                                            <button type="button" class="icon-btn" <?php echo $prevMonthDisabled ? 'disabled' : ''; ?>>‹</button>
+                                        </a>
+                                        <a href="<?php echo htmlspecialchars($nextMonthUrl); ?>" class="icon-btn-link <?php echo $nextMonthDisabled ? 'disabled' : ''; ?>" style="text-decoration:none;">
+                                            <button type="button" class="icon-btn" <?php echo $nextMonthDisabled ? 'disabled' : ''; ?>>›</button>
+                                        </a>
                                     </div>
                                 </div>
+                                <div class="weekday-header">
+                                    <span>SUN</span>
+                                    <span>MON</span>
+                                    <span>TUE</span>
+                                    <span>WED</span>
+                                    <span>THU</span>
+                                    <span>FRI</span>
+                                    <span>SAT</span>
+                                </div>
                                 <div class="day-grid" id="dayGrid">
-                                    <?php foreach ($dayOptions as $day): ?>
+                                    <?php foreach ($gridCells as $cell): ?>
                                         <?php
-                                        $dayValue = $day->format('Y-m-d');
-                                        $isActive = $dayValue === $selectedDate;
+                                        $cellDate = $cell['date'];
+                                        $isActive = $cell['current_month'] && ($cellDate === $selectedDate);
+                                        $isPad = !$cell['current_month'];
+                                        $isDisabled = $cell['disabled'];
+                                        
+                                        $classes = [];
+                                        if ($isActive) $classes[] = 'active';
+                                        if ($isPad) $classes[] = 'pad-btn';
+                                        if ($isDisabled) $classes[] = 'disabled';
+                                        
+                                        $classStr = implode(' ', $classes);
                                         ?>
-                                        <button type="button" class="day-btn <?php echo $isActive ? 'active' : ''; ?>" data-date="<?php echo $dayValue; ?>">
-                                            <span class="dow"><?php echo htmlspecialchars($day->format('D')); ?></span>
-                                            <span class="dom"><?php echo htmlspecialchars($day->format('d')); ?></span>
+                                        <button type="button" class="day-btn <?php echo $classStr; ?>" data-date="<?php echo htmlspecialchars($cellDate); ?>" <?php echo $isDisabled ? 'disabled' : ''; ?>>
+                                            <span class="dom"><?php echo htmlspecialchars($cell['day_num']); ?></span>
                                         </button>
                                     <?php endforeach; ?>
                                 </div>
@@ -519,7 +850,7 @@ $afternoonSlots = [
                             <div class="card-soft">
                                 <div class="slot-head">
                                     <h2 class="slot-title">Available Times</h2>
-                                    <span class="tz">EST (UTC-5)</span>
+                                    <span class="tz">WIB (UTC+7)</span>
                                 </div>
 
                                 <p class="period">Morning</p>
@@ -549,12 +880,45 @@ $afternoonSlots = [
                         <div class="col-xl-4">
                             <div class="summary-card">
                                 <div class="summary-title">Booking Summary</div>
-                                <div class="summary-row"><span><?php echo $serviceLabel; ?></span><span>Rp800.000</span></div>
-                                <div class="summary-row"><span><?php echo $addonLabel; ?></span><span>Rp150.000</span></div>
-                                <div class="summary-date" id="summaryDate">📅 <?php echo htmlspecialchars(date('D, M d, Y', strtotime($selectedDate))); ?><br>🕒 <span id="summaryTime"><?php echo htmlspecialchars(date('h:i A', strtotime($selectedTime))); ?></span> - 11:30 AM</div>
+                                
+                                <?php if (!empty($pricing['services_detail'])): ?>
+                                    <?php foreach ($pricing['services_detail'] as $s): ?>
+                                        <div class="summary-row">
+                                            <span><?php echo htmlspecialchars($s['service_name']); ?></span>
+                                            <span>Rp<?php echo number_format($s['price'], 0, ',', '.'); ?></span>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <div class="summary-row"><span><?php echo $serviceLabel; ?></span><span>Rp0</span></div>
+                                <?php endif; ?>
+
+                                <?php if (!empty($pricing['addons_detail'])): ?>
+                                    <?php foreach ($pricing['addons_detail'] as $a): ?>
+                                        <div class="summary-row">
+                                            <span>[Add-on] <?php echo htmlspecialchars($a['addon_name']); ?></span>
+                                            <span>Rp<?php echo number_format($a['price'], 0, ',', '.'); ?></span>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+
+                                <?php if (!empty($pricing['promo_discount']) && $pricing['promo_discount'] > 0): ?>
+                                    <div class="summary-row text-danger">
+                                        <span>Diskon (<?php echo htmlspecialchars($pricing['promo_detail']['promo_name'] ?? 'Promo'); ?>)</span>
+                                        <span>-Rp<?php echo number_format($pricing['promo_discount'], 0, ',', '.'); ?></span>
+                                    </div>
+                                <?php endif; ?>
+
+                                <?php
+                                $selectedDateTime = strtotime($selectedDate . ' ' . $selectedTime);
+                                $endDateTime = $selectedDateTime + ($durationMinutes * 60);
+                                ?>
+                                <div class="summary-date" id="summaryDate">
+                                    📅 <span id="summaryDateText"><?php echo htmlspecialchars(date('D, M d, Y', $selectedDateTime)); ?></span><br>
+                                    🕒 <span id="summaryTime"><?php echo htmlspecialchars(date('h:i A', $selectedDateTime)); ?></span> - <span id="summaryEndTime"><?php echo htmlspecialchars(date('h:i A', $endDateTime)); ?></span>
+                                </div>
                                 <div class="due-row">
                                     <span class="label">Total Due Today</span>
-                                    <span class="value">Rp950.000</span>
+                                    <span class="value">Rp<?php echo number_format($pricing['total_price'] ?? 0, 0, ',', '.'); ?></span>
                                 </div>
                             </div>
 
@@ -586,19 +950,44 @@ $afternoonSlots = [
 <script>
     const dateInput = document.getElementById('reservation_date');
     const timeInput = document.getElementById('reservation_time');
-    const summaryDate = document.getElementById('summaryDate');
+    const summaryDateText = document.getElementById('summaryDateText');
     const summaryTime = document.getElementById('summaryTime');
+    const summaryEndTime = document.getElementById('summaryEndTime');
+    const durationMinutes = <?php echo $durationMinutes; ?>;
+
+    function formatTime(hours, minutes) {
+        let ampm = hours >= 12 ? 'PM' : 'AM';
+        let displayHours = hours % 12;
+        displayHours = displayHours ? displayHours : 12;
+        let displayMinutes = minutes < 10 ? '0' + minutes : minutes;
+        return (displayHours < 10 ? '0' + displayHours : displayHours) + ':' + displayMinutes + ' ' + ampm;
+    }
+
+    function updateSummaryEndTime() {
+        const timeVal = timeInput.value;
+        if (!timeVal) return;
+        const parts = timeVal.split(':');
+        const startHours = parseInt(parts[0], 10);
+        const startMinutes = parseInt(parts[1], 10);
+
+        summaryTime.textContent = formatTime(startHours, startMinutes);
+
+        let totalMinutes = startHours * 60 + startMinutes + durationMinutes;
+        let endHours = Math.floor(totalMinutes / 60) % 24;
+        let endMinutes = totalMinutes % 60;
+
+        summaryEndTime.textContent = formatTime(endHours, endMinutes);
+    }
 
     document.querySelectorAll('.day-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
-            document.querySelectorAll('.day-btn').forEach((item) => item.classList.remove('active'));
-            btn.classList.add('active');
+            if (btn.classList.contains('disabled') || btn.classList.contains('pad-btn')) {
+                return;
+            }
             const selected = btn.dataset.date;
-            dateInput.value = selected;
-
-            const dateObj = new Date(selected + 'T00:00:00');
-            const label = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: '2-digit', year: 'numeric' });
-            summaryDate.innerHTML = '📅 ' + label + '<br>🕒 <span id="summaryTime">' + summaryTime.textContent + '</span> - 11:30 AM';
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set('date', selected);
+            window.location.search = urlParams.toString();
         });
     });
 
@@ -612,14 +1001,40 @@ $afternoonSlots = [
             btn.classList.add('active');
             const selected = btn.dataset.time;
             timeInput.value = selected;
-
-            const parts = selected.split(':');
-            const dt = new Date();
-            dt.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10));
-            const formatted = dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-            summaryTime.textContent = formatted;
+            updateSummaryEndTime();
         });
     });
+
+    // Handle suggestion button
+    const applySuggBtn = document.getElementById('applySuggestionBtn');
+    if (applySuggBtn) {
+        applySuggBtn.addEventListener('click', () => {
+            const suggDate = applySuggBtn.dataset.date;
+            const suggTime = applySuggBtn.dataset.time;
+            
+            dateInput.value = suggDate;
+            timeInput.value = suggTime;
+            
+            document.querySelectorAll('.day-btn').forEach((btn) => {
+                if (btn.dataset.date === suggDate) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            
+            document.querySelectorAll('.time-btn').forEach((btn) => {
+                if (btn.dataset.time === suggTime) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            
+            updateSummaryEndTime();
+            document.getElementById('scheduleForm').submit();
+        });
+    }
 </script>
 </body>
 </html>

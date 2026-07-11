@@ -96,3 +96,11 @@ CREATE TABLE reviews (
     CONSTRAINT chk_reviews_rating CHECK (rating >= 1 AND rating <= 5),
     CONSTRAINT fk_reviews_res FOREIGN KEY (res_id) REFERENCES reservations(res_id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=INNODB;
+
+CREATE TABLE employee_schedules (
+    employee_id INT AUTO_INCREMENT PRIMARY KEY,
+    employee_name VARCHAR(50) NOT NULL,
+    role VARCHAR(50) NOT NULL,
+    shift_start TIME NOT NULL,
+    shift_end TIME NOT NULL
+) ENGINE=INNODB;
