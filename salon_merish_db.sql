@@ -104,3 +104,12 @@ CREATE TABLE employee_schedules (
     shift_start TIME NOT NULL,
     shift_end TIME NOT NULL
 ) ENGINE=INNODB;
+
+CREATE TABLE `inventories` (
+    `id` INT(11) NOT NULL AUTO_INCREMENT,
+    `item_name` VARCHAR(255) NOT NULL,
+    `stock_quantity` DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    `minimum_stock` DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    `unit` VARCHAR(50) NOT NULL,
+    PRIMARY KEY (`id`)
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;

@@ -225,3 +225,64 @@ INSERT INTO employee_schedules (employee_name, role, shift_start, shift_end) VAL
 ('Kak Nirmana', 'Hair Stylist', '09:00:00', '21:00:00'),
 ('Kak Zeba', 'Hair Stylist', '09:00:00', '21:00:00'),
 ('Kak Zac', 'Hair Stylist', '09:00:00', '21:00:00');
+
+INSERT INTO `inventories` (`id`, `item_name`, `stock_quantity`, `minimum_stock`, `unit`) VALUES
+-- KATEGORI RAMBUT (HAIR CARE & STYLING)
+(1, 'Shampoo Premium (Color Protect & Anti-Dandruff)', 5000.0, 1000.0, 'ML'),
+(2, 'Conditioner Premium', 5000.0, 1000.0, 'ML'),
+(3, 'Bleaching Powder', 2000.0, 500.0, 'Gram'),
+(4, 'Developer / Peroxide Liquid', 3000.0, 1000.0, 'ML'),
+(5, 'Hair Color Cream (Assorted)', 3000.0, 500.0, 'Gram'),
+(6, 'Keratin Smooth Treatment Solution', 2000.0, 500.0, 'ML'),
+(7, 'Hair Mask (L''Oreal / Kerastase)', 2000.0, 500.0, 'Gram'),
+(8, 'Hair Serum / Ampoule', 100.0, 20.0, 'Pcs'),
+(9, 'Collagen Booster Liquid', 1000.0, 200.0, 'ML'),
+(10, 'Scalp Detox Scrub', 1000.0, 200.0, 'Gram'),
+(11, 'Traditional Creambath Cream', 3000.0, 500.0, 'Gram'),
+(12, 'Korean Wave / Perming Lotion', 1000.0, 200.0, 'ML'),
+(13, 'Hair Manicure / Glossing Solution', 1000.0, 200.0, 'ML'),
+(14, 'Hair Styling Spray / Gel', 1000.0, 200.0, 'ML'),
+
+-- KATEGORI WAXING & ALIS (WAX & EYEBROWS)
+(15, 'Hard Wax Beans (Sensitive Skin)', 2000.0, 500.0, 'Gram'),
+(16, 'Soft Wax Cartridge / Pot', 1500.0, 300.0, 'Gram'),
+(17, 'Waxing Strips (Kertas Wax)', 500.0, 100.0, 'Pcs'),
+(18, 'Pre-Wax Cleanser', 1000.0, 200.0, 'ML'),
+(19, 'Post-Wax Soothing Oil / Lotion', 1000.0, 200.0, 'ML'),
+(20, 'Hydrojelly Mask Powder', 1000.0, 200.0, 'Gram'),
+(21, 'Anti-Bump & Brightening Serum', 500.0, 100.0, 'ML'),
+(22, 'Eyebrow Threading Thread', 20.0, 5.0, 'Roll'),
+(23, 'Brow Henna Powder', 200.0, 50.0, 'Gram'),
+(24, 'Brow Bomber / Lamination Kit', 500.0, 100.0, 'ML'),
+
+-- KATEGORI KUKU (NAILS)
+(25, 'Gel Nail Polish (Assorted Colors)', 100.0, 20.0, 'Bottle'),
+(26, 'Halal Breathable Polish', 50.0, 10.0, 'Bottle'),
+(27, 'Base Coat Gel', 30.0, 5.0, 'Bottle'),
+(28, 'Top Coat Gel (Glossy & Matte)', 30.0, 5.0, 'Bottle'),
+(29, 'Gel Overlay / Builder Gel', 500.0, 100.0, 'Gram'),
+(30, 'Nail Polish Remover / Acetone', 2000.0, 500.0, 'ML'),
+(31, 'Cuticle Oil', 500.0, 100.0, 'ML'),
+(32, 'Nail Charms / Rhinestones', 1000.0, 200.0, 'Pcs'),
+(33, 'Fake Nails / Gel Tips', 500.0, 100.0, 'Pcs'),
+(34, 'Paraffin Wax Blocks', 2000.0, 500.0, 'Gram'),
+(35, 'Foot Scrub / Spa Salt', 2000.0, 500.0, 'Gram'),
+(36, 'Callus Treatment Gel', 1000.0, 200.0, 'ML'),
+
+-- KATEGORI BULU MATA (LASHES)
+(37, 'Classic Eyelash Trays', 50.0, 10.0, 'Pcs'),
+(38, 'Volume / Mega Volume Eyelash Trays', 50.0, 10.0, 'Pcs'),
+(39, 'Eyelash Adhesive / Glue', 50.0, 10.0, 'ML'),
+(40, 'Lash Primer', 100.0, 20.0, 'ML'),
+(41, 'Lash Cream Remover', 100.0, 20.0, 'Gram'),
+(42, 'Under-Eye Collagen Patches', 200.0, 50.0, 'Pairs'),
+(43, 'Keratin Lash Boost Serum', 200.0, 50.0, 'ML'),
+(44, 'Lash Cleansing Foam', 500.0, 100.0, 'ML'),
+(45, 'Hydrating Lip Masks', 200.0, 50.0, 'Pcs'),
+
+-- KATEGORI UMUM (GENERAL SALON SUPPLIES)
+(46, 'Cotton Pads (Kapas Wajah)', 1000.0, 200.0, 'Pcs'),
+(47, 'Alcohol Swabs', 500.0, 100.0, 'Pcs'),
+(48, 'Disposable Bed Sheets', 100.0, 20.0, 'Pcs'),
+(49, 'Disposable Panties (For Waxing)', 100.0, 20.0, 'Pcs'),
+(50, 'Hand Sanitizer', 2000.0, 500.0, 'ML');
