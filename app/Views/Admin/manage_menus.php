@@ -442,6 +442,124 @@ $catalogAnchor = '#catalog-form';
                 border-bottom: 1px solid var(--line);
             }
         }
+
+        /* ── Ingredients Popup Modal ── */
+        .ing-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            border: 1px solid #dac8cc;
+            background: #fdf6f7;
+            color: #8b6472;
+            padding: 0.28rem 0.7rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            cursor: pointer;
+            transition: background 0.18s, color 0.18s, border-color 0.18s;
+            white-space: nowrap;
+        }
+        .ing-btn:hover {
+            background: #f3e2e7;
+            color: #5d3f4d;
+            border-color: #c9a7af;
+        }
+        .ing-btn svg {
+            flex-shrink: 0;
+        }
+
+        /* Overlay */
+        #ing-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(60, 40, 45, 0.38);
+            z-index: 1050;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(2px);
+        }
+        #ing-overlay.active {
+            display: flex;
+        }
+
+        /* Modal box */
+        #ing-modal {
+            background: #fff;
+            border: 1px solid #e8d8da;
+            box-shadow: 0 16px 48px rgba(80, 40, 50, 0.18);
+            max-width: 420px;
+            width: 90%;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            animation: ingSlideIn 0.22s cubic-bezier(.4,0,.2,1);
+        }
+        @keyframes ingSlideIn {
+            from { opacity: 0; transform: translateY(-14px) scale(.97); }
+            to   { opacity: 1; transform: none; }
+        }
+        #ing-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.9rem 1.1rem 0.7rem;
+            border-bottom: 1px solid #f0e4e5;
+        }
+        #ing-modal-title {
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.1px;
+            color: #5d3f4d;
+        }
+        #ing-close-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #a08088;
+            padding: 0.2rem;
+            line-height: 1;
+            font-size: 1.1rem;
+            transition: color 0.15s;
+        }
+        #ing-close-btn:hover { color: #5d3f4d; }
+        #ing-modal-body {
+            padding: 0.8rem 1.1rem 1rem;
+            overflow-y: auto;
+        }
+        #ing-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+        #ing-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            font-size: 0.88rem;
+            color: #5a4a50;
+            padding: 0.4rem 0.6rem;
+            background: #fdf7f7;
+            border-left: 2px solid #dac8cc;
+            line-height: 1.4;
+        }
+        #ing-list li::before {
+            content: "•";
+            color: #b07080;
+            font-size: 1rem;
+            line-height: 1.3;
+            flex-shrink: 0;
+        }
+        .ing-empty {
+            color: #a08888;
+            font-size: 0.85rem;
+            font-style: italic;
+            padding: 0.6rem 0;
+        }
     </style>
 </head>
 <body>
@@ -600,7 +718,16 @@ $catalogAnchor = '#catalog-form';
                                                             <?php echo $escape($menu['bom_status']); ?>
                                                         </span>
                                                     </td>
-                                                    <td class="small"><?php echo $escape($menu['bom_items']); ?></td>
+                                                    <td>
+                                                        <?php if (!empty($menu['bom_items'])): ?>
+                                                            <button type="button" class="ing-btn" onclick="showIngredients('<?php echo addslashes(htmlspecialchars($menu['menu_name'], ENT_QUOTES)); ?>', '<?php echo addslashes(htmlspecialchars($menu['bom_items'], ENT_QUOTES)); ?>')">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16"><path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5zm8 0A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5zm-8 8A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5zm8 0A1.5 1.5 0 0 1 10.5 9h3A1.5 1.5 0 0 1 15 10.5v3A1.5 1.5 0 0 1 13.5 15h-3A1.5 1.5 0 0 1 9 13.5z"/></svg>
+                                                                View Ingredients
+                                                            </button>
+                                                        <?php else: ?>
+                                                            <span class="text-muted" style="font-size:0.82rem;font-style:italic;">No BOM</span>
+                                                        <?php endif; ?>
+                                                    </td>
                                                     <td><?php echo $formatCurrency($menu['price']); ?></td>
                                                     <td>
                                                         <span class="badge badge-soft <?php echo (int) $menu['is_available'] === 1 ? 'badge-ok' : 'badge-low'; ?>">
@@ -662,7 +789,16 @@ $catalogAnchor = '#catalog-form';
                                                         <?php echo $escape($item['stock_status']); ?>
                                                     </span>
                                                 </td>
-                                                <td class="small text-muted"><?php echo $escape($item['used_in_menus']); ?></td>
+                                                <td>
+                                                    <?php if (!empty($item['used_in_menus'])): ?>
+                                                        <button type="button" class="ing-btn" onclick="showIngredients('<?php echo addslashes(htmlspecialchars($item['item_name'], ENT_QUOTES)); ?>', '<?php echo addslashes(htmlspecialchars($item['used_in_menus'], ENT_QUOTES)); ?>')">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16"><path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5zm8 0A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5zm-8 8A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5zm8 0A1.5 1.5 0 0 1 10.5 9h3A1.5 1.5 0 0 1 15 10.5v3A1.5 1.5 0 0 1 13.5 15h-3A1.5 1.5 0 0 1 9 13.5z"/></svg>
+                                                            View Ingredients
+                                                        </button>
+                                                    <?php else: ?>
+                                                        <span class="text-muted" style="font-size:0.82rem;font-style:italic;">—</span>
+                                                    <?php endif; ?>
+                                                </td>
                                                 <td>
                                                     <a class="pill-action" href="#restock-form" data-item-id="<?php echo $escape($item['item_id']); ?>">Add Stock</a>
                                                 </td>
@@ -886,7 +1022,50 @@ $catalogAnchor = '#catalog-form';
         </main>
     </div>
 
+<!-- Ingredients Popup Modal -->
+<div id="ing-overlay" role="dialog" aria-modal="true" aria-labelledby="ing-modal-title">
+    <div id="ing-modal">
+        <div id="ing-modal-header">
+            <span id="ing-modal-title">Ingredients</span>
+            <button id="ing-close-btn" onclick="closeIngredients()" title="Close">&times;</button>
+        </div>
+        <div id="ing-modal-body">
+            <ul id="ing-list"></ul>
+        </div>
+    </div>
+</div>
+
 <script>
+function showIngredients(label, rawText) {
+    document.getElementById('ing-modal-title').textContent = label ? 'Ingredients — ' + label : 'Ingredients';
+    const list = document.getElementById('ing-list');
+    list.innerHTML = '';
+    if (!rawText || !rawText.trim()) {
+        list.innerHTML = '<li class="ing-empty">No ingredients recorded.</li>';
+    } else {
+        // Split by comma and trim each entry
+        const items = rawText.split(',').map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
+        items.forEach(function(item) {
+            const li = document.createElement('li');
+            li.textContent = item;
+            list.appendChild(li);
+        });
+    }
+    document.getElementById('ing-overlay').classList.add('active');
+    document.addEventListener('keydown', ingEscHandler);
+}
+function closeIngredients() {
+    document.getElementById('ing-overlay').classList.remove('active');
+    document.removeEventListener('keydown', ingEscHandler);
+}
+function ingEscHandler(e) {
+    if (e.key === 'Escape') closeIngredients();
+}
+// Close when clicking overlay background
+document.getElementById('ing-overlay').addEventListener('click', function(e) {
+    if (e.target === this) closeIngredients();
+});
+
 (function() {
     const input = document.getElementById('menus-search');
     if (!input) return;

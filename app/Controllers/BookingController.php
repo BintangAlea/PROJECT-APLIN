@@ -728,7 +728,7 @@ class BookingController
 
             $paymentProofUrl = null;
             if (!empty($_FILES['payment_proof']['name']) && ($_FILES['payment_proof']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
-                $proofDir = __DIR__ . '/../../uploads/payment_proofs';
+                $proofDir = __DIR__ . '/../../assets/uploads/bukti_dp';
                 if (!is_dir($proofDir)) {
                     mkdir($proofDir, 0755, true);
                 }
@@ -739,7 +739,7 @@ class BookingController
                 $targetPath = $proofDir . DIRECTORY_SEPARATOR . $fileName;
 
                 if (move_uploaded_file($_FILES['payment_proof']['tmp_name'], $targetPath)) {
-                    $paymentProofUrl = '/uploads/payment_proofs/' . $fileName;
+                    $paymentProofUrl = '/assets/uploads/bukti_dp/' . $fileName;
                 }
             }
 
