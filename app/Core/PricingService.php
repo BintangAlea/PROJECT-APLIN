@@ -71,11 +71,31 @@ class PricingService
             }
         }
 
+        $mapping = [
+            1 => ['services' => ['SV01']],
+            2 => ['services' => ['SV03']],
+            3 => ['services' => ['SV33']],
+            4 => ['services' => ['SV52']],
+            5 => ['services' => ['SV50', 'SV63', 'ADD-20']],
+            6 => ['services' => ['SV36', 'SV19', 'ADD-16']],
+            7 => ['services' => ['SV02', 'SV37', 'ADD-15']],
+            8 => ['services' => ['SV49', 'SV60', 'ADD-19']]
+        ];
+
+        // Filter out any addons that are already included in the promo bundle
+        $promoServices = [];
+        if ($promoId && isset($mapping[$promoId])) {
+            $promoServices = $mapping[$promoId]['services'] ?? [];
+        }
+
         // Calculate addon prices (addons are services with is_addon=TRUE)
         $addonsPrice = 0;
         $addonsDetail = [];
         if (!empty($addonIds)) {
             foreach ($addonIds as $addonId) {
+                if (in_array($addonId, $promoServices, true)) {
+                    continue; // Skip addon as it is included in the promo for free
+                }
                 $addonStmt = $this->db->prepare(
                     'SELECT service_id, service_name, base_tariff FROM services WHERE service_id = :id AND is_addon = TRUE'
                 );
@@ -96,6 +116,8 @@ class PricingService
         // Get promo discount (fixed amount from promotions.discount_value)
         $promoDiscount = 0;
         $promoDetail = null;
+        $promoItemsDetail = [];
+        $fbPromoAddition = 0;
 
         if ($promoId) {
             $promoStmt = $this->db->prepare(
@@ -104,18 +126,36 @@ class PricingService
             $promoStmt->execute([':id' => $promoId]);
             $promo = $promoStmt->fetch();
             if ($promo) {
-                $promoDiscount = min((float) $promo['discount_value'], $basePrice + $addonsPrice);
+                $discountVal = (float) $promo['discount_value'];
+                $fbPromoAddition = $discountVal;
+                $promoDiscount = $discountVal;
+
                 $promoDetail = [
                     'promo_id' => $promo['promo_id'],
                     'promo_name' => $promo['promo_name'],
                     'included_fb_item' => $promo['included_fb_item'],
                     'discount_amount' => $promoDiscount
                 ];
+
+                // Determine name of the freebie
+                $freebieName = $promo['included_fb_item'] ?: '';
+                if (empty($freebieName)) {
+                    if ($promoId === 5) $freebieName = 'Under-Eye Collagen Patches';
+                    elseif ($promoId === 6) $freebieName = 'Matte Top Coat Finish';
+                    elseif ($promoId === 7) $freebieName = 'Hand Paraffin Treatment';
+                    elseif ($promoId === 8) $freebieName = 'Keratin Lash Boost Serum';
+                    else $freebieName = 'Promo Special Freebie';
+                }
+
+                $promoItemsDetail[] = [
+                    'name' => $freebieName,
+                    'price' => $discountVal
+                ];
             }
         }
 
         // Calculate totals
-        $subtotal = $basePrice + $addonsPrice;
+        $subtotal = $basePrice + $addonsPrice + $fbPromoAddition;
         $totalPrice = max(0, $subtotal - $promoDiscount);
 
         return [
@@ -127,6 +167,7 @@ class PricingService
             'promo_discount' => (float) $promoDiscount,
             'promo_id' => $promoId,
             'promo_detail' => $promoDetail,
+            'promo_items_detail' => $promoItemsDetail,
             'total_price' => (float) $totalPrice,
             'description' => $description,
             'is_valid' => $totalPrice >= 0

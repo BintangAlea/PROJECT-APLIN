@@ -901,6 +901,15 @@ if (!$selectedTimeIsAvailable) {
                                     <?php endforeach; ?>
                                 <?php endif; ?>
 
+                                <?php if (!empty($pricing['promo_items_detail'])): ?>
+                                    <?php foreach ($pricing['promo_items_detail'] as $item): ?>
+                                        <div class="summary-row">
+                                            <span>[Promo Freebie] <?php echo htmlspecialchars($item['name']); ?></span>
+                                            <span>Rp<?php echo number_format($item['price'], 0, ',', '.'); ?></span>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+
                                 <?php if (!empty($pricing['promo_discount']) && $pricing['promo_discount'] > 0): ?>
                                     <div class="summary-row text-danger">
                                         <span>Diskon (<?php echo htmlspecialchars($pricing['promo_detail']['promo_name'] ?? 'Promo'); ?>)</span>

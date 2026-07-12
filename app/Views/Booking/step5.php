@@ -588,15 +588,27 @@ $requiredDp = 50000;
                                 <?php endforeach; ?>
                             <?php endif; ?>
 
-                            <?php if ($discount > 0): ?>
-                                <div class="receipt-item">
-                                    <div class="left">
-                                        <div class="title">VIP Discount</div>
-                                        <div class="desc">Applied automatically</div>
-                                    </div>
-                                    <div class="amount">-Rp<?php echo number_format($discount, 0, ',', '.'); ?></div>
-                                </div>
-                            <?php endif; ?>
+                             <?php if (!empty($pricing['promo_items_detail'])): ?>
+                                 <?php foreach ($pricing['promo_items_detail'] as $item): ?>
+                                     <div class="receipt-item">
+                                         <div class="left">
+                                             <div class="title"><?php echo htmlspecialchars($item['name']); ?></div>
+                                             <div class="desc">Promo Freebie</div>
+                                         </div>
+                                         <div class="amount">Rp<?php echo number_format((int) $item['price'], 0, ',', '.'); ?></div>
+                                     </div>
+                                 <?php endforeach; ?>
+                             <?php endif; ?>
+
+                             <?php if ($discount > 0): ?>
+                                 <div class="receipt-item">
+                                     <div class="left">
+                                         <div class="title"><?php echo htmlspecialchars($pricing['promo_detail']['promo_name'] ?? 'VIP Discount'); ?></div>
+                                         <div class="desc">Applied automatically</div>
+                                     </div>
+                                     <div class="amount">-Rp<?php echo number_format($discount, 0, ',', '.'); ?></div>
+                                 </div>
+                             <?php endif; ?>
 
                             <div class="receipt-divider"></div>
 
