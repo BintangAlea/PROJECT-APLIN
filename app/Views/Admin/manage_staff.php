@@ -784,7 +784,7 @@ $getStaffPhoto = static function (string $name): ?string {
                                 <?php foreach ($reviews as $review): ?>
                                     <article class="review-card">
                                         <h3 class="quote">"<?php echo $escape($review['subject_name']); ?>"</h3>
-                                        <div class="review-stars"><?php echo str_repeat('â˜…', max(1, (int) $review['rating'])); ?></div>
+                                        <div class="review-stars"><?php echo str_repeat('★', max(1, (int) $review['rating'])); ?></div>
                                         <p class="review-note"><?php echo $escape($review['review_comment'] ?: 'Customer tidak menulis komentar tambahan.'); ?></p>
                                         <div class="review-foot">
                                             <span>Service by <?php echo $escape($review['staff_name']); ?></span>
