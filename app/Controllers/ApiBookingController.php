@@ -177,7 +177,7 @@ class ApiBookingController
         // Generate available slots (every 30 minutes, 9AM to 6PM)
         $availableSlots = [];
         $start = strtotime($date . ' 09:00');
-        $end = strtotime($date . ' 18:00');
+        $end = strtotime($date . ' 21:00');
         $interval = 30 * 60; // 30 minutes
 
         for ($time = $start; $time < $end; $time += $interval) {

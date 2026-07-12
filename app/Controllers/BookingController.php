@@ -425,7 +425,7 @@ class BookingController
             $endTimestamp = strtotime($startDateTimeStr) + ($durationMinutes * 60);
             $endTimeFormatted = date('H:i', $endTimestamp);
 
-            if ($endTimeFormatted > '18:00' || empty($availableSeats) || !$beauticianCheckPassed) {
+            if ($endTimeFormatted > '21:00' || empty($availableSeats) || !$beauticianCheckPassed) {
                 // Conflict detected! Find next suggestion
                 $endTimeStr = date('H:i', strtotime($startDateTimeStr) + ($durationMinutes * 60));
                 $suggestion = $this->findNextAvailableSlot($date, $endTimeStr, $durationMinutes, $category);
@@ -1155,13 +1155,13 @@ class BookingController
                 $currentDateTime->setTime(9, 0);
             }
             
-            while ($currentDateTime->format('H:i') <= '17:30') {
+            while ($currentDateTime->format('H:i') <= '20:30') {
                 $startStr = $currentDateTime->format('Y-m-d H:i:s');
                 $endTimestamp = $currentDateTime->getTimestamp() + ($durationMinutes * 60);
                 $endDayStr = date('Y-m-d', $endTimestamp);
                 $endTimeFormatted = date('H:i', $endTimestamp);
                 
-                if ($endDayStr === $currentDateTime->format('Y-m-d') && $endTimeFormatted <= '18:00') {
+                if ($endDayStr === $currentDateTime->format('Y-m-d') && $endTimeFormatted <= '21:00') {
                     $availableSeats = $this->getAvailableSeatsForBooking(
                         $currentDateTime->format('Y-m-d'),
                         $currentDateTime->format('H:i'),

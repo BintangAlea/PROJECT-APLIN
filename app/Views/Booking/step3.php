@@ -117,6 +117,21 @@ $afternoonSlots = [
     ['time' => '14:00', 'label' => '02:00 PM', 'disabled' => false],
     ['time' => '14:30', 'label' => '02:30 PM', 'disabled' => false],
     ['time' => '15:00', 'label' => '03:00 PM', 'disabled' => false],
+    ['time' => '15:30', 'label' => '03:30 PM', 'disabled' => false],
+];
+
+$eveningSlots = [
+    ['time' => '16:00', 'label' => '04:00 PM', 'disabled' => false],
+    ['time' => '16:30', 'label' => '04:30 PM', 'disabled' => false],
+    ['time' => '17:00', 'label' => '05:00 PM', 'disabled' => false],
+    ['time' => '17:30', 'label' => '05:30 PM', 'disabled' => false],
+    ['time' => '18:00', 'label' => '06:00 PM', 'disabled' => false],
+    ['time' => '18:30', 'label' => '06:30 PM', 'disabled' => false],
+    ['time' => '19:00', 'label' => '07:00 PM', 'disabled' => false],
+    ['time' => '19:30', 'label' => '07:30 PM', 'disabled' => false],
+    ['time' => '20:00', 'label' => '08:00 PM', 'disabled' => false],
+    ['time' => '20:30', 'label' => '08:30 PM', 'disabled' => false],
+    ['time' => '21:00', 'label' => '09:00 PM', 'disabled' => false],
 ];
 
 // DYNAMIC SLOT EVALUATION (SMART SCHEDULING)
@@ -253,7 +268,7 @@ foreach ($morningSlots as &$slot) {
     $endTimeFormatted = date('H:i', $endTimestamp);
     if ($selectedDate === date('Y-m-d') && $slot['time'] <= date('H:i')) {
         $slot['disabled'] = true;
-    } elseif ($endTimeFormatted > '18:00') {
+    } elseif ($endTimeFormatted > '21:00') {
         $slot['disabled'] = true;
     } else {
         $slot['disabled'] = !$getAvailSeats($slot['time'], $durationMinutes) || !$getAvailBeauticians($slot['time'], $durationMinutes);
@@ -266,7 +281,7 @@ foreach ($afternoonSlots as &$slot) {
     $endTimeFormatted = date('H:i', $endTimestamp);
     if ($selectedDate === date('Y-m-d') && $slot['time'] <= date('H:i')) {
         $slot['disabled'] = true;
-    } elseif ($endTimeFormatted > '18:00') {
+    } elseif ($endTimeFormatted > '21:00') {
         $slot['disabled'] = true;
     } else {
         $slot['disabled'] = !$getAvailSeats($slot['time'], $durationMinutes) || !$getAvailBeauticians($slot['time'], $durationMinutes);
@@ -274,7 +289,20 @@ foreach ($afternoonSlots as &$slot) {
 }
 unset($slot);
 
-$allSlots = array_merge($morningSlots, $afternoonSlots);
+foreach ($eveningSlots as &$slot) {
+    $endTimestamp = strtotime($selectedDate . ' ' . $slot['time']) + ($durationMinutes * 60);
+    $endTimeFormatted = date('H:i', $endTimestamp);
+    if ($selectedDate === date('Y-m-d') && $slot['time'] <= date('H:i')) {
+        $slot['disabled'] = true;
+    } elseif ($endTimeFormatted > '21:00') {
+        $slot['disabled'] = true;
+    } else {
+        $slot['disabled'] = !$getAvailSeats($slot['time'], $durationMinutes) || !$getAvailBeauticians($slot['time'], $durationMinutes);
+    }
+}
+unset($slot);
+
+$allSlots = array_merge($morningSlots, $afternoonSlots, $eveningSlots);
 $selectedTimeIsAvailable = false;
 foreach ($allSlots as $s) {
     if ($s['time'] === $selectedTime && !$s['disabled']) {
@@ -865,7 +893,7 @@ if (!$selectedTimeIsAvailable) {
                                 </div>
 
                                 <p class="period">Afternoon</p>
-                                <div class="time-grid" id="afternoonGrid">
+                                <div class="time-grid mb-2" id="afternoonGrid">
                                     <?php foreach ($afternoonSlots as $slot): ?>
                                         <?php
                                         $activeClass = $slot['time'] === $selectedTime ? 'active' : '';
@@ -904,16 +932,14 @@ if (!$selectedTimeIsAvailable) {
                                 <?php if (!empty($pricing['promo_items_detail'])): ?>
                                     <?php foreach ($pricing['promo_items_detail'] as $item): ?>
                                         <div class="summary-row">
-                                            <span>[Promo Freebie] <?php echo htmlspecialchars($item['name']); ?></span>
-                                            <span>Rp<?php echo number_format($item['price'], 0, ',', '.'); ?></span>
+                                            <span><?php echo htmlspecialchars($item['name']); ?></span>
                                         </div>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
 
                                 <?php if (!empty($pricing['promo_discount']) && $pricing['promo_discount'] > 0): ?>
                                     <div class="summary-row text-danger">
-                                        <span>Diskon (<?php echo htmlspecialchars($pricing['promo_detail']['promo_name'] ?? 'Promo'); ?>)</span>
-                                        <span>-Rp<?php echo number_format($pricing['promo_discount'], 0, ',', '.'); ?></span>
+                                        <span>(<?php echo htmlspecialchars($pricing['promo_detail']['promo_name'] ?? 'Promo'); ?>)</span>
                                     </div>
                                 <?php endif; ?>
 
