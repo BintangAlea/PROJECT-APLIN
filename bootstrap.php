@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('Asia/Jakarta');
 // Set session cookie lifetime to 0 to destroy session when browser closes
 if (ini_get('session.cookie_lifetime') !== '0') {
     ini_set('session.cookie_lifetime', 0);
