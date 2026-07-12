@@ -242,6 +242,12 @@ $formatCurrency = static function ($value): string {
             border-color: #e9d7c1;
         }
 
+        .badge-paid {
+            background: #e2f2e8;
+            color: #3a7d55;
+            border-color: #b8dfc7;
+        }
+
         .inventory-panel {
             padding: 1rem 1.05rem 1.1rem;
         }
@@ -400,6 +406,7 @@ $formatCurrency = static function ($value): string {
                                             'In-Service'  => 'badge-soft',
                                             'Ready'       => 'badge-soft badge-ready',
                                             'Selesai'     => 'badge-soft badge-ready',
+                                            'Paid'        => 'badge-soft badge-paid',
                                             default       => 'badge-soft badge-waiting',
                                         };
                                     ?>

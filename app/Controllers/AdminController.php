@@ -84,8 +84,9 @@ class AdminController
                      MAX(o.guest_name) AS customer_name,
                      GROUP_CONCAT(CONCAT(od.qty, 'x ', m.menu_name) SEPARATOR ' + ') AS order_detail,
                      CASE
-                         WHEN o.STATUS = 'Completed' THEN 'Ready'
+                         WHEN o.payment_status = 'Paid' THEN 'Paid'
                          WHEN o.STATUS = 'In Progress' THEN 'In Progress'
+                         WHEN o.STATUS = 'Ready' THEN 'Ready'
                          ELSE 'Waiting'
                      END AS status,
                      MAX(o.order_date) AS queue_time,
@@ -93,7 +94,7 @@ class AdminController
                  FROM db_merish_cafe.orders o
                  LEFT JOIN db_merish_cafe.order_details od ON o.order_id = od.order_id
                  LEFT JOIN db_merish_cafe.menus m ON od.menu_id = m.menu_id
-                 WHERE o.payment_status != 'Paid' AND o.STATUS IN ('New', 'In Progress', 'Ready')
+                 WHERE DATE(o.order_date) = CURDATE()
                  GROUP BY o.order_id
              ) AS queue_data
              ORDER BY queue_time DESC
