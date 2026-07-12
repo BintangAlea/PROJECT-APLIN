@@ -497,13 +497,17 @@ $roleLabel = static function (string $role): string {
                         <li class="nav-item">
                             <a class="nav-link <?php echo $activeTab === 'review' ? 'active' : ''; ?>" href="index.php?page=admin&action=manageStaff&tab=review">Review Tab</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo $activeTab === 'eotm' ? 'active' : ''; ?>" href="index.php?page=admin&action=manageStaff&tab=eotm">EOTM Tab</a>
+                        </li>
                     </ul>
                 </div>
             </div>
 
             <div class="row g-3 align-items-start">
                 <div class="col-12 col-xl-7">
-                    <div class="panel mb-3">
+                    <?php if ($activeTab === 'staff'): ?>
+                        <div class="panel mb-3">
                         <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
                             <div>
                                 <h2 class="section-title mb-1">Staff Directory</h2>
@@ -572,6 +576,156 @@ $roleLabel = static function (string $role): string {
                             </div>
                         </form>
                     </div>
+                    <?php elseif ($activeTab === 'review'): ?>
+                        <div class="panel mb-3">
+                            <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
+                                <div>
+                                    <h2 class="section-title mb-1">Customer Reviews Feed</h2>
+                                    <p class="muted-text mb-0">Detailed list of feedback left by salon clients.</p>
+                                </div>
+                            </div>
+                            <div class="review-list">
+                                <?php if (empty($reviews)): ?>
+                                    <div class="review-card text-muted">Belum ada ulasan dari pelanggan.</div>
+                                <?php else: ?>
+                                    <?php foreach ($reviews as $review): ?>
+                                        <article class="review-card mb-3 p-3 border" style="background:#fff;">
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <h3 class="quote fs-6 mb-0">"<?php echo $escape($review['subject_name']); ?>"</h3>
+                                                <div class="review-stars" style="color: #ffc107; font-size: 0.95rem;"><?php echo str_repeat('★', max(1, (int) $review['rating'])); ?></div>
+                                            </div>
+                                            <p class="review-note small text-muted my-2"><?php echo $escape($review['review_comment'] ?: 'Customer tidak menulis komentar tambahan.'); ?></p>
+                                            <div class="review-foot d-flex justify-content-between mt-2 pt-2 border-top small text-muted">
+                                                <span>Stylist: <strong><?php echo $escape($review['staff_name']); ?></strong></span>
+                                                <span>Client: <strong><?php echo $escape($review['customer_name']); ?></strong></span>
+                                            </div>
+                                        </article>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    <?php elseif ($activeTab === 'eotm'): ?>
+                        <div class="panel mb-3">
+                            <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
+                                <div>
+                                    <h2 class="section-title mb-1">Employee of the Month (EOTM)</h2>
+                                    <p class="muted-text mb-0">Leaderboard and performance stats of beauticians.</p>
+                                </div>
+                                <a href="index.php?page=admin&action=exportEotm&month=<?php echo $selectedMonth; ?>&year=<?php echo $selectedYear; ?>" class="action-btn">Export EOTM Report</a>
+                            </div>
+
+                            <!-- Date selection form -->
+                            <form method="get" action="index.php" class="row g-2 align-items-end mb-4 bg-light p-3 border">
+                                <input type="hidden" name="page" value="admin">
+                                <input type="hidden" name="action" value="manageStaff">
+                                <input type="hidden" name="tab" value="eotm">
+                                <div class="col-12 col-md-5">
+                                    <label class="form-label small fw-semibold">Pilih Bulan</label>
+                                    <select name="month" class="form-select form-select-sm" style="border-radius:0;">
+                                        <?php
+                                        $months = [
+                                            '01' => 'Januari', '02' => 'Februari', '03' => 'Maret',
+                                            '04' => 'April', '05' => 'Mei', '06' => 'Juni',
+                                            '07' => 'Juli', '08' => 'Agustus', '09' => 'September',
+                                            '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
+                                        ];
+                                        foreach ($months as $mNum => $mName) {
+                                            $sel = ($selectedMonth === $mNum) ? 'selected' : '';
+                                            echo "<option value=\"$mNum\" $sel>$mName</option>";
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-md-5">
+                                    <label class="form-label small fw-semibold">Pilih Tahun</label>
+                                    <select name="year" class="form-select form-select-sm" style="border-radius:0;">
+                                        <?php
+                                        $currentYear = (int)date('Y');
+                                        for ($y = $currentYear - 2; $y <= $currentYear + 1; $y++) {
+                                            $sel = ((int)$selectedYear === $y) ? 'selected' : '';
+                                            echo "<option value=\"$y\" $sel>$y</option>";
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-md-2">
+                                    <button type="submit" class="action-btn w-100 py-1" style="font-size: 0.8rem; height: 31px;">Filter</button>
+                                </div>
+                            </form>
+
+                            <!-- EOTM Winner Card -->
+                            <?php if (empty($eotmRankings)): ?>
+                                <div class="text-center py-4 text-muted">Belum ada data performa untuk bulan ini.</div>
+                            <?php else: ?>
+                                <?php
+                                $winner = $eotmRankings[0];
+                                ?>
+                                <div class="card border-0 mb-4 text-white position-relative" style="background-color: var(--accent); border-radius: 0; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                                    <div class="card-body p-4 text-center">
+                                        <div class="d-inline-block p-3 rounded-circle mb-3 bg-white text-warning" style="box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 72px; height: 72px;">
+                                            <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                        </div>
+                                        <h4 class="text-uppercase tracking-wider fw-bold mb-1" style="font-size: 0.85rem; letter-spacing: 2px; color: #ffebd2;">Employee of the Month</h4>
+                                        <h2 class="h1 mb-2 fw-semibold" style="font-family: 'Playfair Display', serif;"><?php echo htmlspecialchars($winner['NAME']); ?></h2>
+                                        <p class="mb-3 opacity-75 small"><?php echo htmlspecialchars($winner['email']); ?></p>
+                                        <div class="d-flex justify-content-center gap-4 border-top border-light pt-3 mt-2">
+                                            <div>
+                                                <div class="fs-4 fw-bold text-white"><?php echo number_format($winner['completed_bookings']); ?></div>
+                                                <div class="small text-white-50">Completed Bookings</div>
+                                            </div>
+                                            <div>
+                                                <div class="fs-4 fw-bold text-white"><?php echo number_format($winner['avg_rating'], 2); ?> ★</div>
+                                                <div class="small text-white-50">Average Rating</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Rankings Leaderboard Table -->
+                                <h3 class="sub-title mb-2">Stylist Leaderboard</h3>
+                                <div class="table-responsive">
+                                    <table class="table align-middle">
+                                        <thead style="background: #f7ecea;">
+                                            <tr>
+                                                <th>Rank</th>
+                                                <th>Name</th>
+                                                <th>Completed Bookings</th>
+                                                <th>Average Rating</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php
+                                            $rank = 1;
+                                            foreach ($eotmRankings as $row):
+                                            ?>
+                                                <tr style="<?php echo $rank === 1 ? 'background-color: #fff9f8; font-weight: 600;' : ''; ?>">
+                                                    <td>
+                                                        <?php if ($rank === 1): ?>
+                                                            <span class="badge bg-warning text-dark px-2 py-1">#1 Winner</span>
+                                                        <?php else: ?>
+                                                            <span class="text-muted">#<?php echo $rank; ?></span>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td>
+                                                        <div class="fw-semibold text-accent"><?php echo htmlspecialchars($row['NAME']); ?></div>
+                                                        <div class="small-muted"><?php echo htmlspecialchars($row['email']); ?></div>
+                                                    </td>
+                                                    <td><?php echo number_format($row['completed_bookings']); ?> bookings</td>
+                                                    <td>
+                                                        <span class="fw-semibold"><?php echo number_format($row['avg_rating'], 2); ?></span>
+                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="#c9a227" stroke="#c9a227" style="vertical-align: middle;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                                    </td>
+                                                </tr>
+                                            <?php
+                                                $rank++;
+                                            endforeach;
+                                            ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <div class="col-12 col-xl-5">

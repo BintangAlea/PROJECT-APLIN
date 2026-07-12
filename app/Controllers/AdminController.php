@@ -838,7 +838,7 @@ class AdminController
     public function manageStaff()
     {
         $activeTab = $_GET['tab'] ?? 'staff';
-        if (!in_array($activeTab, ['staff', 'review'], true)) {
+        if (!in_array($activeTab, ['staff', 'review', 'eotm'], true)) {
             $activeTab = 'staff';
         }
 
@@ -909,6 +909,28 @@ class AdminController
             }
         }
 
+        // Calculate Employee of the Month variables
+        $selectedMonth = $_GET['month'] ?? date('m');
+        $selectedYear = $_GET['year'] ?? date('Y');
+        $monthYear = $selectedYear . '-' . $selectedMonth;
+
+        $eotmStmt = $this->db->prepare(
+            "SELECT u.user_id, u.NAME, u.email, u.ROLE,
+                    COUNT(DISTINCT r.res_id) AS completed_bookings,
+                    COALESCE(AVG(rv.rating), 0) AS avg_rating
+             FROM users u
+             JOIN reservation_details rd ON rd.beautician_id = u.user_id
+             JOIN reservations r ON rd.res_id = r.res_id
+             LEFT JOIN reviews rv ON rv.res_id = r.res_id
+             WHERE u.ROLE = 'Beautician'
+               AND r.STATUS = 'Selesai'
+               AND DATE_FORMAT(r.schedule_time, '%Y-%m') = :month_year
+             GROUP BY u.user_id, u.NAME, u.email, u.ROLE
+             ORDER BY completed_bookings DESC, avg_rating DESC"
+        );
+        $eotmStmt->execute([':month_year' => $monthYear]);
+        $eotmRankings = $eotmStmt->fetchAll();
+
         require __DIR__ . '/../Views/Admin/manage_staff.php';
     }
 
@@ -958,6 +980,55 @@ class AdminController
 
         $_SESSION['success'] = 'Staff baru berhasil didaftarkan.';
         header('Location: index.php?page=admin&action=manageStaff&tab=staff');
+        exit;
+    }
+
+    /**
+     * Export Employee of the Month leaderboard report to CSV
+     */
+    public function exportEotm()
+    {
+        $selectedMonth = $_GET['month'] ?? date('m');
+        $selectedYear = $_GET['year'] ?? date('Y');
+        $monthYear = $selectedYear . '-' . $selectedMonth;
+
+        $eotmStmt = $this->db->prepare(
+            "SELECT u.NAME, u.email, u.ROLE,
+                    COUNT(DISTINCT r.res_id) AS completed_bookings,
+                    COALESCE(AVG(rv.rating), 0) AS avg_rating
+             FROM users u
+             JOIN reservation_details rd ON rd.beautician_id = u.user_id
+             JOIN reservations r ON rd.res_id = r.res_id
+             LEFT JOIN reviews rv ON rv.res_id = r.res_id
+             WHERE u.ROLE = 'Beautician'
+               AND r.STATUS = 'Selesai'
+               AND DATE_FORMAT(r.schedule_time, '%Y-%m') = :month_year
+             GROUP BY u.user_id, u.NAME, u.email, u.ROLE
+             ORDER BY completed_bookings DESC, avg_rating DESC"
+        );
+        $eotmStmt->execute([':month_year' => $monthYear]);
+        $rankings = $eotmStmt->fetchAll();
+
+        // Generate CSV file
+        $filename = "Employee_of_the_Month_" . $monthYear . ".csv";
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=' . $filename);
+
+        $output = fopen('php://output', 'w');
+        fputcsv($output, ['Rank', 'Name', 'Email', 'Role', 'Completed Bookings', 'Average Rating']);
+
+        $rank = 1;
+        foreach ($rankings as $row) {
+            fputcsv($output, [
+                $rank++,
+                $row['NAME'],
+                $row['email'],
+                $row['ROLE'],
+                $row['completed_bookings'],
+                number_format($row['avg_rating'], 2)
+            ]);
+        }
+        fclose($output);
         exit;
     }
 
