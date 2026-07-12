@@ -827,7 +827,7 @@ class BookingController
                         'total_amount' => 0, // Bundle price is handled in salon bill
                         'payment_method' => 'Salon Bill',
                         'payment_status' => 'Paid',
-                        'status' => 'Pending'
+                        'status' => 'New'
                     ]);
 
                     if ($orderId) {
