@@ -326,7 +326,7 @@
                                             <label class="form-label small text-uppercase fw-semibold" style="color:var(--muted)">Metode Pembayaran</label>
                                             <select class="form-select" name="payment_method" required>
                                                 <option value="Cash" <?php echo $selectedOrder['payment_method'] === 'Cash' ? 'selected' : ''; ?>>Cash (Tunai)</option>
-                                                <option value="QRIS" <?php echo $selectedOrder['payment_method'] === 'QRIS' ? 'selected' : ''; ?>>QRIS (Auto-Paid)</option>
+                                                <option value="QRIS" <?php echo $selectedOrder['payment_method'] === 'QRIS' ? 'selected' : ''; ?>>QRIS </option>
                                             </select>
                                         </div>
 

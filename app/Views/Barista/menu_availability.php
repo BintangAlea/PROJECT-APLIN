@@ -159,12 +159,8 @@
             <div class="p-4 p-lg-5 flex-grow-1">
                 <div class="panel p-4 p-lg-5 mx-auto" style="max-width: 820px;">
                     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3 mb-4">
-                        <div>
-                            <div class="text-uppercase small" style="color:#9a7480; letter-spacing:0.12em;">Quick Menu</div>
+                        <div>                         
                             <div class="card-title-hero">Ketersediaan Item</div>
-                        </div>
-                        <div class="text-muted" style="max-width: 280px; font-size: 0.95rem;">
-                            Toggle items to instantly update their availability across the ordering system.
                         </div>
                     </div>
 

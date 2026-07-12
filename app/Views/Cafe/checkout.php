@@ -53,11 +53,12 @@ $seatName = 'Pick Up';
 if ($seatId) {
     try {
         $db = \App\Core\Database::getConnection();
-        $stmt = $db->prepare("SELECT seat_name FROM seats WHERE seat_id = :id OR seat_name = :id LIMIT 1");
-        $stmt->execute([':id' => $seatId]);
+        $stmt = $db->prepare("SELECT seat_id, seat_name FROM seats WHERE seat_id = :sid OR seat_name = :sname LIMIT 1");
+        $stmt->execute([':sid' => $seatId, ':sname' => $seatId]);
         $row = $stmt->fetch();
         if ($row) {
-            $seatName = $row['seat_name'];
+            $seatId   = $row['seat_id'];   // normalize to short key, e.g. 'S08'
+            $seatName = $row['seat_name']; // display name, e.g. 'Kursi Salon 8'
         } else {
             $seatName = $seatId;
         }
@@ -471,6 +472,7 @@ if ($seatId) {
                     <div class="head">☕ Rincian Pesanan Kafe</div>
                     <form method="POST" action="index.php?page=cafe&action=checkout">
                         <input type="hidden" name="order_type" value="<?php echo ($seatName !== 'Pick Up') ? 'Dine-In' : 'Takeaway'; ?>">
+                        <input type="hidden" name="seat_id" value="<?php echo htmlspecialchars((string)($seatId ?? '')); ?>">
 
                         <div class="mb-3">
                             <div class="field-label">Nama Panggilan</div>

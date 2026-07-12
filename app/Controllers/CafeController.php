@@ -162,6 +162,25 @@ class CafeController
         }
 
         $seatId = trim((string) ($_POST['seat_id'] ?? $_GET['seat'] ?? $_SESSION['qr_order']['seat_id'] ?? ''));
+
+        // Normalize seat_id: if it's a display name (e.g. 'Kursi Salon 8'), resolve to short key (e.g. 'S08')
+        if ($seatId !== '') {
+            try {
+                $db = \App\Core\Database::getConnection();
+                $stmt = $db->prepare("SELECT seat_id FROM seats WHERE seat_id = :sid OR seat_name = :sname LIMIT 1");
+                $stmt->execute([':sid' => $seatId, ':sname' => $seatId]);
+                $row = $stmt->fetch();
+                if ($row) {
+                    $seatId = $row['seat_id']; // e.g. 'S08'
+                }
+            } catch (\Exception $e) {
+                // fallback: if seat_id is too long, set to null
+                if (strlen($seatId) > 10) {
+                    $seatId = '';
+                }
+            }
+        }
+
         $tableName = trim($_POST['table_name'] ?? ($seatId !== '' ? $seatId : 'Pick Up'));
         $orderType = ($tableName !== 'Pick Up' || $seatId !== '') ? 'Dine-In' : 'Takeaway';
 

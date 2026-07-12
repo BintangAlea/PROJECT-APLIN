@@ -41,12 +41,14 @@ class OrdersModel
     public function findPendingOrInProgress(): array
     {
         $stmt = $this->db->query(
-            'SELECT o.*, od.menu_id, od.qty, m.menu_name, m.price
+            'SELECT o.*, od.menu_id, od.qty, m.menu_name, m.price,
+                    s.seat_name, s.zone_type
              FROM db_merish_cafe.orders o
              JOIN db_merish_cafe.order_details od ON o.order_id = od.order_id
              JOIN db_merish_cafe.menus m ON od.menu_id = m.menu_id
+             LEFT JOIN seats s ON o.seat_id = s.seat_id
              WHERE o.STATUS IN ("New", "In Progress", "Ready", "Pending")
-             ORDER BY o.order_id DESC'
+             ORDER BY o.order_id ASC'
         );
         return $stmt->fetchAll();
     }
@@ -54,10 +56,12 @@ class OrdersModel
     public function findAll(): array
     {
         $stmt = $this->db->query(
-            'SELECT o.*, od.menu_id, od.qty, m.menu_name, m.price
+            'SELECT o.*, od.menu_id, od.qty, m.menu_name, m.price,
+                    s.seat_name, s.zone_type
              FROM db_merish_cafe.orders o
              JOIN db_merish_cafe.order_details od ON o.order_id = od.order_id
              JOIN db_merish_cafe.menus m ON od.menu_id = m.menu_id
+             LEFT JOIN seats s ON o.seat_id = s.seat_id
              ORDER BY o.order_id DESC'
         );
         return $stmt->fetchAll();
