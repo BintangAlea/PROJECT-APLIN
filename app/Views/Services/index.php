@@ -640,8 +640,9 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
                                     if (!empty($res['discount_value'])) {
                                         $discount = (float)$res['discount_value'];
                                     }
-                                    $finalTotal = max(0, $subtotal - $discount);
-                                    $remainingDue = max(0, $finalTotal - (float)$res['dp_amount']);
+                                    // Do not subtract discount for total in history. Directly subtract DP 50.000.
+                                    $finalTotal = $subtotal;
+                                    $remainingDue = max(0, $finalTotal - 50000);
                                     ?>
                                     <div class="history-card-item">
                                         <div class="d-flex justify-content-between align-items-start mb-2">
@@ -678,7 +679,7 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
                                                         <?php if ($discount > 0): ?>
                                                             <div class="d-flex justify-content-between text-success mb-1">
                                                                 <span>Promo (<?php echo htmlspecialchars($res['promo_name']); ?>):</span>
-                                                                <span>-Rp <?php echo number_format($discount, 0, ',', '.'); ?></span>
+                                                                <span>Free Item</span>
                                                             </div>
                                                         <?php endif; ?>
                                                         <div class="d-flex justify-content-between fw-semibold border-top pt-1 mb-1">
@@ -687,7 +688,7 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
                                                         </div>
                                                         <div class="d-flex justify-content-between text-muted mb-1">
                                                             <span>DP Telah Dibayar (<?php echo $res['is_dp_paid'] ? 'Lunas' : 'Belum Lunas'; ?>):</span>
-                                                            <span>Rp <?php echo number_format($res['dp_amount'], 0, ',', '.'); ?></span>
+                                                            <span>Rp 50.000</span>
                                                         </div>
                                                         <div class="d-flex justify-content-between border-top fw-bold pt-1 text-danger">
                                                             <span>Sisa Harus Dibayar di Salon:</span>
