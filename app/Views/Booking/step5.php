@@ -533,7 +533,7 @@ $requiredDp = 50000;
                 <?php endif; ?>
 
                 <form method="POST" action="index.php?page=booking&action=submit" enctype="multipart/form-data" id="checkoutForm">
-                    <input type="hidden" name="payment_method" value="qris">
+                    <input type="hidden" name="payment_method" value="Transfer">
                     <input type="hidden" name="promo_code" value="">
 
                     <div class="checkout-grid">
@@ -638,16 +638,16 @@ $requiredDp = 50000;
                         </section>
 
                         <section class="panel-card scan-card">
-                            <h2 class="scan-title">Scan to Pay</h2>
-                            <p class="scan-copy">Please scan the QRIS code below using your preferred banking or e-wallet app to transfer the down payment.</p>
+                            <h2 class="scan-title">Bank Transfer</h2>
+                            <p class="scan-copy">Please transfer the required down payment amount to the bank account below.</p>
 
-                            <div class="phone-frame">
-                                <div class="phone-camera"></div>
-                                <div class="qr-art"></div>
+                            <div class="merchant-name" style="margin-top: 1.5rem;">Merish Beauty Studio</div>
+                            
+                            <div class="bank-details" style="background: #faf6f7; border: 1px dashed #d1c4c7; border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; text-align: center; color: #4a3e3d;">
+                                <div style="font-size: 1.25rem; font-weight: bold; color: #7b6a70; letter-spacing: 0.5px;">BCA</div>
+                                <div style="font-size: 1.85rem; font-weight: 800; color: #a38286; margin: 0.5rem 0; letter-spacing: 1px;">4101161212</div>
+                                <div style="font-size: 1.1rem; font-weight: 600; color: #5c4d50;">A/n Merish</div>
                             </div>
-
-                            <div class="merchant-name">Merish Beauty Studio</div>
-                            <div class="merchant-id">ID: 0938472948</div>
 
                             <div class="payment-options">
                                 <label class="agreement" for="payment_proof_agree">
