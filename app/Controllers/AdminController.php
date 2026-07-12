@@ -1150,20 +1150,33 @@ class AdminController
                     stock_qty,
                     min_stock,
                     unit,
-                    0 AS extra_charge_per_unit,
+                    0 AS extra_charge,
+                    'Cafe' AS source,
                     CASE
                         WHEN stock_qty <= min_stock THEN 'Low Stock'
                         ELSE 'Healthy'
                     END AS stock_status
-               FROM db_merish_cafe.inventories
+             FROM db_merish_cafe.inventories
+             UNION ALL
+             SELECT item_name,
+                    stock_quantity AS stock_qty,
+                    minimum_stock AS min_stock,
+                    unit,
+                    0 AS extra_charge,
+                    'Salon' AS source,
+                    CASE
+                        WHEN stock_quantity <= minimum_stock THEN 'Low Stock'
+                        ELSE 'Healthy'
+                    END AS stock_status
+             FROM db_merish_salon.inventories
              ORDER BY stock_qty ASC, item_name ASC"
         );
         $rows = $stmt->fetchAll();
 
         return [
             'title' => 'Laporan Stok',
-            'description' => 'Status stok bahan baku dan minimum stok saat ini.',
-            'headers' => ['Item', 'Stok', 'Minimum', 'Satuan', 'Status', 'Extra Charge/Unit'],
+            'description' => 'Status stok bahan baku dan minimum stok saat ini untuk Salon dan Kafe.',
+            'headers' => ['Item', 'Stok', 'Minimum', 'Satuan', 'Status', 'Kategori', 'Extra Charge/Unit'],
             'rows' => array_map(static function (array $row): array {
                 return [
                     $row['item_name'],
@@ -1171,7 +1184,8 @@ class AdminController
                     rtrim(rtrim(number_format((float) $row['min_stock'], 2, '.', ''), '0'), '.'),
                     $row['unit'],
                     $row['stock_status'],
-                    'Rp 0',
+                    $row['source'],
+                    'Rp ' . number_format((float) $row['extra_charge'], 0, ',', '.'),
                 ];
             }, $rows),
         ];
