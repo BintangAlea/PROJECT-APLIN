@@ -1543,17 +1543,17 @@ class AdminController
         
         $content .= "q\n";
         $content .= "0.545 0.392 0.447 rg\n"; // brand text color
-        $content .= "BT\n/F1 16 Tf\n1 0 0 1 50 {$kopYTitle} Tm\n(MERISH SALON & CAFE) Tj\nET\n";
+        $content .= "BT\n/F1 16 Tf\n1 0 0 1 35 {$kopYTitle} Tm\n(MERISH SALON & CAFE) Tj\nET\n";
         
         $content .= "0.3 0.3 0.3 rg\n"; // subtext color
-        $content .= "BT\n/F1 9 Tf\n1 0 0 1 50 {$kopYSubtext} Tm\n(Jalan Raya Merish No. 1, Surabaya  |  Email: contact@merish.com  |  Telp: (031) 555-0199) Tj\nET\n";
+        $content .= "BT\n/F1 8.5 Tf\n1 0 0 1 35 {$kopYSubtext} Tm\n(Jalan Raya Merish No. 1, Surabaya  |  Email: contact@merish.com  |  Telp: (031) 555-0199) Tj\nET\n";
         
         $content .= "0.545 0.392 0.447 RG\n"; // brand stroke color
-        $content .= "1.5 w\n50 {$kopYLine} m\n545 {$kopYLine} l\nS\n";
+        $content .= "1.5 w\n35 {$kopYLine} m\n560 {$kopYLine} l\nS\n";
         $content .= "Q\n";
 
         $contentStartY = $pageHeight - 100;
-        $content .= "BT\n/F1 9 Tf\n14 TL\n50 {$contentStartY} Td\n";
+        $content .= "BT\n/F1 7.5 Tf\n11 TL\n35 {$contentStartY} Td\n";
         $first = true;
         foreach ($safeLines as $line) {
             if (!$first) {
