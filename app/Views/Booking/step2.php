@@ -255,6 +255,21 @@ if (empty($bundles)) {
             background: #f6eef2;
         }
 
+        .bundle-card.disabled {
+            opacity: 0.55;
+            background: #f1ecec;
+            border-color: #dcd4d6;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .bundle-card.disabled .add-btn {
+            background: #e2dadc;
+            border-color: #e2dadc;
+            color: #a89fa1;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
         .bottom-actions {
             border-top: 1px solid var(--line);
             margin-top: 2rem;
@@ -340,7 +355,7 @@ if (empty($bundles)) {
                         $icon = (string)($bundle['icon'] ?? '✧');
                         ?>
                         <div class="col-lg-6">
-                            <article class="bundle-card">
+                            <article class="bundle-card<?php echo !($bundle['is_selectable'] ?? true) ? ' disabled' : ''; ?>">
                                 <div class="badge-strip">
                                     <span class="chip"><?php echo htmlspecialchars($badge); ?></span>
                                     <span class="badge-icon"><?php echo htmlspecialchars($icon); ?></span>
@@ -352,7 +367,7 @@ if (empty($bundles)) {
                                     <span class="price-main">Rp<?php echo number_format($finalPrice, 0, ',', '.'); ?></span>
                                     <span class="save-chip">Hemat Rp<?php echo number_format($discountValue, 0, ',', '.'); ?></span>
                                 </div>
-                                <button type="button" class="btn add-btn" data-bundle-id="<?php echo htmlspecialchars($bundleId); ?>">Add to Bill</button>
+                                <button type="button" class="btn add-btn" data-bundle-id="<?php echo htmlspecialchars($bundleId); ?>" <?php echo !($bundle['is_selectable'] ?? true) ? 'disabled' : ''; ?>><?php echo ($bundle['is_selectable'] ?? true) ? 'Add to Bill' : 'Unavailable for your treatment'; ?></button>
                             </article>
                         </div>
                     <?php endforeach; ?>

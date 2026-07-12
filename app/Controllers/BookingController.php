@@ -116,6 +116,43 @@ class BookingController
      */
     public function step2()
     {
+        // Map promos to bundle-like format for the view
+        $mapping = [
+            1 => [
+                'services' => ['SV01'],
+                'menus' => ['M001']
+            ],
+            2 => [
+                'services' => ['SV03'],
+                'menus' => ['M009']
+            ],
+            3 => [
+                'services' => ['SV33'],
+                'menus' => [],
+                'fb_custom_price' => 25000
+            ],
+            4 => [
+                'services' => ['SV52'],
+                'menus' => ['M002']
+            ],
+            5 => [
+                'services' => ['SV50', 'SV63', 'ADD-20'],
+                'menus' => []
+            ],
+            6 => [
+                'services' => ['SV36', 'SV19', 'ADD-16'],
+                'menus' => []
+            ],
+            7 => [
+                'services' => ['SV02', 'SV37', 'ADD-15'],
+                'menus' => []
+            ],
+            8 => [
+                'services' => ['SV49', 'SV60', 'ADD-19'],
+                'menus' => []
+            ]
+        ];
+
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $db = \App\Core\Database::getConnection();
 
@@ -144,50 +181,24 @@ class BookingController
             );
             $promos = $promoStmt->fetchAll();
 
-            // Map promos to bundle-like format for the view
-            $mapping = [
-                1 => [
-                    'services' => ['SV01'],
-                    'menus' => ['M001']
-                ],
-                2 => [
-                    'services' => ['SV03'],
-                    'menus' => ['M009']
-                ],
-                3 => [
-                    'services' => ['SV33'],
-                    'menus' => [],
-                    'fb_custom_price' => 25000
-                ],
-                4 => [
-                    'services' => ['SV52'],
-                    'menus' => ['M002']
-                ],
-                5 => [
-                    'services' => ['SV50', 'SV63', 'ADD-20'],
-                    'menus' => []
-                ],
-                6 => [
-                    'services' => ['SV36', 'SV19', 'ADD-16'],
-                    'menus' => []
-                ],
-                7 => [
-                    'services' => ['SV02', 'SV37', 'ADD-15'],
-                    'menus' => []
-                ],
-                8 => [
-                    'services' => ['SV49', 'SV60', 'ADD-19'],
-                    'menus' => []
-                ]
-            ];
+            $selectedServiceIds = $_SESSION['booking']['service_ids'] ?? [];
 
             $bundles = [];
             foreach ($promos as $promo) {
                 $id = (int)$promo['promo_id'];
                 $originalPrice = 0;
                 
+                $isSelectable = false;
                 if (isset($mapping[$id])) {
                     $map = $mapping[$id];
+                    $primaryServices = array_filter($map['services'], function($sId) {
+                        return strpos($sId, 'ADD-') !== 0;
+                    });
+                    
+                    $intersect = array_intersect($selectedServiceIds, $primaryServices);
+                    if (!empty($intersect)) {
+                        $isSelectable = true;
+                    }
                     
                     if (!empty($map['services'])) {
                         $placeholders = implode(',', array_fill(0, count($map['services']), '?'));
@@ -220,6 +231,7 @@ class BookingController
                     'discount_value' => $discountValue,
                     'badge' => 'Promo',
                     'icon' => '✦',
+                    'is_selectable' => $isSelectable,
                 ];
             }
 
@@ -241,7 +253,29 @@ class BookingController
             // Map bundle_id back to promo_id if it starts with "promo_"
             $bundleId = $_POST['bundle_id'] ?? null;
             if ($bundleId && str_starts_with($bundleId, 'promo_')) {
-                $_SESSION['booking']['promo_id'] = (int)substr($bundleId, 6);
+                $promoId = (int)substr($bundleId, 6);
+                
+                // Validate if this promo is selectable for the selected services
+                $selectedServiceIds = $_SESSION['booking']['service_ids'] ?? [];
+                $isSelectable = false;
+                if (isset($mapping[$promoId])) {
+                    $map = $mapping[$promoId];
+                    $primaryServices = array_filter($map['services'], function($sId) {
+                        return strpos($sId, 'ADD-') !== 0;
+                    });
+                    $intersect = array_intersect($selectedServiceIds, $primaryServices);
+                    if (!empty($intersect)) {
+                        $isSelectable = true;
+                    }
+                }
+                
+                if (!$isSelectable) {
+                    $_SESSION['booking_error'] = 'Promo bundling ini tidak cocok dengan treatment yang dipilih';
+                    header('Location: /index.php?page=booking&step=2');
+                    exit;
+                }
+                
+                $_SESSION['booking']['promo_id'] = $promoId;
             } else {
                 $_SESSION['booking']['promo_id'] = null;
             }
