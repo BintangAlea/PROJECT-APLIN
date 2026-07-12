@@ -825,7 +825,7 @@ class BookingController
                         'guest_name' => $guestName,
                         'seat_id' => $assignedSeatId,
                         'total_amount' => 0, // Bundle price is handled in salon bill
-                        'payment_method' => 'Salon Bill',
+                        'payment_method' => 'Cash',
                         'payment_status' => 'Paid',
                         'status' => 'New'
                     ]);
