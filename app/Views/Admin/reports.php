@@ -483,9 +483,7 @@ $topSalon = array_slice($reportData['rows'] ?? [], 0, 3);
                         <span>⌕</span>
                         <input type="text" placeholder="Search data...">
                     </div>
-                    <button class="icon-btn" type="button">🔔</button>
-                    <button class="icon-btn" type="button">↺</button>
-                    <button class="icon-btn" type="button">?</button>
+                    <button class="icon-btn" type="button" onclick="location.reload()" title="Reload page">↺</button>
                     <a class="secondary-btn" href="#generate-reports">Export Report</a>
                     <a class="action-btn" href="index.php?page=admin&action=manageCafeOrders">Live Queue</a>
                 </div>
