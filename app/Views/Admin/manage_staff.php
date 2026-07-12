@@ -19,6 +19,26 @@ $roleLabel = static function (string $role): string {
         default => 'Front Desk',
     };
 };
+
+$getStaffPhoto = static function (string $name): ?string {
+    $normalized = strtolower(trim($name));
+    $mapping = [
+        'siska resepsionis' => 'assets/merish_pictures/RESEPSIONIS/Siska resepsionis.jpg',
+        'kak sarah' => 'assets/merish_pictures/EXPERTS/Sarah Roberts.webp',
+        'dimas barista' => 'assets/merish_pictures/BARISTA/Dimas.jpg',
+        'kak niki' => 'assets/merish_pictures/EXPERTS/Niki Rose.webp',
+        'kak ambar' => 'assets/merish_pictures/EXPERTS/Ambar Eliyah.webp',
+        'kak nurul' => 'assets/merish_pictures/EXPERTS/Kak Nurul.jpg',
+        'kak angel' => 'assets/merish_pictures/EXPERTS/Kak Angel.webp',
+        'kak jennifer' => 'assets/merish_pictures/EXPERTS/Kak Jennifer.webp',
+        'kak winda' => 'assets/merish_pictures/EXPERTS/Kak Winda.webp',
+        'kak wendy' => 'assets/merish_pictures/EXPERTS/Kak Wendy.webp',
+        'kak nirmana' => 'assets/merish_pictures/EXPERTS/Kak Nirmana.jpg',
+        'kak zeba' => 'assets/merish_pictures/EXPERTS/Kak Zeba.webp',
+        'kak zac' => 'assets/merish_pictures/EXPERTS/Kak Zac.webp',
+    ];
+    return $mapping[$normalized] ?? null;
+};
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -523,7 +543,14 @@ $roleLabel = static function (string $role): string {
                                 <?php foreach ($staff as $person): ?>
                                     <article class="staff-card">
                                         <div class="staff-head">
-                                            <div class="avatar"><?php echo strtoupper(substr((string) ($person['NAME'] ?? 'S'), 0, 1)); ?></div>
+                                            <?php 
+                                            $photoPath = $getStaffPhoto($person['NAME']);
+                                            if ($photoPath): 
+                                            ?>
+                                                <img src="<?php echo htmlspecialchars($photoPath); ?>" alt="<?php echo htmlspecialchars($person['NAME']); ?>" class="avatar" style="object-fit: cover;">
+                                            <?php else: ?>
+                                                <div class="avatar"><?php echo strtoupper(substr((string) ($person['NAME'] ?? 'S'), 0, 1)); ?></div>
+                                            <?php endif; ?>
                                             <div class="flex-grow-1">
                                                 <?php if ($topPerformer && (int) $topPerformer['user_id'] === (int) $person['user_id']): ?>
                                                     <div class="top-performer"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> Top Performer</div>
@@ -662,9 +689,21 @@ $roleLabel = static function (string $role): string {
                                 ?>
                                 <div class="card border-0 mb-4 text-white position-relative" style="background-color: var(--accent); border-radius: 0; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                                     <div class="card-body p-4 text-center">
-                                        <div class="d-inline-block p-3 rounded-circle mb-3 bg-white text-warning" style="box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 72px; height: 72px;">
-                                            <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                                        </div>
+                                        <?php 
+                                        $winnerPhoto = $getStaffPhoto($winner['NAME']);
+                                        if ($winnerPhoto): 
+                                        ?>
+                                            <div class="mb-3 position-relative d-inline-block">
+                                                <img src="<?php echo htmlspecialchars($winnerPhoto); ?>" alt="<?php echo htmlspecialchars($winner['NAME']); ?>" class="rounded-circle border border-white border-2" style="width: 80px; height: 80px; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
+                                                <span class="position-absolute bottom-0 end-0 bg-warning text-dark p-1 rounded-circle d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                                </span>
+                                            </div>
+                                        <?php else: ?>
+                                            <div class="d-inline-block p-3 rounded-circle mb-3 bg-white text-warning" style="box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 72px; height: 72px; line-height: 40px;">
+                                                <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                            </div>
+                                        <?php endif; ?>
                                         <h4 class="text-uppercase tracking-wider fw-bold mb-1" style="font-size: 0.85rem; letter-spacing: 2px; color: #ffebd2;">Employee of the Month</h4>
                                         <h2 class="h1 mb-2 fw-semibold" style="font-family: 'Playfair Display', serif;"><?php echo htmlspecialchars($winner['NAME']); ?></h2>
                                         <p class="mb-3 opacity-75 small"><?php echo htmlspecialchars($winner['email']); ?></p>
