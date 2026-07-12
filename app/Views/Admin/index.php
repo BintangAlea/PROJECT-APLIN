@@ -397,9 +397,10 @@ $formatCurrency = static function ($value): string {
                                         $status = (string) ($row['status'] ?? 'Waiting');
                                         $badgeClass = match ($status) {
                                             'In Progress' => 'badge-soft',
-                                            'Ready' => 'badge-soft badge-ready',
-                                            'Selesai' => 'badge-soft badge-ready',
-                                            default => 'badge-soft badge-waiting',
+                                            'In-Service'  => 'badge-soft',
+                                            'Ready'       => 'badge-soft badge-ready',
+                                            'Selesai'     => 'badge-soft badge-ready',
+                                            default       => 'badge-soft badge-waiting',
                                         };
                                     ?>
                                     <tr>

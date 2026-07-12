@@ -93,7 +93,7 @@ class AdminController
                  FROM db_merish_cafe.orders o
                  LEFT JOIN db_merish_cafe.order_details od ON o.order_id = od.order_id
                  LEFT JOIN db_merish_cafe.menus m ON od.menu_id = m.menu_id
-                 WHERE o.payment_status = 'Paid' OR o.STATUS IN ('New', 'In Progress', 'Ready')
+                 WHERE o.payment_status != 'Paid' AND o.STATUS IN ('New', 'In Progress', 'Ready')
                  GROUP BY o.order_id
              ) AS queue_data
              ORDER BY queue_time DESC
