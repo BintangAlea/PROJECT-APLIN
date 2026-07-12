@@ -570,7 +570,7 @@ $catalogAnchor = '#catalog-form';
         <aside class="sidebar">
             <div>
                 <a class="brand" href="index.php?page=admin">Merish</a>
-                <div class="brand-sub">MANAGEMENT PORTAL</div>
+                <div class="brand-sub">Management Portal</div>
             </div>
 
             <a class="new-booking" href="index.php?page=admin&action=manageReservations">+ New Appointment</a>

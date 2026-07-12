@@ -306,7 +306,7 @@ $formatCurrency = static function ($value): string {
             <div class="brand-sub">Management Portal</div>
         </div>
 
-        <a class="new-booking btn w-100 text-decoration-none d-block text-center" href="index.php?page=admin&action=manageReservations">New Appointment</a>
+        <a class="new-booking btn w-100 text-decoration-none d-block text-center" href="index.php?page=admin&action=manageReservations">+ New Appointment</a>
 
         <nav class="nav flex-column side-nav gap-1">
             <a class="nav-link active" href="index.php?page=admin">Dashboard</a>

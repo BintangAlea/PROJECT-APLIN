@@ -299,11 +299,11 @@ $formattedTime = $editData['reservation_time'] ?? date('H:i');
 <div class="shell">
     <aside class="sidebar">
         <div>
-            <span class="brand">MERISH</span>
-            <div class="brand-sub">Luxury Suite</div>
+            <span class="brand">Merish</span>
+            <div class="brand-sub">Management Portal</div>
         </div>
 
-        <button class="new-booking btn w-100" type="button" onclick="document.getElementById('reservation-form').scrollIntoView({behavior:'smooth'})">New Appointment</button>
+        <button class="new-booking btn w-100" type="button" onclick="document.getElementById('reservation-form').scrollIntoView({behavior:'smooth'})">+ New Appointment</button>
 
         <nav class="nav flex-column side-nav gap-1">
             <a class="nav-link" href="index.php?page=admin">Dashboard</a>
