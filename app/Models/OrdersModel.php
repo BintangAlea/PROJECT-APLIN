@@ -70,12 +70,18 @@ class OrdersModel
              VALUES (:guest_name, :seat_id, :total_amount, :payment_method, :payment_status, :status, NOW())'
         );
 
+        $paymentMethod = $data['payment_method'] ?? 'Cash';
+        $paymentStatus = $data['payment_status'] ?? 'Unpaid';
+        if ($paymentMethod === 'QRIS') {
+            $paymentStatus = 'Paid';
+        }
+
         $success = $stmt->execute([
             ':guest_name' => $data['guest_name'],
             ':seat_id' => $data['seat_id'] ?? null,
             ':total_amount' => $data['total_amount'] ?? 0,
-            ':payment_method' => $data['payment_method'] ?? 'Cash',
-            ':payment_status' => $data['payment_status'] ?? 'Unpaid',
+            ':payment_method' => $paymentMethod,
+            ':payment_status' => $paymentStatus,
             ':status' => $data['status'] ?? 'New',
         ]);
 

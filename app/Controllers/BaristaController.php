@@ -92,6 +92,9 @@ class BaristaController
 
     public function paymentCashier()
     {
+        // Auto-heal/update any QRIS orders that are incorrectly marked as Unpaid to Paid
+        $this->db->exec("UPDATE db_merish_cafe.orders SET payment_status = 'Paid' WHERE payment_method = 'QRIS' AND payment_status = 'Unpaid'");
+
         $statusFilter = $_GET['filter'] ?? 'unpaid';
 
         // Fetch orders based on filter

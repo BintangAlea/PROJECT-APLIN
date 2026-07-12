@@ -31,7 +31,12 @@ class AuthController
 
     public function logout()
     {
+        $reason = $_GET['reason'] ?? '';
         session_destroy();
+        if ($reason === 'timeout') {
+            session_start();
+            $_SESSION['error'] = 'Sesi Anda telah berakhir karena tidak ada aktivitas selama 10 menit.';
+        }
         header('Location: index.php?page=login');
         exit;
     }

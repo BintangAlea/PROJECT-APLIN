@@ -154,7 +154,6 @@
                     <h1 class="page-title"><?= htmlspecialchars($pageTitle ?? 'Item Availability Manager') ?></h1>
                     <p class="page-subtitle">Toggle items to instantly update their availability across the ordering system.</p>
                 </div>
-                <button class="quick-btn">Quick Menu</button>
             </div>
 
             <div class="p-4 p-lg-5 flex-grow-1">
