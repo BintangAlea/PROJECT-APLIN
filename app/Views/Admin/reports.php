@@ -11,13 +11,16 @@ $escape = static fn ($value): string => htmlspecialchars((string) $value, ENT_QU
 $formatCurrency = static fn ($value): string => 'Rp ' . number_format((float) $value, 0, ',', '.');
 $reportTypeLabel = match ($reportType) {
     'stock' => 'Laporan Stok',
-    'top-services' => 'Layanan Paling Laku',
+    'top-services' => 'Layanan Paling Laku (Salon)',
+    'top-menu' => 'Menu Paling Laku (Kafe)',
+    'top-employee' => 'Performa Stylist & EOTM',
+    'all' => 'Semua Laporan Terpadu',
     default => 'Laporan Pendapatan',
 };
 
 $baseQuery = 'index.php?page=admin&action=reports&start_date=' . urlencode($startDate) . '&end_date=' . urlencode($endDate) . '&report_type=' . urlencode($reportType);
 $pdfUrl = $baseQuery . '&export=pdf';
-$excelUrl = $baseQuery . '&export=excel';
+$csvUrl = $baseQuery . '&export=csv';
 
 $trendLabels = $trendData['labels'] ?? [];
 $salonTrend = $trendData['salon'] ?? [];
@@ -437,7 +440,7 @@ $topSalon = array_slice($reportData['rows'] ?? [], 0, 3);
                     <button class="icon-btn" type="button">🔔</button>
                     <button class="icon-btn" type="button">↺</button>
                     <button class="icon-btn" type="button">?</button>
-                    <a class="secondary-btn" href="<?php echo $escape($excelUrl); ?>">Export Report</a>
+                    <a class="secondary-btn" href="#generate-reports">Export Report</a>
                     <a class="action-btn" href="index.php?page=admin&action=manageCafeOrders">Live Queue</a>
                 </div>
             </div>
@@ -463,9 +466,12 @@ $topSalon = array_slice($reportData['rows'] ?? [], 0, 3);
                     <div class="col-12 col-md-3">
                         <label class="form-label">Jenis Laporan</label>
                         <select class="form-select" name="report_type">
+                            <option value="all" <?php echo $reportType === 'all' ? 'selected' : ''; ?>>Semua Laporan Terpadu</option>
                             <option value="revenue" <?php echo $reportType === 'revenue' ? 'selected' : ''; ?>>Laporan Pendapatan</option>
                             <option value="stock" <?php echo $reportType === 'stock' ? 'selected' : ''; ?>>Laporan Stok</option>
-                            <option value="top-services" <?php echo $reportType === 'top-services' ? 'selected' : ''; ?>>Layanan Paling Laku</option>
+                            <option value="top-services" <?php echo $reportType === 'top-services' ? 'selected' : ''; ?>>Layanan Paling Laku (Salon)</option>
+                            <option value="top-menu" <?php echo $reportType === 'top-menu' ? 'selected' : ''; ?>>Menu Paling Laku (Kafe)</option>
+                            <option value="top-employee" <?php echo $reportType === 'top-employee' ? 'selected' : ''; ?>>Performa Stylist & EOTM</option>
                         </select>
                     </div>
                     <div class="col-12 col-md-3 d-grid">
@@ -580,50 +586,116 @@ $topSalon = array_slice($reportData['rows'] ?? [], 0, 3);
                 </div>
             </div>
 
-            <section class="table-panel mb-3">
-                <div class="d-flex justify-content-between align-items-start gap-3 mb-2 flex-wrap">
-                    <div>
-                        <h3 class="trend-title"><?php echo $escape($reportData['title'] ?? 'Report'); ?></h3>
-                        <div class="muted-note"><?php echo $escape($reportData['description'] ?? ''); ?></div>
-                    </div>
-                    <div class="muted-note">Jenis Laporan: <?php echo $escape($reportTypeLabel); ?></div>
-                </div>
+            <?php if (!empty($reportData['is_all'])): ?>
+                <?php foreach ($reportData['sections'] as $section): ?>
+                    <section class="table-panel mb-4">
+                        <div class="d-flex justify-content-between align-items-start gap-3 mb-2 flex-wrap">
+                            <div>
+                                <h3 class="trend-title"><?php echo $escape($section['title']); ?></h3>
+                                <div class="muted-note"><?php echo $escape($section['description']); ?></div>
+                            </div>
+                        </div>
 
-                <div class="table-responsive">
-                    <table class="table align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <?php foreach (($reportData['headers'] ?? []) as $header): ?>
-                                    <th><?php echo $escape($header); ?></th>
-                                <?php endforeach; ?>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (empty($reportData['rows'] ?? [])): ?>
-                                <tr>
-                                    <td colspan="<?php echo max(1, count($reportData['headers'] ?? [])); ?>" class="text-center text-muted py-4">Tidak ada data pada rentang filter ini.</td>
-                                </tr>
-                            <?php else: ?>
-                                <?php foreach (($reportData['rows'] ?? []) as $row): ?>
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead>
                                     <tr>
-                                        <?php foreach ($row as $cell): ?>
-                                            <td><?php echo $escape((string) $cell); ?></td>
+                                        <?php foreach ($section['headers'] as $header): ?>
+                                            <th><?php echo $escape($header); ?></th>
                                         <?php endforeach; ?>
                                     </tr>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+                                </thead>
+                                <tbody>
+                                    <?php if (empty($section['rows'])): ?>
+                                        <tr>
+                                            <td colspan="<?php echo max(1, count($section['headers'])); ?>" class="text-center text-muted py-4">Tidak ada data.</td>
+                                        </tr>
+                                    <?php else: ?>
+                                        <?php foreach ($section['rows'] as $row): ?>
+                                            <tr>
+                                                <?php foreach ($row as $cell): ?>
+                                                    <td><?php echo $escape((string) $cell); ?></td>
+                                                <?php endforeach; ?>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <section class="table-panel mb-3">
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-2 flex-wrap">
+                        <div>
+                            <h3 class="trend-title"><?php echo $escape($reportData['title'] ?? 'Report'); ?></h3>
+                            <div class="muted-note"><?php echo $escape($reportData['description'] ?? ''); ?></div>
+                        </div>
+                        <div class="muted-note">Jenis Laporan: <?php echo $escape($reportTypeLabel); ?></div>
+                    </div>
 
-            <section class="export-section">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <?php foreach (($reportData['headers'] ?? []) as $header): ?>
+                                        <th><?php echo $escape($header); ?></th>
+                                    <?php endforeach; ?>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($reportData['rows'] ?? [])): ?>
+                                    <tr>
+                                        <td colspan="<?php echo max(1, count($reportData['headers'] ?? [])); ?>" class="text-center text-muted py-4">Tidak ada data pada rentang filter ini.</td>
+                                    </tr>
+                                <?php else: ?>
+                                    <?php foreach (($reportData['rows'] ?? []) as $row): ?>
+                                        <tr>
+                                            <?php foreach ($row as $cell): ?>
+                                                <td><?php echo $escape((string) $cell); ?></td>
+                                            <?php endforeach; ?>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            <?php endif; ?>
+
+            <section id="generate-reports" class="export-section">
                 <h3 class="export-title">Generate Official Reports</h3>
-                <p class="muted-note">Export the current analytics view including detailed financial breakdowns and service metrics.</p>
-                <div class="d-flex gap-2 justify-content-center flex-wrap mt-3">
-                    <a class="action-btn" href="<?php echo $escape($pdfUrl); ?>">Export to PDF</a>
-                    <a class="secondary-btn" href="<?php echo $escape($excelUrl); ?>">Export to Excel</a>
-                </div>
+                <p class="muted-note">Pilih jenis laporan dan format dokumen yang ingin Anda ekspor.</p>
+                <form action="index.php" method="get" class="row g-3 justify-content-center mt-3 text-start" style="max-width: 800px; margin: 0 auto;">
+                    <input type="hidden" name="page" value="admin">
+                    <input type="hidden" name="action" value="reports">
+                    <input type="hidden" name="start_date" value="<?php echo $escape($startDate); ?>">
+                    <input type="hidden" name="end_date" value="<?php echo $escape($endDate); ?>">
+
+                    <div class="col-12 col-md-5">
+                        <label class="form-label small fw-semibold">Pilih Isi Laporan</label>
+                        <select name="report_type" class="form-select" style="border-radius:0;">
+                            <option value="all" <?php echo $reportType === 'all' ? 'selected' : ''; ?>>Semua Laporan (Pendapatan, Stok, Layanan, Menu, Stylist)</option>
+                            <option value="revenue" <?php echo $reportType === 'revenue' ? 'selected' : ''; ?>>Laporan Pendapatan</option>
+                            <option value="stock" <?php echo $reportType === 'stock' ? 'selected' : ''; ?>>Laporan Stok</option>
+                            <option value="top-services" <?php echo $reportType === 'top-services' ? 'selected' : ''; ?>>Layanan Paling Laku (Salon)</option>
+                            <option value="top-menu" <?php echo $reportType === 'top-menu' ? 'selected' : ''; ?>>Menu Paling Laku (Kafe)</option>
+                            <option value="top-employee" <?php echo $reportType === 'top-employee' ? 'selected' : ''; ?>>Performa Stylist & EOTM</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-3">
+                        <label class="form-label small fw-semibold">Format Dokumen</label>
+                        <select name="export" class="form-select" style="border-radius:0;">
+                            <option value="pdf">Portable Document Format (PDF)</option>
+                            <option value="csv">Comma-Separated Values (CSV)</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-4 d-flex align-items-end">
+                        <button type="submit" class="action-btn w-100" style="height: 38px;">Unduh Laporan</button>
+                    </div>
+                </form>
             </section>
         </main>
     </div>

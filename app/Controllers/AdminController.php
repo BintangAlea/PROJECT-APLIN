@@ -1051,18 +1051,40 @@ class AdminController
         }
 
         $reportType = (string) ($_GET['report_type'] ?? 'revenue');
-        if (!in_array($reportType, ['revenue', 'stock', 'top-services'], true)) {
+        if (!in_array($reportType, ['revenue', 'stock', 'top-services', 'top-menu', 'top-employee', 'all'], true)) {
             $reportType = 'revenue';
         }
 
         $selectedExport = strtolower((string) ($_GET['export'] ?? ''));
 
-        $reportData = $this->getReportData($reportType, $startDate, $endDate);
+        if ($reportType === 'all') {
+            $revenueReport = $this->buildRevenueReportData($startDate, $endDate);
+            $stockReport = $this->buildStockReportData();
+            $servicesReport = $this->buildTopServicesReportData($startDate, $endDate);
+            $menuReport = $this->buildTopMenuReportData($startDate, $endDate);
+            $employeeReport = $this->buildTopEmployeeReportData($startDate, $endDate);
+
+            $reportData = [
+                'is_all' => true,
+                'title' => 'Semua Laporan Terintegrasi',
+                'description' => 'Kompilasi seluruh performa salon dan kafe.',
+                'sections' => [
+                    $revenueReport,
+                    $stockReport,
+                    $servicesReport,
+                    $menuReport,
+                    $employeeReport
+                ]
+            ];
+        } else {
+            $reportData = $this->getReportData($reportType, $startDate, $endDate);
+        }
+
         $summaryCards = $this->getReportSummaryCards($startDate, $endDate);
         $trendData = $this->getRevenueTrendData($startDate, $endDate);
 
-        if ($selectedExport === 'excel') {
-            $this->exportReportExcel($reportData, $startDate, $endDate);
+        if ($selectedExport === 'csv') {
+            $this->exportReportCsv($reportData, $startDate, $endDate);
             return;
         }
         if ($selectedExport === 'pdf') {
@@ -1078,6 +1100,8 @@ class AdminController
         return match ($reportType) {
             'stock' => $this->buildStockReportData(),
             'top-services' => $this->buildTopServicesReportData($startDate, $endDate),
+            'top-menu' => $this->buildTopMenuReportData($startDate, $endDate),
+            'top-employee' => $this->buildTopEmployeeReportData($startDate, $endDate),
             default => $this->buildRevenueReportData($startDate, $endDate),
         };
     }
@@ -1190,6 +1214,82 @@ class AdminController
         ];
     }
 
+    private function buildTopMenuReportData(string $startDate, string $endDate): array
+    {
+        $stmt = $this->db->prepare(
+            "SELECT m.menu_name,
+                    m.category,
+                    m.price,
+                    SUM(od.qty) AS total_sold,
+                    SUM(od.subtotal) AS total_revenue
+             FROM db_merish_cafe.order_details od
+             JOIN db_merish_cafe.menus m ON od.menu_id = m.menu_id
+             JOIN db_merish_cafe.orders o ON od.order_id = o.order_id
+             WHERE DATE(o.order_date) BETWEEN :start_date AND :end_date
+               AND o.payment_status = 'Paid'
+             GROUP BY m.menu_id, m.menu_name, m.category, m.price
+             ORDER BY total_sold DESC, total_revenue DESC"
+        );
+        $stmt->execute([
+            ':start_date' => $startDate,
+            ':end_date' => $endDate,
+        ]);
+        $rows = $stmt->fetchAll();
+
+        return [
+            'title' => 'Menu Paling Laku',
+            'description' => 'Performa penjualan menu kafe berdasarkan jumlah porsi terjual.',
+            'headers' => ['Nama Menu', 'Kategori', 'Terjual', 'Harga Satuan', 'Total Revenue'],
+            'rows' => array_map(static function (array $row): array {
+                return [
+                    $row['menu_name'],
+                    $row['category'],
+                    number_format((int) $row['total_sold']),
+                    'Rp ' . number_format((float) $row['price'], 0, ',', '.'),
+                    'Rp ' . number_format((float) $row['total_revenue'], 0, ',', '.'),
+                ];
+            }, $rows),
+        ];
+    }
+
+    private function buildTopEmployeeReportData(string $startDate, string $endDate): array
+    {
+        $stmt = $this->db->prepare(
+            "SELECT u.NAME,
+                    u.email,
+                    COUNT(DISTINCT r.res_id) AS completed_bookings,
+                    COALESCE(AVG(rv.rating), 0) AS avg_rating
+             FROM users u
+             JOIN reservation_details rd ON rd.beautician_id = u.user_id
+             JOIN reservations r ON rd.res_id = r.res_id
+             LEFT JOIN reviews rv ON rv.res_id = r.res_id
+             WHERE u.ROLE = 'Beautician'
+               AND r.STATUS = 'Selesai'
+               AND DATE(r.schedule_time) BETWEEN :start_date AND :end_date
+             GROUP BY u.user_id, u.NAME, u.email
+             ORDER BY completed_bookings DESC, avg_rating DESC"
+        );
+        $stmt->execute([
+            ':start_date' => $startDate,
+            ':end_date' => $endDate,
+        ]);
+        $rows = $stmt->fetchAll();
+
+        return [
+            'title' => 'Performa Stylist & EOTM',
+            'description' => 'Peringkat performa beautician berdasarkan jumlah layanan selesai dan rating.',
+            'headers' => ['Nama Stylist', 'Email', 'Layanan Selesai', 'Rata-rata Rating'],
+            'rows' => array_map(static function (array $row): array {
+                return [
+                    $row['NAME'],
+                    $row['email'],
+                    number_format((int) $row['completed_bookings']) . ' bookings',
+                    number_format((float) $row['avg_rating'], 2) . ' ★',
+                ];
+            }, $rows),
+        ];
+    }
+
     private function getReportSummaryCards(string $startDate, string $endDate): array
     {
         $revenueStmt = $this->db->prepare(
@@ -1281,60 +1381,113 @@ class AdminController
         return $trend;
     }
 
-    private function exportReportExcel(array $reportData, string $startDate, string $endDate): void
+    private function exportReportCsv(array $reportData, string $startDate, string $endDate): void
     {
-        $filename = 'report-' . date('Ymd-His') . '.xls';
+        $filename = 'report-' . date('Ymd-His') . '.csv';
 
-        header('Content-Type: application/vnd.ms-excel; charset=UTF-8');
+        header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename="' . $filename . '"');
 
-        echo '<html><head><meta charset="UTF-8"></head><body>';
-        echo '<h2>' . htmlspecialchars($reportData['title'] ?? 'Report', ENT_QUOTES, 'UTF-8') . '</h2>';
-        echo '<p>Periode: ' . htmlspecialchars($startDate . ' s/d ' . $endDate, ENT_QUOTES, 'UTF-8') . '</p>';
-        echo '<table border="1" cellpadding="6" cellspacing="0">';
+        $output = fopen('php://output', 'w');
 
-        echo '<tr>';
-        foreach (($reportData['headers'] ?? []) as $header) {
-            echo '<th>' . htmlspecialchars((string) $header, ENT_QUOTES, 'UTF-8') . '</th>';
-        }
-        echo '</tr>';
+        if (!empty($reportData['is_all'])) {
+            fputcsv($output, ['LAPORAN INTEGRASI TERPADU - MERISH SALON & CAFE']);
+            fputcsv($output, ['Periode:', $startDate . ' s/d ' . $endDate]);
+            fputcsv($output, []);
 
-        $rows = $reportData['rows'] ?? [];
-        if (empty($rows)) {
-            echo '<tr><td colspan="' . max(1, count($reportData['headers'] ?? [])) . '">Tidak ada data</td></tr>';
-        } else {
-            foreach ($rows as $row) {
-                echo '<tr>';
-                foreach ($row as $cell) {
-                    echo '<td>' . htmlspecialchars((string) $cell, ENT_QUOTES, 'UTF-8') . '</td>';
+            foreach ($reportData['sections'] as $section) {
+                fputcsv($output, [strtoupper($section['title'])]);
+                fputcsv($output, [$section['description']]);
+                fputcsv($output, $section['headers']);
+                foreach ($section['rows'] as $row) {
+                    fputcsv($output, $row);
                 }
-                echo '</tr>';
+                fputcsv($output, []);
+                fputcsv($output, []);
+            }
+        } else {
+            fputcsv($output, [strtoupper($reportData['title'] ?? 'Report')]);
+            fputcsv($output, ['Periode:', $startDate . ' s/d ' . $endDate]);
+            fputcsv($output, []);
+            fputcsv($output, $reportData['headers'] ?? []);
+            foreach (($reportData['rows'] ?? []) as $row) {
+                fputcsv($output, $row);
             }
         }
-        echo '</table></body></html>';
+
+        fclose($output);
         exit;
     }
 
     private function exportReportPdf(array $reportData, string $startDate, string $endDate): void
     {
         $lines = [];
-        $lines[] = $reportData['title'] ?? 'Report';
-        $lines[] = 'Periode: ' . $startDate . ' s/d ' . $endDate;
-        $lines[] = '';
-        $lines[] = implode(' | ', $reportData['headers'] ?? []);
-        $lines[] = str_repeat('-', 120);
 
-        $rows = $reportData['rows'] ?? [];
-        if (empty($rows)) {
-            $lines[] = 'Tidak ada data.';
-        } else {
-            foreach ($rows as $row) {
-                $plainRow = array_map(static fn ($value): string => preg_replace('/\s+/', ' ', (string) $value), $row);
-                $line = implode(' | ', $plainRow);
-                if (strlen($line) > 115) {
-                    $line = substr($line, 0, 112) . '...';
+        if (!empty($reportData['is_all'])) {
+            $lines[] = 'LAPORAN INTEGRASI TERPADU - MERISH SALON & CAFE';
+            $lines[] = 'Periode: ' . $startDate . ' s/d ' . $endDate;
+            $lines[] = '';
+
+            foreach ($reportData['sections'] as $section) {
+                $lines[] = strtoupper($section['title']);
+                $lines[] = $section['description'];
+                $lines[] = '';
+
+                // Calculate padding widths
+                $colWidths = [];
+                foreach ($section['headers'] as $colIdx => $header) {
+                    $maxW = strlen($header);
+                    foreach ($section['rows'] as $row) {
+                        $maxW = max($maxW, strlen((string)($row[$colIdx] ?? '')));
+                    }
+                    $colWidths[$colIdx] = $maxW + 2;
                 }
-                $lines[] = $line;
+
+                $formattedHeader = '';
+                foreach ($section['headers'] as $colIdx => $header) {
+                    $formattedHeader .= str_pad($header, $colWidths[$colIdx]);
+                }
+                $lines[] = $formattedHeader;
+                $lines[] = str_repeat('-', array_sum($colWidths));
+
+                foreach ($section['rows'] as $row) {
+                    $formattedRow = '';
+                    foreach ($row as $colIdx => $cell) {
+                        $formattedRow .= str_pad((string)$cell, $colWidths[$colIdx]);
+                    }
+                    $lines[] = $formattedRow;
+                }
+
+                $lines[] = '';
+                $lines[] = '';
+            }
+        } else {
+            $lines[] = strtoupper($reportData['title'] ?? 'Report');
+            $lines[] = 'Periode: ' . $startDate . ' s/d ' . $endDate;
+            $lines[] = '';
+
+            $colWidths = [];
+            foreach ($reportData['headers'] as $colIdx => $header) {
+                $maxW = strlen($header);
+                foreach ($reportData['rows'] as $row) {
+                    $maxW = max($maxW, strlen((string)($row[$colIdx] ?? '')));
+                }
+                $colWidths[$colIdx] = $maxW + 2;
+            }
+
+            $formattedHeader = '';
+            foreach ($reportData['headers'] as $colIdx => $header) {
+                $formattedHeader .= str_pad($header, $colWidths[$colIdx]);
+            }
+            $lines[] = $formattedHeader;
+            $lines[] = str_repeat('-', array_sum($colWidths));
+
+            foreach ($reportData['rows'] as $row) {
+                $formattedRow = '';
+                foreach ($row as $colIdx => $cell) {
+                    $formattedRow .= str_pad((string)$cell, $colWidths[$colIdx]);
+                }
+                $lines[] = $formattedRow;
             }
         }
 
@@ -1355,7 +1508,38 @@ class AdminController
             return preg_replace('/[^\x20-\x7E]/', '?', $line);
         }, $lines);
 
-        $content = "BT\n/F1 10 Tf\n14 TL\n50 800 Td\n";
+        $lineCount = count($lines);
+        $pageHeight = max(842, $lineCount * 14 + 150);
+
+        // Rotated diagonal watermark text in the middle
+        $watermarkY = (int) ($pageHeight / 2);
+        $watermarkX = 120;
+        
+        $content = "q\n";
+        $content .= "0.95 0.95 0.95 rg\n";
+        $content .= "/F1 42 Tf\n";
+        $content .= "0.707 0.707 -0.707 0.707 {$watermarkX} {$watermarkY} Tm\n";
+        $content .= "(MERISH SALON & CAFE - OFFICIAL REPORT) Tj\n";
+        $content .= "Q\n";
+
+        // Kop surat
+        $kopYTitle = $pageHeight - 45;
+        $kopYSubtext = $pageHeight - 60;
+        $kopYLine = $pageHeight - 70;
+        
+        $content .= "q\n";
+        $content .= "0.545 0.392 0.447 rg\n"; // brand text color
+        $content .= "BT\n/F1 16 Tf\n1 0 0 1 50 {$kopYTitle} Tm\n(MERISH SALON & CAFE) Tj\nET\n";
+        
+        $content .= "0.3 0.3 0.3 rg\n"; // subtext color
+        $content .= "BT\n/F1 9 Tf\n1 0 0 1 50 {$kopYSubtext} Tm\n(Jalan Raya Merish No. 1, Surabaya  |  Email: contact@merish.com  |  Telp: (031) 555-0199) Tj\nET\n";
+        
+        $content .= "0.545 0.392 0.447 RG\n"; // brand stroke color
+        $content .= "1.5 w\n50 {$kopYLine} m\n545 {$kopYLine} l\nS\n";
+        $content .= "Q\n";
+
+        $contentStartY = $pageHeight - 100;
+        $content .= "BT\n/F1 9 Tf\n14 TL\n50 {$contentStartY} Td\n";
         $first = true;
         foreach ($safeLines as $line) {
             if (!$first) {
@@ -1364,13 +1548,13 @@ class AdminController
             $content .= '(' . $line . ") Tj\n";
             $first = false;
         }
-        $content .= "ET";
+        $content .= "\nET";
 
         $objects = [];
         $objects[] = "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n";
         $objects[] = "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n";
-        $objects[] = "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>\nendobj\n";
-        $objects[] = "4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n";
+        $objects[] = "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 {$pageHeight}] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>\nendobj\n";
+        $objects[] = "4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>\nendobj\n"; // Using Courier so columns align perfectly
         $objects[] = "5 0 obj\n<< /Length " . strlen($content) . " >>\nstream\n" . $content . "\nendstream\nendobj\n";
 
         $pdf = "%PDF-1.4\n";
