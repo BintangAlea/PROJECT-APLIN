@@ -53,6 +53,20 @@ class BookingController
     public function step1()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $selectService = $_GET['service_id'] ?? null;
+            if ($selectService) {
+                $servicesModel = new ServicesModel();
+                $svc = $servicesModel->findById($selectService);
+                if ($svc) {
+                    $_SESSION['booking'] = [
+                        'service_id' => $svc['service_id'],
+                        'service_ids' => [$svc['service_id']]
+                    ];
+                    header('Location: index.php?page=booking&step=2');
+                    exit;
+                }
+            }
+
             $servicesModel = new ServicesModel();
             $services = $servicesModel->findAll();
 
@@ -132,7 +146,7 @@ class BookingController
                 'fb_custom_price' => 25000
             ],
             4 => [
-                'services' => ['SV52'],
+                'services' => ['SV52', 'SV05'],
                 'menus' => ['M002']
             ],
             5 => [

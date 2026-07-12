@@ -75,7 +75,7 @@ class PricingService
             1 => ['services' => ['SV01']],
             2 => ['services' => ['SV03']],
             3 => ['services' => ['SV33']],
-            4 => ['services' => ['SV52']],
+            4 => ['services' => ['SV52', 'SV05']],
             5 => ['services' => ['SV50', 'SV63', 'ADD-20']],
             6 => ['services' => ['SV36', 'SV19', 'ADD-16']],
             7 => ['services' => ['SV02', 'SV37', 'ADD-15']],
