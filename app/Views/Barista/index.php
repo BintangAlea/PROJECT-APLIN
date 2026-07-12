@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -162,7 +162,10 @@
                 <p class="page-subtitle">Monitor dan kelola pesanan minuman secara real-time.</p>
             </div>
             <div style="font-size:0.78rem;color:var(--muted);">
-                <i class="fas fa-clock me-1"></i> <?= date('d M Y, H:i') ?>
+                <i class="fas fa-clock me-1"></i> <?php 
+                $dt = new DateTime("now", new DateTimeZone("Asia/Jakarta"));
+                echo $dt->format('d M Y, H:i') . ' WIB';
+                ?>
             </div>
         </div>
 
