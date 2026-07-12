@@ -2,7 +2,7 @@
 $pageTitle = 'Performance Intelligence - Merish Admin';
 $startDate = $startDate ?? date('Y-m-01');
 $endDate = $endDate ?? date('Y-m-t');
-$reportType = $reportType ?? 'revenue';
+$reportType = $reportType ?? 'all';
 $reportData = $reportData ?? ['title' => 'Report', 'description' => '', 'headers' => [], 'rows' => []];
 $summaryCards = $summaryCards ?? ['total_revenue' => 0, 'total_appointments' => 0, 'total_cafe_orders' => 0];
 $trendData = $trendData ?? ['labels' => [], 'salon' => [], 'cafe' => []];
@@ -281,11 +281,57 @@ $topSalon = array_slice($reportData['rows'] ?? [], 0, 3);
             align-items: end;
         }
 
+        .trend-chart > div {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
         .bar-stack {
             display: flex;
             gap: 0.22rem;
             align-items: end;
             height: 100%;
+        }
+
+        /* Chart switcher styling */
+        .chart-toggle-btn {
+            background: transparent;
+            border: 1px solid #efe4e2;
+            color: #8d7b80;
+            padding: 2px 10px;
+            font-size: 0.72rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .chart-toggle-btn:hover {
+            background: #fff0ee;
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .chart-toggle-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        /* Toggle visibility */
+        .trend-chart.view-salon .bar.cafe {
+            display: none !important;
+        }
+        .trend-chart.view-salon .bar.salon {
+            width: 100% !important;
+        }
+        .trend-chart.view-cafe .bar.salon {
+            display: none !important;
+        }
+        .trend-chart.view-cafe .bar.cafe {
+            width: 100% !important;
         }
 
         .bar {
@@ -502,11 +548,16 @@ $topSalon = array_slice($reportData['rows'] ?? [], 0, 3);
                             <div>
                                 <h3 class="trend-title">Revenue Growth Trend</h3>
                                 <div class="muted-note">Combined Salon &amp; Cafe performance over the selected period.</div>
+                                <div class="d-flex align-items-center gap-1 mt-2">
+                                    <button type="button" class="chart-toggle-btn active" data-view="both">Semua</button>
+                                    <button type="button" class="chart-toggle-btn" data-view="salon">Salon</button>
+                                    <button type="button" class="chart-toggle-btn" data-view="cafe">Kafe</button>
+                                </div>
                             </div>
                             <div class="muted-note">Period: <?php echo $escape($startDate); ?> - <?php echo $escape($endDate); ?></div>
                         </div>
 
-                        <div class="trend-chart">
+                        <div class="trend-chart" id="revenue-trend-chart">
                             <?php for ($i = 0; $i < 5; $i++): ?>
                                 <?php
                                 $label = $trendLabels[$i] ?? 'N/A';
@@ -699,6 +750,29 @@ $topSalon = array_slice($reportData['rows'] ?? [], 0, 3);
             </section>
         </main>
     </div>
+    <script>
+    document.querySelectorAll('.chart-toggle-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            // Remove active class from all buttons
+            document.querySelectorAll('.chart-toggle-btn').forEach(b => b.classList.remove('active'));
+            // Add active class to clicked button
+            this.classList.add('active');
+            
+            const view = this.getAttribute('data-view');
+            const chart = document.getElementById('revenue-trend-chart');
+            
+            if (chart) {
+                // Clear any view class
+                chart.classList.remove('view-salon', 'view-cafe');
+                if (view === 'salon') {
+                    chart.classList.add('view-salon');
+                } else if (view === 'cafe') {
+                    chart.classList.add('view-cafe');
+                }
+            }
+        });
+    });
+    </script>
 </body>
 </html>
 

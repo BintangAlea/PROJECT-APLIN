@@ -1050,9 +1050,9 @@ class AdminController
             [$startDate, $endDate] = [$endDate, $startDate];
         }
 
-        $reportType = (string) ($_GET['report_type'] ?? 'revenue');
+        $reportType = (string) ($_GET['report_type'] ?? 'all');
         if (!in_array($reportType, ['revenue', 'stock', 'top-services', 'top-menu', 'top-employee', 'all'], true)) {
-            $reportType = 'revenue';
+            $reportType = 'all';
         }
 
         $selectedExport = strtolower((string) ($_GET['export'] ?? ''));
