@@ -152,7 +152,6 @@
             <div class="main-topbar px-4 px-lg-5 py-3 d-flex align-items-center justify-content-between">
                 <div>
                     <h1 class="page-title"><?= htmlspecialchars($pageTitle ?? 'Item Availability Manager') ?></h1>
-                    <p class="page-subtitle">Toggle items to instantly update their availability across the ordering system.</p>
                 </div>
             </div>
 
