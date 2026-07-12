@@ -1169,4 +1169,68 @@ class BookingController
         
         return null;
     }
+
+    /**
+     * Submit review from customer history modal
+     */
+    public function addReview()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php');
+            exit;
+        }
+
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: index.php?page=login');
+            exit;
+        }
+
+        $resId = (int) ($_POST['res_id'] ?? 0);
+        $rating = (int) ($_POST['rating'] ?? 5);
+        $comment = trim($_POST['comment'] ?? '');
+        $redirect = trim($_POST['redirect'] ?? 'index.php');
+
+        if ($resId <= 0 || $rating < 1 || $rating > 5) {
+            $_SESSION['error'] = 'Ulasan tidak valid.';
+            header('Location: ' . $redirect);
+            exit;
+        }
+
+        try {
+            // Check if reservation belongs to current user
+            $stmt = $this->db->prepare("SELECT user_id FROM db_merish_salon.reservations WHERE res_id = :res_id LIMIT 1");
+            $stmt->execute([':res_id' => $resId]);
+            $res = $stmt->fetch();
+
+            if (!$res || (int)$res['user_id'] !== (int)$_SESSION['user_id']) {
+                $_SESSION['error'] = 'Anda tidak memiliki hak untuk mengulas reservasi ini.';
+                header('Location: ' . $redirect);
+                exit;
+            }
+
+            // Check if review already exists
+            $checkStmt = $this->db->prepare("SELECT review_id FROM db_merish_salon.reviews WHERE res_id = :res_id LIMIT 1");
+            $checkStmt->execute([':res_id' => $resId]);
+            if ($checkStmt->fetch()) {
+                $_SESSION['error'] = 'Anda sudah mengirimkan ulasan untuk reservasi ini.';
+                header('Location: ' . $redirect);
+                exit;
+            }
+
+            // Insert review using ReviewsModel
+            $reviewsModel = new \App\Models\ReviewsModel();
+            $reviewsModel->create([
+                'res_id' => $resId,
+                'rating' => $rating,
+                'comment' => $comment !== '' ? $comment : null
+            ]);
+
+            $_SESSION['success'] = 'Terima kasih atas ulasan Anda!';
+        } catch (\Exception $e) {
+            $_SESSION['error'] = 'Gagal mengirim ulasan: ' . $e->getMessage();
+        }
+
+        header('Location: ' . $redirect);
+        exit;
+    }
 }

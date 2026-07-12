@@ -286,3 +286,9 @@ INSERT INTO `inventories` (`id`, `item_name`, `stock_quantity`, `minimum_stock`,
 (48, 'Disposable Bed Sheets', 100.0, 20.0, 'Pcs'),
 (49, 'Disposable Panties (For Waxing)', 100.0, 20.0, 'Pcs'),
 (50, 'Hand Sanitizer', 2000.0, 500.0, 'ML');
+
+-- ==========================================
+-- SKENARIO TRANSAKSI SALON (LUNAS)
+-- ==========================================
+INSERT INTO transactions (res_id, total_amount, payment_method, payment_date) VALUES
+(1, 925000.00, 'QRIS', '2026-06-10 11:30:00');

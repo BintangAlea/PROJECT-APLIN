@@ -339,17 +339,27 @@ $formatCurrency = static function ($value): string {
         </div>
 
         <div class="row g-3">
-            <div class="col-lg-6">
+            <div class="col-lg-4">
                 <div class="stat-card">
-                    <div class="stat-label">Total Pendapatan Hari Ini</div>
-                    <div class="stat-value"><?php echo $formatCurrency($totalRevenueToday); ?></div>
+                    <div class="stat-label">Total Pendapatan Salon</div>
+                    <div class="stat-value"><?php echo $formatCurrency($totalSalonRevenueToday); ?></div>
                     <div class="stat-note">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
-                        Sesuai transaksi yang sudah lunas
+                        Transaksi salon hari ini (lunas)
                     </div>
                 </div>
             </div>
-            <div class="col-lg-6">
+            <div class="col-lg-4">
+                <div class="stat-card">
+                    <div class="stat-label">Total Pendapatan Kafe</div>
+                    <div class="stat-value"><?php echo $formatCurrency($totalCafeRevenueToday); ?></div>
+                    <div class="stat-note">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
+                        Pesanan kafe hari ini (lunas)
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
                 <div class="stat-card">
                     <div class="stat-label">Reservasi Aktif</div>
                     <div class="stat-value"><?php echo number_format($activeReservations, 0, ',', '.'); ?> Sesi</div>

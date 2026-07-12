@@ -529,6 +529,20 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" style="color: var(--ink);">
+                    <?php if (isset($_SESSION['success'])): ?>
+                        <div class="alert alert-success alert-dismissible fade show border-0 rounded-0 mb-3 small" role="alert">
+                            <?php echo htmlspecialchars($_SESSION['success']); ?>
+                            <?php unset($_SESSION['success']); ?>
+                            <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    <?php endif; ?>
+                    <?php if (isset($_SESSION['error'])): ?>
+                        <div class="alert alert-danger alert-dismissible fade show border-0 rounded-0 mb-3 small" role="alert">
+                            <?php echo htmlspecialchars($_SESSION['error']); ?>
+                            <?php unset($_SESSION['error']); ?>
+                            <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    <?php endif; ?>
                     <ul class="nav nav-pills mb-3 d-flex justify-content-center gap-2" id="historyTab" role="tablist">
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active px-4 py-2" id="salon-tab" data-bs-toggle="pill" data-bs-target="#salon-history" type="button" role="tab" aria-controls="salon-history" aria-selected="true" style="font-weight: 600; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; border-radius: 0; border: 1px solid #7b4e61;">Salon History</button>
@@ -546,6 +560,21 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
                         #historyModal .nav-pills .nav-link.active {
                             color: #fff;
                             background-color: #7b4e61;
+                        }
+                        .star-rating-input {
+                            display: flex;
+                            gap: 0.35rem;
+                            direction: ltr;
+                        }
+                        .star-rating-input .star-item {
+                            font-size: 1.75rem;
+                            color: #ccc;
+                            cursor: pointer;
+                            transition: color 0.15s ease-in-out;
+                            user-select: none;
+                        }
+                        .star-rating-input .star-item.active {
+                            color: #ffc107;
                         }
                         .history-card-item {
                             background: #fff;
@@ -659,6 +688,51 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
                                                 </div>
                                             </div>
                                         </div>
+
+                                        <!-- Review / Rating Section -->
+                                        <?php if ($statusLower === 'selesai'): ?>
+                                            <?php if (!empty($res['review_id'])): ?>
+                                                <div class="mt-3 p-2 bg-light border border-dashed rounded small">
+                                                    <div class="fw-semibold text-accent mb-1">
+                                                        Rating Anda: 
+                                                        <span style="color: #ffc107; font-size: 0.9rem;">
+                                                            <?php echo str_repeat('★', (int)$res['rating']); ?><?php echo str_repeat('☆', 5 - (int)$res['rating']); ?>
+                                                        </span>
+                                                    </div>
+                                                    <?php if (!empty($res['review_comment'])): ?>
+                                                        <div class="text-muted italic">"<?php echo htmlspecialchars($res['review_comment']); ?>"</div>
+                                                    <?php endif; ?>
+                                                </div>
+                                            <?php else: ?>
+                                                <div class="mt-3 text-end">
+                                                    <button class="btn btn-sm btn-outline-accent" type="button" data-bs-toggle="collapse" data-bs-target="#reviewForm-<?php echo $resId; ?>" style="font-size: 0.75rem; font-weight: 600; border-radius: 0; color: var(--accent); border-color: var(--accent);">
+                                                        Beri Ulasan
+                                                    </button>
+                                                </div>
+                                                <div class="collapse mt-2" id="reviewForm-<?php echo $resId; ?>">
+                                                    <form action="index.php?page=booking&action=addReview" method="post" class="p-3 bg-light border rounded">
+                                                        <input type="hidden" name="res_id" value="<?php echo $resId; ?>">
+                                                        <input type="hidden" name="redirect" value="index.php?page=cafe">
+                                                        <div class="mb-2">
+                                                            <label class="form-label small fw-semibold mb-1">Rating:</label>
+                                                            <div class="star-rating-input" data-res-id="<?php echo $resId; ?>">
+                                                                <span class="star-item" data-val="1">★</span>
+                                                                <span class="star-item" data-val="2">★</span>
+                                                                <span class="star-item" data-val="3">★</span>
+                                                                <span class="star-item" data-val="4">★</span>
+                                                                <span class="star-item" data-val="5">★</span>
+                                                            </div>
+                                                            <input type="hidden" name="rating" id="ratingInput-<?php echo $resId; ?>" value="">
+                                                        </div>
+                                                        <div class="mb-2">
+                                                            <label class="form-label small fw-semibold mb-1">Komentar / Feedback (Opsional):</label>
+                                                            <textarea name="comment" class="form-control form-control-sm" rows="2" placeholder="Tulis masukan Anda di sini..." style="border-radius: 0; font-size: 0.8rem;"></textarea>
+                                                        </div>
+                                                        <button type="submit" class="btn btn-sm w-100 text-white" style="background-color: var(--accent); border-radius: 0; font-size: 0.8rem; font-weight: 600;">Kirim Ulasan</button>
+                                                    </form>
+                                                </div>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
                                     </div>
                                 <?php endforeach; ?>
                             <?php endif; ?>
@@ -737,6 +811,62 @@ $displayName = $_SESSION['full_name'] ?? $_SESSION['user_login'] ?? 'Guest';
             </div>
         </div>
     </div>
+    <script>
+    document.querySelectorAll('.star-rating-input').forEach(function(container) {
+        const resId = container.getAttribute('data-res-id');
+        const input = document.getElementById('ratingInput-' + resId);
+        const stars = container.querySelectorAll('.star-item');
+        const form = container.closest('form');
+        
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                if (!input.value || input.value === "") {
+                    e.preventDefault();
+                    alert('Silakan pilih rating bintang terlebih dahulu.');
+                }
+            });
+        }
+        
+        stars.forEach(function(star) {
+            star.addEventListener('mouseover', function() {
+                const hoverVal = parseInt(this.getAttribute('data-val'));
+                stars.forEach(function(s) {
+                    const sVal = parseInt(s.getAttribute('data-val'));
+                    if (sVal <= hoverVal) {
+                        s.classList.add('active');
+                    } else {
+                        s.classList.remove('active');
+                    }
+                });
+            });
+            
+            container.addEventListener('mouseleave', function() {
+                const activeVal = input.value ? parseInt(input.value) : 0;
+                stars.forEach(function(s) {
+                    const sVal = parseInt(s.getAttribute('data-val'));
+                    if (sVal <= activeVal) {
+                        s.classList.add('active');
+                    } else {
+                        s.classList.remove('active');
+                    }
+                });
+            });
+            
+            star.addEventListener('click', function() {
+                const clickVal = parseInt(this.getAttribute('data-val'));
+                input.value = clickVal;
+                stars.forEach(function(s) {
+                    const sVal = parseInt(s.getAttribute('data-val'));
+                    if (sVal <= clickVal) {
+                        s.classList.add('active');
+                    } else {
+                        s.classList.remove('active');
+                    }
+                });
+            });
+        });
+    });
+    </script>
     <?php endif; ?>
 </body>
 </html>

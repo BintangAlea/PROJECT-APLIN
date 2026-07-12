@@ -420,6 +420,9 @@ $catalogAnchor = '#catalog-form';
             padding: 0.35rem 0.65rem;
             font-size: 0.78rem;
             text-decoration: none;
+            display: inline-block;
+            white-space: nowrap;
+            text-align: center;
         }
 
         .pill-action:hover {
@@ -579,11 +582,9 @@ $catalogAnchor = '#catalog-form';
                 <a class="nav-link active" href="index.php?page=admin&action=manageMenus">Inventory</a>
                 <a class="nav-link" href="index.php?page=admin&action=manageStaff">Staff Management</a>
                 <a class="nav-link" href="index.php?page=admin&action=reports">Analytics</a>
-            </nav>
-
-            <div class="sidebar-footer d-grid gap-1">
+                <hr style="border-top: 1px solid var(--line); margin: 0.5rem 0; opacity: 1;">
                 <a class="nav-link" href="<?= LOGOUT_URL ?>">Logout</a>
-            </div>
+            </nav>
         </aside>
 
         <main class="main">
@@ -597,7 +598,6 @@ $catalogAnchor = '#catalog-form';
                     <button type="button" class="icon-btn" aria-label="Refresh" onclick="location.reload()" title="Refresh">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
                     </button>
-                    <a class="action-btn ms-2" href="<?php echo $catalogAnchor; ?>">Add New Service/Menu</a>
                 </div>
             </div>
 
@@ -800,7 +800,7 @@ $catalogAnchor = '#catalog-form';
                                                     <?php endif; ?>
                                                 </td>
                                                 <td>
-                                                    <a class="pill-action" href="#restock-form" data-item-id="<?php echo $escape($item['item_id']); ?>">Add Stock</a>
+                                                    <a class="pill-action" href="#restock-form" data-item-type="cafe" data-item-id="<?php echo $escape($item['item_id']); ?>">Add Stock</a>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
@@ -815,11 +815,11 @@ $catalogAnchor = '#catalog-form';
                         <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
                             <div>
                                 <h2 class="card-headline mb-1">Raw Goods Inventory — Salon</h2>
-                                <div class="small-muted">Bahan baku salon (shampoo, conditioner, cat rambut, dll). Belum ada data saat ini.</div>
+                                <div class="small-muted">Bahan baku salon (shampoo, conditioner, cat rambut, dll).</div>
                             </div>
                             <div>
                                 <div class="small-muted text-uppercase fw-semibold">Total Items</div>
-                                <div class="stat-value fs-3 mb-0">0</div>
+                                <div class="stat-value fs-3 mb-0"><?php echo count($salonInventories); ?></div>
                             </div>
                         </div>
 
@@ -836,9 +836,31 @@ $catalogAnchor = '#catalog-form';
                                     </tr>
                                 </thead>
                                 <tbody id="salon-inventory-tbody">
-                                    <tr>
-                                        <td colspan="6" class="text-center py-4 text-muted">Belum ada data inventory salon. Data akan ditambahkan kemudian.</td>
-                                    </tr>
+                                    <?php if (empty($salonInventories)): ?>
+                                        <tr>
+                                            <td colspan="6" class="text-center py-4 text-muted">Belum ada data inventory salon.</td>
+                                        </tr>
+                                    <?php else: ?>
+                                        <?php foreach ($salonInventories as $item): ?>
+                                            <tr>
+                                                <td>
+                                                    <div class="fw-semibold"><?php echo $escape($item['item_name']); ?></div>
+                                                    <div class="muted-caption">#<?php echo $escape($item['item_id']); ?></div>
+                                                </td>
+                                                <td><?php echo $formatNumber($item['stock_qty']); ?></td>
+                                                <td><?php echo $formatNumber($item['min_stock']); ?></td>
+                                                <td><?php echo $escape($item['unit']); ?></td>
+                                                <td>
+                                                    <span class="badge badge-soft <?php echo (float) $item['stock_qty'] <= (float) $item['min_stock'] ? 'badge-low' : 'badge-ok'; ?>">
+                                                        <?php echo $escape($item['stock_status']); ?>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <a class="pill-action" href="#restock-form" data-item-type="salon" data-item-id="<?php echo $escape($item['item_id']); ?>">Add Stock</a>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
                                 </tbody>
                             </table>
                         </div>
@@ -886,11 +908,26 @@ $catalogAnchor = '#catalog-form';
                         <form action="index.php?page=admin&action=saveInventory" method="post" class="d-grid gap-3">
                             <div>
                                 <label class="form-label">Existing Item</label>
-                                <select name="item_id" class="form-select">
+                                <select name="item_id" class="form-select" id="restock-item-select">
                                     <option value="">Create new item</option>
-                                    <?php foreach ($inventories as $item): ?>
-                                        <option value="<?php echo $escape($item['item_id']); ?>"><?php echo $escape($item['item_name']); ?></option>
-                                    <?php endforeach; ?>
+                                    <optgroup label="Cafe Items">
+                                        <?php foreach ($cafeInventories as $item): ?>
+                                            <option value="cafe_<?php echo $escape($item['item_id']); ?>" data-type="cafe" data-name="<?php echo $escape($item['item_name']); ?>" data-unit="<?php echo $escape($item['unit']); ?>" data-min="<?php echo $escape($item['min_stock']); ?>"><?php echo $escape($item['item_name']); ?></option>
+                                        <?php endforeach; ?>
+                                    </optgroup>
+                                    <optgroup label="Salon Items">
+                                        <?php foreach ($salonInventories as $item): ?>
+                                            <option value="salon_<?php echo $escape($item['item_id']); ?>" data-type="salon" data-name="<?php echo $escape($item['item_name']); ?>" data-unit="<?php echo $escape($item['unit']); ?>" data-min="<?php echo $escape($item['min_stock']); ?>"><?php echo $escape($item['item_name']); ?></option>
+                                        <?php endforeach; ?>
+                                    </optgroup>
+                                </select>
+                            </div>
+
+                            <div id="inventory-type-wrapper">
+                                <label class="form-label">Inventory Type (For New Item)</label>
+                                <select name="inventory_type" id="inventory-type-select" class="form-select">
+                                    <option value="cafe">Cafe</option>
+                                    <option value="salon">Salon</option>
                                 </select>
                             </div>
 
@@ -1067,11 +1104,62 @@ document.getElementById('ing-overlay').addEventListener('click', function(e) {
 });
 
 (function() {
+    // 1. Restock item selection auto-fill helper
+    const itemSelect = document.getElementById('restock-item-select');
+    const typeSelect = document.getElementById('inventory-type-select');
+    
+    if (itemSelect) {
+        itemSelect.addEventListener('change', function() {
+            const val = this.value;
+            const selectedOption = this.options[this.selectedIndex];
+            
+            const nameInput = document.querySelector('#restock-form input[name="item_name"]');
+            const unitInput = document.querySelector('#restock-form input[name="unit"]');
+            const minInput = document.querySelector('#restock-form input[name="min_stock"]');
+            
+            if (val === '') {
+                // Creating new item
+                if (nameInput) nameInput.value = '';
+                if (unitInput) unitInput.value = '';
+                if (minInput) minInput.value = '';
+                if (typeSelect) typeSelect.disabled = false;
+            } else {
+                // Selected existing item
+                const name = selectedOption.getAttribute('data-name');
+                const unit = selectedOption.getAttribute('data-unit');
+                const min = selectedOption.getAttribute('data-min');
+                const type = selectedOption.getAttribute('data-type');
+                
+                if (nameInput) nameInput.value = name || '';
+                if (unitInput) unitInput.value = unit || '';
+                if (minInput) minInput.value = min || '';
+                if (typeSelect) {
+                    typeSelect.value = type || 'cafe';
+                    typeSelect.disabled = true;
+                }
+            }
+        });
+    }
+
+    // 2. Add Stock buttons listener (pill-action)
+    document.querySelectorAll('.pill-action[href="#restock-form"]').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            const itemId = this.getAttribute('data-item-id');
+            const itemType = this.getAttribute('data-item-type');
+            
+            if (itemSelect) {
+                itemSelect.value = itemType + '_' + itemId;
+                itemSelect.dispatchEvent(new Event('change'));
+            }
+        });
+    });
+
+    // 3. Search filter logic
     const input = document.getElementById('menus-search');
     if (!input) return;
     input.addEventListener('input', function() {
         const q = this.value.toLowerCase().trim();
-        ['services-tbody','menus-tbody','inventory-tbody'].forEach(function(id) {
+        ['services-tbody','menus-tbody','inventory-tbody','salon-inventory-tbody'].forEach(function(id) {
             const tbody = document.getElementById(id);
             if (!tbody) return;
             tbody.querySelectorAll('tr').forEach(function(row) {

@@ -58,15 +58,12 @@ class ReviewsModel
     public function create(array $data): bool
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO reviews (res_id, customer_id, beautician_id, menu_id, rating, COMMENT)
-             VALUES (:res_id, :customer_id, :beautician_id, :menu_id, :rating, :comment)'
+            'INSERT INTO reviews (res_id, rating, COMMENT)
+             VALUES (:res_id, :rating, :comment)'
         );
 
         return $stmt->execute([
             ':res_id' => $data['res_id'],
-            ':customer_id' => $data['customer_id'],
-            ':beautician_id' => $data['beautician_id'] ?? null,
-            ':menu_id' => $data['menu_id'] ?? null,
             ':rating' => $data['rating'],
             ':comment' => $data['comment'] ?? null,
         ]);

@@ -41,7 +41,17 @@ class AdminController
     public function index()
     {
         $today = date('Y-m-d');
-        $totalRevenueToday = $this->transactionsModel->getTotalRevenue($today, $today);
+        
+        // Fetch separate revenues for Salon and Cafe
+        $totalSalonRevenueToday = $this->transactionsModel->getTotalRevenue($today, $today);
+
+        $cafeRevenueStmt = $this->db->prepare(
+            "SELECT SUM(total_amount) AS total
+             FROM db_merish_cafe.orders
+             WHERE payment_status = 'Paid' AND DATE(order_date) = :today"
+        );
+        $cafeRevenueStmt->execute([':today' => $today]);
+        $totalCafeRevenueToday = (float) ($cafeRevenueStmt->fetch()['total'] ?? 0);
 
         $activeReservationsStmt = $this->db->query(
             "SELECT COUNT(*) AS total
@@ -340,8 +350,21 @@ class AdminController
         );
         $cafeInventories = $cafeInventoriesStmt->fetchAll();
 
-        // Salon inventory — kosong untuk sementara
-        $salonInventories = [];
+        // Salon inventory
+        $salonInventoriesStmt = $this->db->query(
+            "SELECT id AS item_id,
+                    item_name,
+                    stock_quantity AS stock_qty,
+                    minimum_stock AS min_stock,
+                    unit,
+                    CASE
+                        WHEN stock_quantity <= minimum_stock THEN 'Low Stock'
+                        ELSE 'Healthy'
+                    END AS stock_status
+             FROM db_merish_salon.inventories
+             ORDER BY stock_quantity ASC, item_name ASC"
+        );
+        $salonInventories = $salonInventoriesStmt->fetchAll();
 
         // Keep $inventories pointing to cafe for backward compat (low stock alerts etc)
         $inventories = $cafeInventories;
@@ -378,16 +401,33 @@ class AdminController
 
         $summaryStmt = $this->db->query(
             "SELECT
-                (SELECT COUNT(*) FROM db_merish_cafe.inventories) AS total_inventory_items,
-                (SELECT COUNT(*) FROM db_merish_cafe.inventories WHERE stock_qty <= min_stock) AS low_stock_items,
+                ((SELECT COUNT(*) FROM db_merish_cafe.inventories) + (SELECT COUNT(*) FROM db_merish_salon.inventories)) AS total_inventory_items,
+                ((SELECT COUNT(*) FROM db_merish_cafe.inventories WHERE stock_qty <= min_stock) + (SELECT COUNT(*) FROM db_merish_salon.inventories WHERE stock_quantity <= minimum_stock)) AS low_stock_items,
                 (SELECT COUNT(*) FROM db_merish_salon.services) AS total_services,
                 (SELECT COUNT(*) FROM db_merish_cafe.menus) AS total_menus"
         );
         $summary = $summaryStmt->fetch() ?: [];
 
-        $lowStockItems = array_slice(array_filter($inventories, static function (array $item): bool {
-            return (float) $item['stock_qty'] <= (float) $item['min_stock'];
-        }), 0, 4);
+        // Unified low stock items
+        $lowStockItems = [];
+        foreach ($cafeInventories as $item) {
+            if ((float) $item['stock_qty'] <= (float) $item['min_stock']) {
+                $item['shortage'] = (float) $item['min_stock'] - (float) $item['stock_qty'];
+                $item['type'] = 'cafe';
+                $lowStockItems[] = $item;
+            }
+        }
+        foreach ($salonInventories as $item) {
+            if ((float) $item['stock_qty'] <= (float) $item['min_stock']) {
+                $item['shortage'] = (float) $item['min_stock'] - (float) $item['stock_qty'];
+                $item['type'] = 'salon';
+                $lowStockItems[] = $item;
+            }
+        }
+        usort($lowStockItems, static function ($a, $b) {
+            return $b['shortage'] <=> $a['shortage'];
+        });
+        $lowStockItems = array_slice($lowStockItems, 0, 4);
 
         $summaryStats = [
             'total_inventory_items' => (int) ($summary['total_inventory_items'] ?? 0),
@@ -406,7 +446,16 @@ class AdminController
             exit;
         }
 
-        $itemId = (int) ($_POST['item_id'] ?? 0);
+        $itemVal = trim($_POST['item_id'] ?? '');
+        $inventoryType = trim($_POST['inventory_type'] ?? 'cafe');
+        $itemId = 0;
+
+        if (strpos($itemVal, '_') !== false) {
+            list($parsedType, $parsedId) = explode('_', $itemVal);
+            $inventoryType = $parsedType;
+            $itemId = (int) $parsedId;
+        }
+
         $itemName = trim($_POST['item_name'] ?? '');
         $unit = trim($_POST['unit'] ?? '');
         $stockAddRaw = trim((string) ($_POST['stock_add'] ?? ''));
@@ -420,8 +469,13 @@ class AdminController
         }
 
         try {
+            $dbTable = ($inventoryType === 'salon') ? 'db_merish_salon.inventories' : 'db_merish_cafe.inventories';
+            $idCol = ($inventoryType === 'salon') ? 'id' : 'item_id';
+            $stockCol = ($inventoryType === 'salon') ? 'stock_quantity' : 'stock_qty';
+            $minStockCol = ($inventoryType === 'salon') ? 'minimum_stock' : 'min_stock';
+
             if ($itemId > 0) {
-                $existingStmt = $this->db->prepare('SELECT * FROM db_merish_cafe.inventories WHERE item_id = :item_id LIMIT 1');
+                $existingStmt = $this->db->prepare("SELECT * FROM {$dbTable} WHERE {$idCol} = :item_id LIMIT 1");
                 $existingStmt->execute([':item_id' => $itemId]);
                 $existing = $existingStmt->fetch();
 
@@ -432,17 +486,17 @@ class AdminController
                 }
 
                 $updateStmt = $this->db->prepare(
-                    'UPDATE db_merish_cafe.inventories
+                    "UPDATE {$dbTable}
                      SET item_name = :item_name,
-                         stock_qty = stock_qty + :stock_add,
-                         min_stock = :min_stock,
+                         {$stockCol} = {$stockCol} + :stock_add,
+                         {$minStockCol} = :min_stock,
                          unit = :unit
-                     WHERE item_id = :item_id'
+                     WHERE {$idCol} = :item_id"
                 );
                 $updateStmt->execute([
                     ':item_name' => $itemName !== '' ? $itemName : $existing['item_name'],
                     ':stock_add' => (float) $stockAddRaw,
-                    ':min_stock' => $minStockRaw !== '' ? (float) $minStockRaw : (float) $existing['min_stock'],
+                    ':min_stock' => $minStockRaw !== '' ? (float) $minStockRaw : (float) $existing[$minStockCol],
                     ':unit' => $unit !== '' ? $unit : $existing['unit'],
                     ':item_id' => $itemId,
                 ]);
@@ -456,8 +510,8 @@ class AdminController
                 }
 
                 $insertStmt = $this->db->prepare(
-                    'INSERT INTO db_merish_cafe.inventories (item_name, stock_qty, min_stock, unit)
-                     VALUES (:item_name, :stock_qty, :min_stock, :unit)'
+                    "INSERT INTO {$dbTable} (item_name, {$stockCol}, {$minStockCol}, unit)
+                     VALUES (:item_name, :stock_qty, :min_stock, :unit)"
                 );
                 $insertStmt->execute([
                     ':item_name' => $itemName,

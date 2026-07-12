@@ -29,9 +29,9 @@ INSERT INTO menus (menu_id, menu_name, price, is_available, category, descriptio
 ('M017', 'Yuzu Mango Sparkling', 38000.00, TRUE, 'Non Coffee', 'Perpaduan jeruk yuzu Jepang asam manis, potongan mangga harum, dan air soda sparkling.', 'assets/MERISH_PICTURES/CAFE/yuzu mango sparkling.jpg'),
 ('M018', 'Truffle Fries', 35000.00, TRUE, 'Snack', 'Kentang goreng gurih renyah dengan siraman minyak truffle wangi dan parmesan.', 'assets/MERISH_PICTURES/CAFE/truffle fries.png');
 
-INSERT INTO inventories (item_name, stock_qty, min_stock, unit) VALUES
-('Susu Oat (ML)', 5000.00, 1000.00, 'ML'),
-('Kopi Espresso (Gram)', 1000.00, 200.00, 'Gram'),
+INSERT INTO inventories (item_id, item_name, stock_qty, min_stock, unit) VALUES
+(1, 'Susu Oat (ML)', 5000.00, 1000.00, 'ML'),
+(2, 'Kopi Espresso (Gram)', 1000.00, 200.00, 'Gram'),
 (3, 'Biji Kopi / Coffee Beans', 5000.0, 1000.0, 'Gram'),
 (4, 'Air Mineral / Purified Water', 10000.0, 2000.0, 'ML'),
 (5, 'Es Batu / Ice Cubes', 10000.0, 2000.0, 'Gram'),

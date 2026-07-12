@@ -121,10 +121,12 @@ class UsersModel
         $salonHistory = [];
         try {
             $salonStmt = $this->db->prepare("
-                SELECT r.res_id, r.schedule_time, r.STATUS AS status, r.is_dp_paid, r.dp_amount, r.payment_proof_url, s.seat_name, p.promo_name, p.discount_value
+                SELECT r.res_id, r.schedule_time, r.STATUS AS status, r.is_dp_paid, r.dp_amount, r.payment_proof_url, s.seat_name, p.promo_name, p.discount_value,
+                       rv.review_id, rv.rating, rv.COMMENT AS review_comment
                 FROM db_merish_salon.reservations r
                 LEFT JOIN db_merish_salon.seats s ON r.seat_id = s.seat_id
                 LEFT JOIN db_merish_salon.promotions p ON r.promo_id = p.promo_id
+                LEFT JOIN db_merish_salon.reviews rv ON r.res_id = rv.res_id
                 WHERE r.user_id = :user_id
                 ORDER BY r.schedule_time DESC
             ");
