@@ -857,6 +857,17 @@ class AdminController
              ORDER BY FIELD(u.ROLE, 'Beautician', 'Barista', 'Receptionist'), u.NAME ASC"
         );
         $staff = $staffStmt->fetchAll();
+        $sort = $_GET['sort'] ?? 'newest';
+        if (!in_array($sort, ['newest', 'oldest', 'highest', 'lowest'], true)) {
+            $sort = 'newest';
+        }
+
+        $orderBy = match ($sort) {
+            'oldest' => 'rv.review_id ASC',
+            'highest' => 'rv.rating DESC, rv.review_id DESC',
+            'lowest' => 'rv.rating ASC, rv.review_id DESC',
+            default => 'rv.review_id DESC',
+        };
 
         $reviewsStmt = $this->db->query(
             "SELECT rv.review_id,
@@ -873,7 +884,7 @@ class AdminController
              LEFT JOIN services s ON rd.service_id = s.service_id
              LEFT JOIN users b ON b.user_id = rd.beautician_id
              GROUP BY rv.review_id, rv.rating, rv.COMMENT, rv.res_id, c.NAME
-             ORDER BY rv.review_id DESC
+             ORDER BY {$orderBy}
              LIMIT 20"
         );
         $reviews = $reviewsStmt->fetchAll();

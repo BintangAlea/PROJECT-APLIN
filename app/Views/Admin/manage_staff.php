@@ -9,6 +9,7 @@ $activeTab = $activeTab ?? 'staff';
 $flashSuccess = $_SESSION['success'] ?? null;
 $flashError = $_SESSION['error'] ?? null;
 unset($_SESSION['success'], $_SESSION['error']);
+$sort = $sort ?? 'newest';
 
 $escape = static fn ($value): string => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 $formatRating = static fn ($value): string => number_format((float) $value, 1);
@@ -774,7 +775,15 @@ $getStaffPhoto = static function (string $name): ?string {
                                 <h2 class="section-title mb-1">Recent Testimonials</h2>
                                 <p class="muted-text mb-0">Live feed of client feedback.</p>
                             </div>
-                            <div class="text-end small muted-text">Sort: Newest</div>
+                            <div class="text-end small muted-text">
+                                <label class="form-label small mb-0 me-1" style="font-size:0.75rem;">Sort:</label>
+                                <select onchange="location.href='index.php?page=admin&action=manageStaff&tab=<?php echo $activeTab; ?>&sort=' + this.value" class="form-select form-select-sm d-inline-block w-auto py-0 px-1" style="font-size:0.75rem; height:24px; border-radius:0;">
+                                    <option value="newest" <?php echo $sort === 'newest' ? 'selected' : ''; ?>>Newest</option>
+                                    <option value="oldest" <?php echo $sort === 'oldest' ? 'selected' : ''; ?>>Oldest</option>
+                                    <option value="highest" <?php echo $sort === 'highest' ? 'selected' : ''; ?>>Highest Rating</option>
+                                    <option value="lowest" <?php echo $sort === 'lowest' ? 'selected' : ''; ?>>Lowest Rating</option>
+                                </select>
+                            </div>
                         </div>
 
                         <div class="review-list">
