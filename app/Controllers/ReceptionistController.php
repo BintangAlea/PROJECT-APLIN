@@ -624,7 +624,8 @@ class ReceptionistController
 
     private function getCurrentSeatOccupancy(): array
     {
-        $stmt = $this->db->query(
+        $today = date('Y-m-d');
+        $stmt = $this->db->prepare(
             "SELECT r.res_id,
                     r.seat_id,
                     r.STATUS,
@@ -641,8 +642,10 @@ class ReceptionistController
              ) rd_first ON rd_first.res_id = r.res_id
              LEFT JOIN services s ON s.service_id = rd_first.service_id
              WHERE r.STATUS IN ('Pending', 'Confirmed', 'In-Service')
+               AND DATE(r.schedule_time) = :today
              ORDER BY FIELD(r.STATUS, 'In-Service', 'Confirmed', 'Pending'), r.schedule_time DESC"
         );
+        $stmt->execute([':today' => $today]);
 
         $map = [];
         foreach ($stmt->fetchAll() as $row) {
@@ -658,7 +661,8 @@ class ReceptionistController
 
     private function getLoungeQueue(): array
     {
-        $stmt = $this->db->query(
+        $today = date('Y-m-d');
+        $stmt = $this->db->prepare(
             "SELECT r.res_id,
                     r.schedule_time,
                     COALESCE(u.NAME, 'Guest') AS customer_name,
@@ -666,10 +670,12 @@ class ReceptionistController
              FROM reservations r
              LEFT JOIN users u ON r.user_id = u.user_id
              WHERE r.STATUS = 'Pending'
+               AND DATE(r.schedule_time) = :today
              GROUP BY r.res_id, r.schedule_time, u.NAME
              ORDER BY r.schedule_time ASC
              LIMIT 5"
         );
+        $stmt->execute([':today' => $today]);
 
         return $stmt->fetchAll();
     }
